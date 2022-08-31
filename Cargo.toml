@@ -1,5 +1,5 @@
 [workspace]
 members = [
-        "lib",
+        "reckless_lib",
 ]
 resolver = "2"
