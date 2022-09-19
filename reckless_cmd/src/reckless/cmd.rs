@@ -1,21 +1,22 @@
 //! Reckless command line arguments definition.
 use clap::{Parser, Subcommand};
 
-
 /// Reckless main command line definition for the command line tools.
 #[derive(Debug, Parser)]
 #[clap(name = "rkl")]
 #[clap(about = "A reckless plugin manager for core lightning", long_about = None)]
 pub struct RecklessArgs {
     #[clap(subcommand)]
-    command: RecklessCommand,
+    pub command: RecklessCommand,
     #[clap(short, long, value_parser)]
-    conf: Option<String>,
+    pub conf: Option<String>,
+    #[clap(short, long, value_parser)]
+    pub network: Option<String>,
 }
 
 /// Reckless subcommand of the command line daemon.
 #[derive(Debug, Subcommand)]
-enum RecklessCommand {
+pub enum RecklessCommand {
     /// Install a single or a list of plugins.
     #[clap(arg_required_else_help = true)]
     Install,

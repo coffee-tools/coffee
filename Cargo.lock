@@ -258,6 +258,7 @@ dependencies = [
 name = "reckless_cmd"
 version = "0.0.1-alpha.1"
 dependencies = [
+ "async-trait",
  "clap",
  "reckless_lib",
  "tokio",
