@@ -120,10 +120,20 @@ async fn get_branches() -> Vec<Branch> {
 
 #[cfg(test)]
 mod tests {
-    use super::get_branches;
+    use std::path::Path;
+
+    use super::{download_github_repo, get_branches};
 
     #[test]
     fn test_get_branches() {
+        // This repo is supposed to have 9 branches.
         assert_eq!(get_branches().len(), 9);
+    }
+    #[test]
+    fn test_download_github_repo() {
+        // 1. Download the zip
+        download_github_repo();
+        // 2. Check if the path exists, this is done in the root dir i.e. reckless.rs/reckless_lib
+        assert_eq!(Path::new("./plugin.zip").exists(), true);
     }
 }
