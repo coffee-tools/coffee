@@ -1,9 +1,10 @@
 use error_chain::error_chain;
 use reqwest::header::{CONTENT_TYPE, USER_AGENT};
-use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::prelude::*;
 use std::{env, fs::create_dir_all, path::Path};
+
+use crate::data::{Branch, Content};
 
 error_chain! {
     foreign_links {
@@ -73,7 +74,7 @@ async fn get_files(url: &str) {
     let mut res = Vec::new();
     match response.status() {
         reqwest::StatusCode::OK => {
-            match response.json::<Vec<data::Content>>().await {
+            match response.json::<Vec<Content>>().await {
                 Ok(parsed) => res = parsed,
                 Err(_) => println!("ERROR WHILE PARSING!"),
             };
@@ -91,7 +92,7 @@ async fn get_files(url: &str) {
 
 #[allow(dead_code)]
 #[tokio::main]
-async fn get_branches() {
+async fn get_branches() -> Vec<Branch> {
     let url = "https://api.github.com/repos/dart-lightning/lndart.cln/branches";
     let client = reqwest::Client::new();
     let response = client
@@ -114,6 +115,15 @@ async fn get_branches() {
             panic!("UNEXPECTED ERROR");
         }
     };
+    res
+}
 
-    println!("{}", res.len());
+#[cfg(test)]
+mod tests {
+    use super::get_branches;
+
+    #[test]
+    fn test_get_branches() {
+        assert_eq!(get_branches().len(), 9);
+    }
 }

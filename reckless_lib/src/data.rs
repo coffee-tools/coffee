@@ -25,14 +25,14 @@ impl Content {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Commit {
     sha: String,
     url: String,
 }
 
-#[derive(Serialize, Deserialize)]
-struct Branch {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Branch {
     name: String,
     commit: Commit,
     protected: bool,
