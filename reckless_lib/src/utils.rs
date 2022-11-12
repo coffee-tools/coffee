@@ -45,7 +45,6 @@ fn create_dir(absolute_path: &str) {
 }
 
 #[allow(dead_code)]
-#[tokio::main]
 async fn download_github_repo() -> Result<()> {
     let url = "https://github.com/dart-lightning/lndart.cln/archive/refs/heads/main.zip";
     let response = reqwest::get(url).await?;
@@ -60,7 +59,6 @@ async fn download_github_repo() -> Result<()> {
 }
 
 #[allow(dead_code)]
-#[tokio::main]
 async fn get_files(url: &str) {
     let client = reqwest::Client::new();
     let response = client
@@ -91,7 +89,6 @@ async fn get_files(url: &str) {
 }
 
 #[allow(dead_code)]
-#[tokio::main]
 async fn get_branches() -> Vec<Branch> {
     let url = "https://api.github.com/repos/dart-lightning/lndart.cln/branches";
     let client = reqwest::Client::new();
