@@ -1,0 +1,8 @@
+[package]
+name = "reckless_github"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+reckless_lib = { path = "../reckless_lib" }
+async-trait = "0.1.57"
