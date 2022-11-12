@@ -6,13 +6,13 @@ use crate::plugin::Plugin;
 use async_trait::async_trait;
 
 #[async_trait]
-pub trait Repository<'tcx> {
+pub trait Repository {
     /// init the plugin manager repository in local
     /// machine.
     ///
     /// This should work like a `git fetch`.
-    async fn init() -> &'tcx Self;
+    async fn init(&self) -> Result<(), RecklessError>;
 
     /// return the list of plugin that are register contained inside the repository.
-    async fn list() -> Result<Vec<&'tcx Plugin>, RecklessError>;
+    async fn list(&self) -> Result<Vec<Plugin>, RecklessError>;
 }

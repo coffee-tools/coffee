@@ -2,5 +2,6 @@
 members = [
         "reckless_lib",
         "reckless_cmd",
+        "reckless_github",
 ]
 resolver = "2"
