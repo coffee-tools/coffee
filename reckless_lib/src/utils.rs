@@ -15,6 +15,8 @@ error_chain! {
 
 #[allow(dead_code)]
 fn create_dir_in_home(relative_path: &str) {
+    // FIXME move the download inside a .reckless dir
+    // like the .lightning dir
     let mut path = env::home_dir()
         .unwrap()
         .into_os_string()
@@ -121,15 +123,17 @@ mod tests {
 
     use super::{download_github_repo, get_branches};
 
-    #[test]
-    fn test_get_branches() {
+    #[tokio::test]
+    async fn test_get_branches() {
         // This repo is supposed to have 9 branches.
-        assert_eq!(get_branches().len(), 9);
+        assert_eq!(get_branches().await.len(), 9);
     }
-    #[test]
-    fn test_download_github_repo() {
+
+    #[tokio::test]
+    async fn test_download_github_repo() {
         // 1. Download the zip
-        download_github_repo();
+        let result = download_github_repo().await;
+        assert!(result.is_ok());
         // 2. Check if the path exists, this is done in the root dir i.e. reckless.rs/reckless_lib
         assert_eq!(Path::new("./plugin.zip").exists(), true);
     }
