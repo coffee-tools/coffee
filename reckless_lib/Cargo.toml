@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.57"
+git2 = "0.15.0"

@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 reckless_lib = { path = "../reckless_lib" }
 async-trait = "0.1.57"
+tokio = { version = "1.21.2", features = ["full"] }
+git2 = "0.15.0"

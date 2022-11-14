@@ -10,7 +10,7 @@ pub struct RecklessError {
 impl RecklessError {
     /// Build a new error message with a specific code
     /// and a specific message.
-    fn new(code: u64, msg: &str) -> Self {
+    pub fn new(code: u64, msg: &str) -> Self {
         RecklessError {
             code,
             msg: msg.to_string(),

@@ -1,7 +1,5 @@
 //! Reckless configuration utils.
 
-use std::borrow::BorrowMut;
-
 use reckless_lib::errors::RecklessError;
 
 use super::cmd::RecklessArgs;
