@@ -4,18 +4,19 @@ pub mod repository;
 
 #[cfg(test)]
 mod tests {
-    use reckless_lib::repository::Repository;
+    use std::path::Path;
+
+    use reckless_lib::{repository::Repository, utils::get_dir_path_from_url};
 
     use crate::repository::Github;
 
-    // FIXME: move this as async test
-    #[test]
-    fn repository_is_initialized_ok() {
-        let repo = Github::new("mock_repo", "cool url");
-        let repo = repo.init();
+    #[tokio::test]
+    async fn repository_is_initialized_ok() {
+        let name = "hello";
+        let url = "https://github.com/lightningd/plugins";
+        let repo = Github::new(name, url);
+        let repo = repo.init().await;
 
-        // FIXME: check whatever give you information regarding
-        // the init with success
-        assert!(false);
+        assert_eq!(Path::new(&(get_dir_path_from_url(url))).exists(), true);
     }
 }

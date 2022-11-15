@@ -7,3 +7,4 @@ pub mod errors;
 pub mod plugin;
 pub mod plugin_manager;
 pub mod repository;
+pub mod utils;
