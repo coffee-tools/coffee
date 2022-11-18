@@ -52,4 +52,11 @@ impl PluginManager for RecklessManager {
     async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), RecklessError> {
         Ok(())
     }
+
+    async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), RecklessError> {
+        // 1. create the repository
+        // 2. init the repository
+        // 3. if all is ok store the repository in the plugin manager
+        Ok(())
+    }
 }

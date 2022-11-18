@@ -29,4 +29,16 @@ pub enum RecklessCommand {
     /// Remove a plugin installed in cln.
     #[clap(arg_required_else_help = true)]
     Remove,
+    /// Manage Repository subcommand
+    #[clap(arg_required_else_help = true)]
+    Remote {
+        #[clap(subcommand)]
+        action: RemoteAction,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum RemoteAction {
+    Add { name: String, url: String },
+    Remove { name: String },
 }

@@ -19,4 +19,7 @@ pub trait PluginManager {
 
     /// upgrade a sequence of plugin managed by the plugin manager.
     async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), RecklessError>;
+
+    /// add the remote repository to the plugin manager.
+    async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), RecklessError>;
 }
