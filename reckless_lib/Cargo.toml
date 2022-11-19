@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1.57"
 git2 = "0.15.0"
+log = "0.4.17"
+env_logger = "0.9.3"

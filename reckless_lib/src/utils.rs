@@ -1,5 +1,6 @@
 use crate::errors::RecklessError;
 use git2;
+use log::debug;
 use std::env;
 use std::fs::create_dir_all;
 use std::path::Path;
@@ -14,7 +15,7 @@ pub fn create_dir_in_home(relative_path: &str) {
     let path = Path::new(&path);
     match create_dir_all(path) {
         Ok(_) => {
-            println!("DONE!")
+            debug!("Successfully created directory at {}", path.display());
         }
         Err(err) => {
             println!("ERROR!: {:?}", err);
@@ -36,8 +37,10 @@ pub fn get_dir_path_from_url(url: &str) -> String {
 }
 
 pub fn clone_recursive_fix(repo: git2::Repository, url: &str) -> Result<(), RecklessError> {
-    for sub in repo.submodules().unwrap_or_default() {
-        println!("URL {}", sub.url().unwrap());
+    let repository = repo.submodules().unwrap_or_default();
+    debug!("SUBMODULE COUNT: {}", repository.len());
+    for (index, sub) in repository.iter().enumerate() {
+        debug!("URL {}: {}", index + 1, sub.url().unwrap());
         let path = format!(
             "{}/{}",
             get_dir_path_from_url(url),
@@ -45,7 +48,10 @@ pub fn clone_recursive_fix(repo: git2::Repository, url: &str) -> Result<(), Reck
         );
         match git2::Repository::clone(sub.url().unwrap(), path) {
             // Fix error handling
-            Ok(_) => Ok(()),
+            Ok(_) => {
+                debug!("ADDED {}", sub.url().unwrap());
+                Ok(())
+            }
             Err(err) => Err(RecklessError::new(1, err.message())),
         };
     }
@@ -54,8 +60,19 @@ pub fn clone_recursive_fix(repo: git2::Repository, url: &str) -> Result<(), Reck
 
 #[cfg(test)]
 mod tests {
-    use super::{create_dir_in_home, get_dir_path_from_url};
-    use std::{env, path::Path};
+    use super::create_dir_in_home;
+    use std::env;
+    use std::path::Path;
+    use std::sync::Once;
+
+    static INIT: Once = Once::new();
+
+    fn init() {
+        // ignore error
+        INIT.call_once(|| {
+            env_logger::init();
+        });
+    }
 
     #[test]
     fn test_create_dir_in_home() {

@@ -10,3 +10,5 @@ clap = { version = "4.0.26", features = ["derive"] }
 async-trait = "0.1.57"
 reckless_lib = { path = "../reckless_lib" }
 reckless_github = { path = "../reckless_github"  }
+log = "0.4.17"
+env_logger = "0.9.3"
