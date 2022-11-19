@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-clap = { version = "3.2.19", features = ["derive"] }
+clap = { version = "4.0.26", features = ["derive"] }
 async-trait = "0.1.57"
 reckless_lib = { path = "../reckless_lib" }
+reckless_github = { path = "../reckless_github"  }

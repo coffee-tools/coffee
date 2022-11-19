@@ -2,8 +2,10 @@
 use std::vec::Vec;
 
 use async_trait::async_trait;
+use reckless_github::repository::Github;
 use reckless_lib::errors::RecklessError;
 use reckless_lib::plugin_manager::PluginManager;
+use reckless_lib::repository::Repository;
 
 use self::cmd::RecklessArgs;
 use self::config::RecklessConf;
@@ -13,7 +15,7 @@ mod config;
 
 pub struct RecklessManager {
     config: config::RecklessConf,
-    repos: Vec<String>,
+    repos: Vec<Box<dyn Repository>>,
     plugins: Vec<String>,
 }
 
@@ -52,4 +54,15 @@ impl PluginManager for RecklessManager {
     async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), RecklessError> {
         Ok(())
     }
+
+    async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), RecklessError> {
+        let repo = Github::new(name, url);
+        repo.init().await?;
+        self.repos.push(Box::new(repo));
+        Ok(())
+    }
 }
+
+// FIXME: we need to move on but this is not safe and with the reckless
+// implementation is not true!
+unsafe impl Send for RecklessManager {}
