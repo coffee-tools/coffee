@@ -10,6 +10,7 @@ use reckless_lib::{errors::RecklessError, plugin_manager::PluginManager};
 
 #[tokio::main]
 async fn main() -> Result<(), RecklessError> {
+    env_logger::init();
     let args = RecklessArgs::parse();
     let mut reckless = RecklessManager::new(&args).await?;
     let result = match args.command {
@@ -21,7 +22,7 @@ async fn main() -> Result<(), RecklessError> {
             if let RemoteAction::Add { name, url } = action {
                 reckless.add_remote(name.as_str(), url.as_str()).await
             } else {
-                Err(RecklessError::new(1, "command not supported"))
+                Err(RecklessError::new(1, "unsupported command"))
             }
         }
     };

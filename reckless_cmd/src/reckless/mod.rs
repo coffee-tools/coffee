@@ -1,4 +1,5 @@
 //! Reckless mod implementation
+use log::debug;
 use std::vec::Vec;
 
 use async_trait::async_trait;
@@ -40,10 +41,13 @@ impl RecklessManager {
 #[async_trait]
 impl PluginManager for RecklessManager {
     async fn configure(&mut self) -> Result<(), RecklessError> {
+        debug!("PLUGIN CONFIGURED");
         Ok(())
     }
 
     async fn install(&mut self, plugins: &[&str]) -> Result<(), RecklessError> {
+        // FIXME: Fix debug message with the list of plugins to be installed
+        debug!("INSTALLING PLUGINS");
         Ok(())
     }
 
@@ -52,13 +56,17 @@ impl PluginManager for RecklessManager {
     }
 
     async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), RecklessError> {
+        // FIXME: Fix debug message with the list of plugins to be upgraded
+        debug!("UPGRADING PLUGINS");
         Ok(())
     }
 
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), RecklessError> {
+        debug!("REMOTE ADDING: {} {}", name, url);
         let repo = Github::new(name, url);
         repo.init().await?;
         self.repos.push(Box::new(repo));
+        debug!("REMOTE ADDED: {} {}", name, url);
         Ok(())
     }
 }
