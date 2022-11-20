@@ -2,11 +2,12 @@ mod reckless;
 
 use crate::reckless::cmd::RecklessArgs;
 use clap::Parser;
-use reckless::{
-    cmd::{RecklessCommand, RemoteAction},
-    RecklessManager,
-};
-use reckless_lib::{errors::RecklessError, plugin_manager::PluginManager};
+use reckless::cmd::RecklessCommand;
+use reckless::cmd::RemoteAction;
+use reckless::RecklessManager;
+
+use reckless_lib::errors::RecklessError;
+use reckless_lib::plugin_manager::PluginManager;
 
 #[tokio::main]
 async fn main() -> Result<(), RecklessError> {

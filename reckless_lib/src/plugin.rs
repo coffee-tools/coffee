@@ -1,11 +1,17 @@
 //! Plugin module that abstract the concept of a cln plugin
 //! from a plugin manager point of view.
+use std::fmt;
+
 use crate::errors::RecklessError;
 
 /// Plugin language definition
 pub enum PluginLang {
     Python,
+    Go,
     Rust,
+    Dart,
+    JavaScript,
+    TypeScript,
     Unknown,
 }
 
@@ -17,9 +23,28 @@ impl PluginLang {
                  * 2. return the path of the main file */
                 todo!()
             }
+            PluginLang::Go => {
+                /* better instructions needed here */
+                todo!()
+            }
             PluginLang::Rust => {
                 /* 1. run cargo build in release mode
                  * 2. return the binary path */
+                todo!()
+            }
+            PluginLang::Dart => {
+                /* 1. run dart compile exe and
+                 * 2. return the binary path */
+                todo!()
+            }
+            PluginLang::JavaScript => {
+                /* better instructions needed here */
+                todo!()
+            }
+            PluginLang::TypeScript => {
+                /* 1. From https://github.com/runcitadel/core-ln.ts
+                deno run --allow-env --allow-read --allow-write src/generate.ts
+                 * 2. run the ts file */
                 todo!()
             }
             PluginLang::Unknown => {
@@ -36,7 +61,8 @@ impl PluginLang {
 
 /// Plugin struct definition
 pub struct Plugin {
-    /// plugin language
+    name: String,
+    path: String,
     lang: PluginLang,
     // FIXME: the plugin should contains also
     // a custom install script stored in some way
@@ -45,9 +71,11 @@ pub struct Plugin {
 
 impl Plugin {
     /// create a new instance of the plugin.
-    pub fn new() -> Self {
+    pub fn new(name: &str, path: &str, plugin_lang: PluginLang) -> Self {
         Plugin {
-            lang: PluginLang::Unknown,
+            name: name.to_owned(),
+            path: path.to_owned(),
+            lang: plugin_lang,
             custom_install: None,
         }
     }
@@ -72,5 +100,11 @@ impl Plugin {
     /// remove the plugin and clean up all the data.
     async fn remove(&mut self) -> Result<(), RecklessError> {
         todo!("not implemented yet")
+    }
+}
+
+impl fmt::Display for Plugin {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "name: {}, path: {}", self.name, self.path)
     }
 }

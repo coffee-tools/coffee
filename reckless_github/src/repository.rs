@@ -1,11 +1,14 @@
 use async_trait::async_trait;
 use git2;
+use glob::glob;
 use log::debug;
 use reckless_lib::errors::RecklessError;
 use reckless_lib::plugin::Plugin;
+use reckless_lib::plugin::PluginLang;
 use reckless_lib::repository::Repository;
 use reckless_lib::utils::clone_recursive_fix;
 use reckless_lib::utils::get_dir_path_from_url;
+use reckless_lib::utils::get_plugin_info_from_path;
 
 pub struct Github {
     /// the url of the repository to be able
@@ -30,6 +33,72 @@ impl Github {
             plugins: vec![],
         }
     }
+
+    /// Index the repository to store information
+    /// related to the plugins
+    pub fn index_repository(&mut self) {
+        let repo_path = get_dir_path_from_url(&self.url);
+        let pattern = format!("{}/[!.]*/*", &repo_path);
+        for plugin in glob(&pattern).unwrap() {
+            match plugin {
+                Ok(path) => {
+                    let (path_to_plugin, plugin_name) =
+                        get_plugin_info_from_path(path.clone()).unwrap();
+
+                    let file_name = path.file_name().unwrap().to_str().unwrap();
+                    match file_name {
+                        "requirements.txt" => {
+                            self.plugins.push(Plugin::new(
+                                &plugin_name,
+                                &path_to_plugin,
+                                PluginLang::Python,
+                            ));
+                        }
+                        "go.mod" => {
+                            self.plugins.push(Plugin::new(
+                                &plugin_name,
+                                &path_to_plugin,
+                                PluginLang::Go,
+                            ));
+                        }
+                        "cargo.toml" => {
+                            self.plugins.push(Plugin::new(
+                                &plugin_name,
+                                &path_to_plugin,
+                                PluginLang::Rust,
+                            ));
+                        }
+                        "pubspec.yaml" => {
+                            self.plugins.push(Plugin::new(
+                                &plugin_name,
+                                &path_to_plugin,
+                                PluginLang::Dart,
+                            ));
+                        }
+                        "package.json" => {
+                            self.plugins.push(Plugin::new(
+                                &plugin_name,
+                                &path_to_plugin,
+                                PluginLang::JavaScript,
+                            ));
+                        }
+                        "tsconfig.json" => {
+                            // FIXME: avoid to unwrap here
+                            self.plugins.push(Plugin::new(
+                                plugin_name.as_str(),
+                                path_to_plugin.as_str(),
+                                PluginLang::TypeScript,
+                            ));
+                        }
+                        _ => continue,
+                    }
+                }
+                Err(err) => {
+                    RecklessError::new(1, err.to_string().as_str());
+                }
+            }
+        }
+    }
 }
 
 #[async_trait]
@@ -39,7 +108,7 @@ impl Repository for Github {
     ///
     /// Where to store the index is an implementation
     /// details.
-    async fn init(&self) -> Result<(), RecklessError> {
+    async fn init(&mut self) -> Result<(), RecklessError> {
         debug!(
             "INITIALIZING REPOSITORY: {} {} > {}",
             self.name,
@@ -48,7 +117,11 @@ impl Repository for Github {
         );
         let res = git2::Repository::clone(&self.url, get_dir_path_from_url(&self.url));
         match res {
-            Ok(repo) => clone_recursive_fix(repo, &self.url),
+            Ok(repo) => {
+                let clone = clone_recursive_fix(repo, &self.url);
+                self.index_repository();
+                clone
+            }
             Err(err) => Err(RecklessError::new(1, err.message())),
         }
     }
