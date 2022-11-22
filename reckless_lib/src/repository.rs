@@ -11,7 +11,7 @@ pub trait Repository {
     /// machine.
     ///
     /// This should work like a `git fetch`.
-    async fn init(&self) -> Result<(), RecklessError>;
+    async fn init(&mut self) -> Result<(), RecklessError>;
 
     /// return the list of plugin that are register contained inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, RecklessError>;

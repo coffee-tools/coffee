@@ -63,7 +63,7 @@ impl PluginManager for RecklessManager {
 
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), RecklessError> {
         debug!("REMOTE ADDING: {} {}", name, url);
-        let repo = Github::new(name, url);
+        let mut repo = Github::new(name, url);
         repo.init().await?;
         self.repos.push(Box::new(repo));
         debug!("REMOTE ADDED: {} {}", name, url);
