@@ -1,5 +1,6 @@
 //! Reckless mod implementation
 use log::debug;
+use reckless_lib::url::URL;
 use std::vec::Vec;
 
 use async_trait::async_trait;
@@ -62,11 +63,12 @@ impl PluginManager for RecklessManager {
     }
 
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), RecklessError> {
-        debug!("REMOTE ADDING: {} {}", name, url);
-        let mut repo = Github::new(name, url);
+        let url = URL::new(url);
+        debug!("REMOTE ADDING: {} {}", name, &url.url_string);
+        let mut repo = Github::new(name, &url);
         repo.init().await?;
         self.repos.push(Box::new(repo));
-        debug!("REMOTE ADDED: {} {}", name, url);
+        debug!("REMOTE ADDED: {} {}", name, &url.url_string);
         Ok(())
     }
 }

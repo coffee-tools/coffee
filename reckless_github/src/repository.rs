@@ -6,14 +6,14 @@ use reckless_lib::errors::RecklessError;
 use reckless_lib::plugin::Plugin;
 use reckless_lib::plugin::PluginLang;
 use reckless_lib::repository::Repository;
+use reckless_lib::url::URL;
 use reckless_lib::utils::clone_recursive_fix;
-use reckless_lib::utils::get_dir_path_from_url;
 use reckless_lib::utils::get_plugin_info_from_path;
 
 pub struct Github {
     /// the url of the repository to be able
     /// to get all the plugin information.
-    url: String,
+    url: URL,
     /// the name of the repository that can be used
     /// by reckless as repository key.
     name: String,
@@ -25,11 +25,11 @@ pub struct Github {
 impl Github {
     /// Create a new instance of the Repository
     /// with a name and a url
-    pub fn new(name: &str, url: &str) -> Self {
-        debug!("ADDING REPOSITORY: {name} {url}");
+    pub fn new(name: &str, url: &URL) -> Self {
+        debug!("ADDING REPOSITORY: {} {}", name, url.url_string);
         Github {
             name: name.to_owned(),
-            url: url.to_owned(),
+            url: url.clone(),
             plugins: vec![],
         }
     }
@@ -37,7 +37,7 @@ impl Github {
     /// Index the repository to store information
     /// related to the plugins
     pub fn index_repository(&mut self) {
-        let repo_path = get_dir_path_from_url(&self.url);
+        let repo_path = &self.url.path_string;
         let pattern = format!("{}/[!.]*/*", &repo_path);
         for plugin in glob(&pattern).unwrap() {
             match plugin {
@@ -111,11 +111,9 @@ impl Repository for Github {
     async fn init(&mut self) -> Result<(), RecklessError> {
         debug!(
             "INITIALIZING REPOSITORY: {} {} > {}",
-            self.name,
-            self.url,
-            get_dir_path_from_url(&self.url)
+            self.name, &self.url.url_string, &self.url.path_string,
         );
-        let res = git2::Repository::clone(&self.url, get_dir_path_from_url(&self.url));
+        let res = git2::Repository::clone(&self.url.url_string, &self.url.path_string);
         match res {
             Ok(repo) => {
                 let clone = clone_recursive_fix(repo, &self.url);
