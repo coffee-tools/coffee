@@ -1,4 +1,5 @@
 use crate::errors::RecklessError;
+use crate::url::URL;
 use git2;
 use log::debug;
 use std::env;
@@ -34,36 +35,6 @@ pub fn get_reckless_dir(dir: &str) -> String {
     path
 }
 
-pub fn get_dir_path_from_url(url: &str) -> String {
-    return format!(
-        "{}/{}",
-        get_reckless_dir("repositories"),
-        &url.split(".com")
-            .last()
-            .unwrap()
-            .strip_prefix("/")
-            .unwrap()
-            .trim()
-            .to_string()
-    );
-}
-
-fn slice_from_end(string: &str, size: usize) -> Option<&str> {
-    string
-        .char_indices()
-        .rev()
-        .nth(size)
-        .map(|(i, _)| &string[i..])
-}
-
-pub fn get_repo_name_from_url(url: &str) -> String {
-    let mut repo_name = url.split("/").last().unwrap().to_string();
-    if slice_from_end(url, 3).unwrap().to_string() == ".git" {
-        repo_name = repo_name.strip_suffix(".git").unwrap().to_string();
-    };
-    repo_name
-}
-
 pub fn get_plugin_info_from_path(path: PathBuf) -> Result<(String, String), RecklessError> {
     match path.parent() {
         Some(parent_path) => {
@@ -79,16 +50,12 @@ pub fn get_plugin_info_from_path(path: PathBuf) -> Result<(String, String), Reck
     }
 }
 
-pub fn clone_recursive_fix(repo: git2::Repository, url: &str) -> Result<(), RecklessError> {
+pub fn clone_recursive_fix(repo: git2::Repository, url: &URL) -> Result<(), RecklessError> {
     let repository = repo.submodules().unwrap_or_default();
     debug!("SUBMODULE COUNT: {}", repository.len());
     for (index, sub) in repository.iter().enumerate() {
         debug!("URL {}: {}", index + 1, sub.url().unwrap());
-        let path = format!(
-            "{}/{}",
-            get_dir_path_from_url(url),
-            sub.path().to_str().unwrap()
-        );
+        let path = format!("{}/{}", &url.path_string, sub.path().to_str().unwrap());
         match git2::Repository::clone(sub.url().unwrap(), &path) {
             // Fix error handling
             Ok(_) => {
