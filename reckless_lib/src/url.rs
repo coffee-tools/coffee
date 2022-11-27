@@ -7,6 +7,8 @@ use crate::utils::get_reckless_dir;
 /// of associated fields
 #[derive(Clone)]
 pub struct URL {
+    /// the url name in case of remote
+    pub name: String,
     /// the url string
     pub url_string: String,
     /// the reckless path associated with the url
@@ -45,27 +47,41 @@ fn get_repo_name_from_url(url: &str) -> String {
 }
 
 /// Get path field from the URL
-fn get_path_from_url(url: &str) -> String {
-    return format!(
-        "{}/{}",
-        get_reckless_dir("repositories"),
-        &url.split(".com")
-            .last()
-            .unwrap()
-            .strip_prefix("/")
-            .unwrap()
-            .trim()
-            .to_string()
-    );
+fn get_path_from_url(url: &str, remote_name: Option<&str>) -> String {
+    match remote_name {
+        Some(name) => return format!("{}/{}", get_reckless_dir("repositories"), name),
+        None => {
+            return format!(
+                "{}/{}",
+                get_reckless_dir("repositories"),
+                &url.split(".com")
+                    .last()
+                    .unwrap()
+                    .strip_prefix("/")
+                    .unwrap()
+                    .trim()
+                    .to_string()
+            )
+        }
+    };
 }
 
 impl URL {
     /// Build a new URL and initialize its fields
-    pub fn new(url: &str) -> Self {
-        URL {
-            url_string: handle_incorrect_url(&url),
-            path_string: get_path_from_url(&url),
-            repo_name: get_repo_name_from_url(&url),
+    pub fn new(url: &str, remote_name: Option<&str>) -> Self {
+        match remote_name {
+            Some(name) => URL {
+                name: name.to_string(),
+                url_string: handle_incorrect_url(&url),
+                path_string: get_path_from_url(&url, Some(name)),
+                repo_name: get_repo_name_from_url(&url),
+            },
+            None => URL {
+                name: get_repo_name_from_url(&url),
+                url_string: handle_incorrect_url(&url),
+                path_string: get_path_from_url(&url, None),
+                repo_name: get_repo_name_from_url(&url),
+            },
         }
     }
 }
@@ -87,12 +103,25 @@ mod tests {
     use super::URL;
 
     #[test]
-    fn test() {
+    fn test_remote() {
         let u = "https://github.com/lightningd/plugins";
-        let url = URL::new(u);
+        let url = URL::new(u, Some("lightningd_plugins"));
         assert_eq!(url.repo_name, "plugins");
         assert_eq!(url.url_string, u);
-        assert_eq!(url.path_string, get_path_from_url(u));
+        assert_eq!(
+            url.path_string,
+            get_path_from_url(u, Some("lightningd_plugins"))
+        );
+        println!("{}", &url);
+    }
+
+    #[test]
+    fn test_plugin() {
+        let u = "https://github.com/lightningd/plugins";
+        let url = URL::new(u, None);
+        assert_eq!(url.repo_name, "plugins");
+        assert_eq!(url.url_string, u);
+        assert_eq!(url.path_string, get_path_from_url(u, None));
         println!("{}", &url);
     }
 }
