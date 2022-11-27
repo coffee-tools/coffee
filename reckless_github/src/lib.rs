@@ -6,7 +6,6 @@ pub mod repository;
 mod tests {
     use std::{path::Path, sync::Once};
 
-    use log::debug;
     use reckless_lib::repository::Repository;
     use reckless_lib::url::URL;
 
@@ -25,7 +24,10 @@ mod tests {
     async fn repository_is_initialized_ok() {
         init();
         let name = "hello";
-        let url = URL::new("https://github.com/lightningd/plugins");
+        let url = URL::new(
+            "https://github.com/lightningd/plugins",
+            Some("lightningd_plugins"),
+        );
         let mut repo = Github::new(name, &url);
         let repo = repo.init().await;
         assert!(repo.is_ok());
