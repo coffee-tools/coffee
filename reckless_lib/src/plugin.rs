@@ -2,7 +2,7 @@
 //! from a plugin manager point of view.
 use std::fmt;
 
-use crate::errors::RecklessError;
+use crate::{errors::RecklessError, plugin_conf::Conf};
 
 /// Plugin language definition
 pub enum PluginLang {
@@ -64,9 +64,7 @@ pub struct Plugin {
     name: String,
     path: String,
     lang: PluginLang,
-    // FIXME: the plugin should contains also
-    // a custom install script stored in some way
-    custom_install: Option<()>,
+    conf: Option<Conf>,
 }
 
 impl Plugin {
@@ -76,7 +74,7 @@ impl Plugin {
             name: name.to_owned(),
             path: path.to_owned(),
             lang: plugin_lang,
-            custom_install: None,
+            conf: None,
         }
     }
 
@@ -84,8 +82,16 @@ impl Plugin {
     ///
     /// In case of success return the path of the executable.
     pub async fn configure(&mut self) -> Result<String, RecklessError> {
-        let exec_path = if let Some(_) = self.custom_install {
-            todo!()
+        let exec_path = if let Some(conf) = &self.conf {
+            if let Some(script) = &conf.plugin.install {
+                let cmds = script.split("\n"); // Check if the script contains `\`
+                for cmd in cmds {
+                    // FIXME: run command
+                }
+                format!("{}/{}", self.path, conf.plugin.main)
+            } else {
+                self.lang.default_install()?
+            }
         } else {
             self.lang.default_install()?
         };

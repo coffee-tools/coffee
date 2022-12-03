@@ -25,3 +25,12 @@ impl fmt::Display for RecklessError {
         write!(f, "code: {}, msg: {}", self.code, self.msg)
     }
 }
+
+impl From<std::io::Error> for RecklessError {
+    fn from(err: std::io::Error) -> Self {
+        RecklessError {
+            code: 1,
+            msg: format!("{}", err),
+        }
+    }
+}
