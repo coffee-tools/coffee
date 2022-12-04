@@ -42,13 +42,13 @@ impl RecklessManager {
 #[async_trait]
 impl PluginManager for RecklessManager {
     async fn configure(&mut self) -> Result<(), RecklessError> {
-        debug!("PLUGIN CONFIGURED");
+        debug!("plugin configured");
         Ok(())
     }
 
     async fn install(&mut self, plugins: &[&str]) -> Result<(), RecklessError> {
         // FIXME: Fix debug message with the list of plugins to be installed
-        debug!("INSTALLING PLUGINS");
+        debug!("installing plugins");
         Ok(())
     }
 
@@ -58,17 +58,17 @@ impl PluginManager for RecklessManager {
 
     async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), RecklessError> {
         // FIXME: Fix debug message with the list of plugins to be upgraded
-        debug!("UPGRADING PLUGINS");
+        debug!("upgrading plugins");
         Ok(())
     }
 
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), RecklessError> {
         let url = URL::new(url, Some(name));
-        debug!("REMOTE ADDING: {} {}", name, &url.url_string);
+        debug!("remote adding: {} {}", name, &url.url_string);
         let mut repo = Github::new(name, &url);
         repo.init().await?;
         self.repos.push(Box::new(repo));
-        debug!("REMOTE ADDED: {} {}", name, &url.url_string);
+        debug!("remote added: {} {}", name, &url.url_string);
         Ok(())
     }
 }

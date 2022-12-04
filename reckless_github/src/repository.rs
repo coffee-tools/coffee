@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use async_trait::async_trait;
 use git2;
 use glob::glob;
@@ -5,10 +7,13 @@ use log::debug;
 use reckless_lib::errors::RecklessError;
 use reckless_lib::plugin::Plugin;
 use reckless_lib::plugin::PluginLang;
+use reckless_lib::plugin_conf::Conf;
 use reckless_lib::repository::Repository;
 use reckless_lib::url::URL;
 use reckless_lib::utils::clone_recursive_fix;
 use reckless_lib::utils::get_plugin_info_from_path;
+use tokio::fs::File;
+use tokio::io::AsyncReadExt;
 
 pub struct Github {
     /// the url of the repository to be able
@@ -36,9 +41,22 @@ impl Github {
 
     /// Index the repository to store information
     /// related to the plugins
-    pub fn index_repository(&mut self) {
+    pub async fn index_repository(&mut self) -> Result<(), RecklessError> {
         let repo_path = &self.url.path_string;
         let pattern = format!("{}/[!.]*/*", &repo_path);
+
+        // FIXME rewrite it in a way that is more clear that
+        // we are walking all the plugins.
+        // for plugin_dir in repo_pat:
+        //    let conf = None
+        //    let plugin = None
+        //    for file in plugin_dir:
+        //
+        //     let lang = match file {
+        //          ...
+        //      }
+        //      plugun = {conf, lang ...}
+        //      self.plugins(plugin)
         for plugin in glob(&pattern).unwrap() {
             match plugin {
                 Ok(path) => {
@@ -90,14 +108,23 @@ impl Github {
                                 PluginLang::TypeScript,
                             ));
                         }
+                        "reckless.yml" | "reckless.yaml" => {
+                            let conf_path = format!("{}/{}", path_to_plugin, file_name);
+                            let mut conf_str = String::new();
+                            File::open(conf_path.as_str())
+                                .await?
+                                .read_to_string(&mut conf_str)
+                                .await?;
+                            let _: Conf = serde_yaml::from_str(&conf_str).unwrap();
+                            // FIXME: store the conf inside the plugin
+                        }
                         _ => continue,
                     }
                 }
-                Err(err) => {
-                    RecklessError::new(1, err.to_string().as_str());
-                }
+                Err(err) => return Err(RecklessError::new(1, err.to_string().as_str())),
             }
         }
+        Ok(())
     }
 }
 
@@ -117,7 +144,7 @@ impl Repository for Github {
         match res {
             Ok(repo) => {
                 let clone = clone_recursive_fix(repo, &self.url);
-                self.index_repository();
+                self.index_repository().await?;
                 clone
             }
             Err(err) => Err(RecklessError::new(1, err.message())),

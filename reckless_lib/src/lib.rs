@@ -5,6 +5,7 @@
 //! author: Vincenzo Palazzo <vincenzopalazzodev@gmail.com>
 pub mod errors;
 pub mod plugin;
+pub mod plugin_conf;
 pub mod plugin_manager;
 pub mod repository;
 pub mod url;

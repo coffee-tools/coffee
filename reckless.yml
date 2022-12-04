@@ -1,0 +1,11 @@
+plugin:
+    - name: helpeme
+    - version: 0.0.1
+    - lang: py
+    - deprecated:
+      - reason: "tell me why!"
+    - dep:
+      - commando
+    - install: |
+        pip3 install -r requirements.txt
+    - main: helpme.py
