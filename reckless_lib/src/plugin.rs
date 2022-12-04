@@ -26,13 +26,17 @@ impl PluginLang {
                 let main_file = format!("{}/{}.py", path, name);
                 match Command::new("pip")
                     .arg("install")
+                    .arg("-r")
                     .arg(req_file.as_str())
                     .output()
                     .await
                 {
                     Ok(_) => Ok(main_file),
-                    Err(_) => {
-                        return Err(RecklessError::new(1, "problem installing python plugin"))
+                    Err(err) => {
+                        return Err(RecklessError::new(
+                            1,
+                            &format!("problem installing python plugin {err}"),
+                        ))
                     }
                 }
             }
@@ -106,10 +110,12 @@ impl Plugin {
                         .await;
                     match cmd_result {
                         Ok(_) => {}
-                        Err(_) => {
+                        Err(err) => {
                             return Err(RecklessError::new(
                                 1,
-                                "problem installing, error executing plugin commands",
+                                &format!(
+                                    "problem installing, error executing plugin commands : {err}"
+                                ),
                             ))
                         }
                     }

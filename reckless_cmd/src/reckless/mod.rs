@@ -46,7 +46,7 @@ impl PluginManager for RecklessManager {
         Ok(())
     }
 
-    async fn install(&mut self, plugins: Vec<String>) -> Result<(), RecklessError> {
+    async fn install(&mut self, plugins: &Vec<String>) -> Result<(), RecklessError> {
         debug!("installing plugins {:?}", plugins);
         Ok(())
     }

@@ -15,7 +15,7 @@ async fn main() -> Result<(), RecklessError> {
     let args = RecklessArgs::parse();
     let mut reckless = RecklessManager::new(&args).await?;
     let result = match args.command {
-        RecklessCommand::Install { plugin } => reckless.install(plugin).await,
+        RecklessCommand::Install { plugin } => reckless.install(&plugin).await,
         RecklessCommand::Remove => todo!(),
         RecklessCommand::List => reckless.list().await,
         RecklessCommand::Upgrade => reckless.upgrade(&[""]).await,
