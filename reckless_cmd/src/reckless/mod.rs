@@ -46,9 +46,8 @@ impl PluginManager for RecklessManager {
         Ok(())
     }
 
-    async fn install(&mut self, plugins: &[&str]) -> Result<(), RecklessError> {
-        // FIXME: Fix debug message with the list of plugins to be installed
-        debug!("installing plugins");
+    async fn install(&mut self, plugins: Vec<String>) -> Result<(), RecklessError> {
+        debug!("installing plugins {:?}", plugins);
         Ok(())
     }
 

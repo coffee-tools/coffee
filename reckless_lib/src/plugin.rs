@@ -1,10 +1,11 @@
 //! Plugin module that abstract the concept of a cln plugin
 //! from a plugin manager point of view.
-use std::fmt;
-
 use crate::{errors::RecklessError, plugin_conf::Conf};
+use std::fmt;
+use tokio::process::Command;
 
 /// Plugin language definition
+#[derive(Clone)]
 pub enum PluginLang {
     Python,
     Go,
@@ -16,12 +17,24 @@ pub enum PluginLang {
 }
 
 impl PluginLang {
-    pub fn default_install(&self) -> Result<String, RecklessError> {
+    pub async fn default_install(&self, path: &str, name: &str) -> Result<String, RecklessError> {
         match self {
             PluginLang::Python => {
                 /* 1. RUN PIP install or poetry install
                  * 2. return the path of the main file */
-                todo!()
+                let req_file = format!("{}/requirements.txt", path);
+                let main_file = format!("{}/{}.py", path, name);
+                match Command::new("pip")
+                    .arg("install")
+                    .arg(req_file.as_str())
+                    .output()
+                    .await
+                {
+                    Ok(_) => Ok(main_file),
+                    Err(_) => {
+                        return Err(RecklessError::new(1, "problem installing python plugin"))
+                    }
+                }
             }
             PluginLang::Go => {
                 /* better instructions needed here */
@@ -60,6 +73,7 @@ impl PluginLang {
 }
 
 /// Plugin struct definition
+#[derive(Clone)]
 pub struct Plugin {
     name: String,
     path: String,
@@ -86,14 +100,26 @@ impl Plugin {
             if let Some(script) = &conf.plugin.install {
                 let cmds = script.split("\n"); // Check if the script contains `\`
                 for cmd in cmds {
-                    // FIXME: run command
+                    let cmd_result = Command::new(cmd)
+                        .current_dir(self.path.clone())
+                        .output()
+                        .await;
+                    match cmd_result {
+                        Ok(_) => {}
+                        Err(_) => {
+                            return Err(RecklessError::new(
+                                1,
+                                "problem installing, error executing plugin commands",
+                            ))
+                        }
+                    }
                 }
                 format!("{}/{}", self.path, conf.plugin.main)
             } else {
-                self.lang.default_install()?
+                self.lang.default_install(&self.path, &self.name).await?
             }
         } else {
-            self.lang.default_install()?
+            self.lang.default_install(&self.path, &self.name).await?
         };
         Ok(exec_path)
     }

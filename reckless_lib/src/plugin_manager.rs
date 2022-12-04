@@ -12,7 +12,7 @@ pub trait PluginManager {
 
     /// install a sequence of plugin or return an error if somethings happens.
     // FIXME: what happens if only one plugin fails?
-    async fn install(&mut self, plugins: &[&str]) -> Result<(), RecklessError>;
+    async fn install(&mut self, plugins: Vec<String>) -> Result<(), RecklessError>;
 
     /// return the list of pluing manager by the plugin manager.
     async fn list(&mut self) -> Result<(), RecklessError>;

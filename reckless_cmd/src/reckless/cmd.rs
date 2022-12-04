@@ -19,7 +19,7 @@ pub struct RecklessArgs {
 pub enum RecklessCommand {
     /// Install a single or a list of plugins.
     #[clap(arg_required_else_help = true)]
-    Install,
+    Install { plugin: Vec<String> },
     /// upgrade a single or a list of plugins.
     #[clap(arg_required_else_help = true)]
     Upgrade,
