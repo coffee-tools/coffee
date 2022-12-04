@@ -17,7 +17,9 @@ mod config;
 
 pub struct RecklessManager {
     config: config::RecklessConf,
-    repos: Vec<Box<dyn Repository>>,
+    /// List of repositories
+    repos: Vec<Box<Github>>,
+    /// List of plugins installed
     plugins: Vec<String>,
 }
 
@@ -46,9 +48,21 @@ impl PluginManager for RecklessManager {
         Ok(())
     }
 
-    async fn install(&mut self, plugins: &[&str]) -> Result<(), RecklessError> {
-        // FIXME: Fix debug message with the list of plugins to be installed
-        debug!("installing plugins");
+    async fn install(&mut self, plugins: &Vec<String>) -> Result<(), RecklessError> {
+        debug!("installing plugins {:?}", plugins);
+        for plugin_to_be_installed in plugins {
+            for repo in &self.repos {
+                for plugin_list in repo.list().await {
+                    for mut plugin in plugin_list {
+                        if plugin_to_be_installed == &plugin.name() {
+                            // FIXME: This path needs to be added to config
+                            let path = plugin.configure().await.unwrap();
+                            debug!("{path}");
+                        }
+                    }
+                }
+            }
+        }
         Ok(())
     }
 
