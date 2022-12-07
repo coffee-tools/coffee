@@ -139,6 +139,10 @@ impl Plugin {
     async fn remove(&mut self) -> Result<(), RecklessError> {
         todo!("not implemented yet")
     }
+
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
 }
 
 impl fmt::Display for Plugin {

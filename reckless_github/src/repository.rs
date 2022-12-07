@@ -156,6 +156,6 @@ impl Repository for Github {
     /// M.B: in the future we want also list all the plugin installed
     /// inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, RecklessError> {
-        Ok(vec![])
+        Ok(self.plugins.clone())
     }
 }
