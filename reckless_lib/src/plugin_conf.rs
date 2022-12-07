@@ -1,12 +1,14 @@
 //! FIXME : put some docs here!
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+
 pub struct Conf {
     pub plugin: Plugin,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+
 pub struct Plugin {
     pub name: String,
     pub version: String,
@@ -20,4 +22,10 @@ pub struct Plugin {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Deprecaterd {
     pub reason: String,
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_remote() {}
 }

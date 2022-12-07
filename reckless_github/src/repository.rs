@@ -156,6 +156,16 @@ impl Repository for Github {
     /// M.B: in the future we want also list all the plugin installed
     /// inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, RecklessError> {
-        Ok(vec![])
+        Ok(self.plugins.clone())
+    }
+
+    /// search inside the repository a plugin by name.
+    fn get_plugin_by_name(&self, name: &str) -> Option<Plugin> {
+        for plugin in &self.plugins {
+            if plugin.name() == name {
+                return Some(plugin.to_owned());
+            }
+        }
+        None
     }
 }

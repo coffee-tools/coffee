@@ -1,6 +1,7 @@
 //! Reckless mod implementation
 use log::debug;
 use reckless_lib::url::URL;
+use std::collections::HashSet;
 use std::vec::Vec;
 
 use async_trait::async_trait;
@@ -17,7 +18,9 @@ mod config;
 
 pub struct RecklessManager {
     config: config::RecklessConf,
-    repos: Vec<Box<dyn Repository>>,
+    /// List of repositories
+    repos: Vec<Box<dyn Repository + Send + Sync>>,
+    /// List of plugins installed
     plugins: Vec<String>,
 }
 
@@ -46,10 +49,51 @@ impl PluginManager for RecklessManager {
         Ok(())
     }
 
-    async fn install(&mut self, plugins: &[&str]) -> Result<(), RecklessError> {
-        // FIXME: Fix debug message with the list of plugins to be installed
-        debug!("installing plugins");
-        Ok(())
+    async fn install(&mut self, plugins: &HashSet<String>) -> Result<(), RecklessError> {
+        debug!("installing plugins {:?}", plugins);
+
+        // keep track if the plugin that are installed with success
+        let mut installed = HashSet::new();
+        for repo in &self.repos {
+            for plugin_name in plugins {
+                if installed.contains(plugin_name) {
+                    continue;
+                }
+                if let Some(mut plugin) = repo.get_plugin_by_name(&plugin_name) {
+                    let result = plugin.configure().await;
+                    match result {
+                        Ok(path) => {
+                            debug!("plugin path {path}");
+                            // TODO: add this to the plugin manager config
+                            installed.insert(plugin_name);
+                            continue;
+                        }
+                        Err(err) => return Err(err),
+                    }
+                }
+
+                // if we install all the plugin we return Ok
+                if plugins.len() == installed.len() {
+                    return Ok(());
+                }
+            }
+        }
+
+        // FIXME: improve the solution there, we can use the filter method
+        let mut missed_plugins = vec![];
+        for plugin_name in plugins {
+            if !installed.contains(plugin_name) {
+                missed_plugins.push(plugin_name);
+            }
+        }
+        let err = RecklessError::new(
+            1,
+            &format!(
+                "plugin {:?} are not present inside the repositories",
+                missed_plugins
+            ),
+        );
+        Err(err)
     }
 
     async fn list(&mut self) -> Result<(), RecklessError> {

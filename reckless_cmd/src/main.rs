@@ -1,5 +1,7 @@
 mod reckless;
 
+use std::collections::HashSet;
+
 use crate::reckless::cmd::RecklessArgs;
 use clap::Parser;
 use reckless::cmd::RecklessCommand;
@@ -15,7 +17,13 @@ async fn main() -> Result<(), RecklessError> {
     let args = RecklessArgs::parse();
     let mut reckless = RecklessManager::new(&args).await?;
     let result = match args.command {
-        RecklessCommand::Install => reckless.install(&[""]).await,
+        RecklessCommand::Install { plugin } => {
+            let mut unique_plugin: HashSet<String> = HashSet::new();
+            plugin
+                .iter()
+                .map(|plugin| unique_plugin.insert(plugin.to_owned()));
+            reckless.install(&unique_plugin).await
+        }
         RecklessCommand::Remove => todo!(),
         RecklessCommand::List => reckless.list().await,
         RecklessCommand::Upgrade => reckless.upgrade(&[""]).await,
