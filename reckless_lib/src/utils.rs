@@ -7,34 +7,6 @@ use std::fs::create_dir_all;
 use std::path::Path;
 use std::path::PathBuf;
 
-pub fn create_dir_in_home(relative_path: &str) {
-    let mut path = env::home_dir()
-        .unwrap()
-        .into_os_string()
-        .into_string()
-        .unwrap();
-    path = format!("{}/{}", path, relative_path);
-    let path = Path::new(&path);
-    match create_dir_all(path) {
-        Ok(_) => {
-            debug!("Successfully created directory at {}", path.display());
-        }
-        Err(err) => {
-            println!("ERROR!: {:?}", err);
-        }
-    };
-}
-
-pub fn get_reckless_dir(dir: &str) -> String {
-    let mut path = env::home_dir()
-        .unwrap()
-        .into_os_string()
-        .into_string()
-        .unwrap();
-    path = format!("{}/.reckless/{}", path, dir);
-    path
-}
-
 pub fn get_plugin_info_from_path(path: PathBuf) -> Result<(String, String), RecklessError> {
     match path.parent() {
         Some(parent_path) => {

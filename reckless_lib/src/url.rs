@@ -1,7 +1,5 @@
 use std::fmt;
 
-use crate::utils::get_reckless_dir;
-
 /// This struct will make sure our URL's are of the
 /// correct format and will also check correctness
 /// of associated fields
@@ -46,42 +44,14 @@ fn get_repo_name_from_url(url: &str) -> String {
     repo_name
 }
 
-/// Get path field from the URL
-fn get_path_from_url(url: &str, remote_name: Option<&str>) -> String {
-    match remote_name {
-        Some(name) => return format!("{}/{}", get_reckless_dir("repositories"), name),
-        None => {
-            return format!(
-                "{}/{}",
-                get_reckless_dir("repositories"),
-                &url.split(".com")
-                    .last()
-                    .unwrap()
-                    .strip_prefix("/")
-                    .unwrap()
-                    .trim()
-                    .to_string()
-            )
-        }
-    };
-}
-
 impl URL {
     /// Build a new URL and initialize its fields
-    pub fn new(url: &str, remote_name: Option<&str>) -> Self {
-        match remote_name {
-            Some(name) => URL {
-                name: name.to_string(),
-                url_string: handle_incorrect_url(&url),
-                path_string: get_path_from_url(&url, Some(name)),
-                repo_name: get_repo_name_from_url(&url),
-            },
-            None => URL {
-                name: get_repo_name_from_url(&url),
-                url_string: handle_incorrect_url(&url),
-                path_string: get_path_from_url(&url, None),
-                repo_name: get_repo_name_from_url(&url),
-            },
+    pub fn new(local_path: &str, url: &str, remote_name: &str) -> Self {
+        URL {
+            name: remote_name.to_owned(),
+            url_string: handle_incorrect_url(&url),
+            path_string: format!("{local_path}/repositories/{remote_name}"),
+            repo_name: get_repo_name_from_url(&url),
         }
     }
 }
