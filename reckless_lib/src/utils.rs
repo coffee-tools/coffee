@@ -7,34 +7,6 @@ use std::fs::create_dir_all;
 use std::path::Path;
 use std::path::PathBuf;
 
-pub fn create_dir_in_home(relative_path: &str) {
-    let mut path = env::home_dir()
-        .unwrap()
-        .into_os_string()
-        .into_string()
-        .unwrap();
-    path = format!("{}/{}", path, relative_path);
-    let path = Path::new(&path);
-    match create_dir_all(path) {
-        Ok(_) => {
-            debug!("Successfully created directory at {}", path.display());
-        }
-        Err(err) => {
-            println!("ERROR!: {:?}", err);
-        }
-    };
-}
-
-pub fn get_reckless_dir(dir: &str) -> String {
-    let mut path = env::home_dir()
-        .unwrap()
-        .into_os_string()
-        .into_string()
-        .unwrap();
-    path = format!("{}/.reckless/{}", path, dir);
-    path
-}
-
 pub fn get_plugin_info_from_path(path: PathBuf) -> Result<(String, String), RecklessError> {
     match path.parent() {
         Some(parent_path) => {
@@ -71,7 +43,7 @@ pub fn clone_recursive_fix(repo: git2::Repository, url: &URL) -> Result<(), Reck
 
 #[cfg(test)]
 mod tests {
-    use super::create_dir_in_home;
+    use std::fs::create_dir_all;
 
     use std::env;
     use std::fs::remove_dir_all;
@@ -87,18 +59,23 @@ mod tests {
         });
     }
 
-    #[test]
-    fn test_create_dir_in_home() {
-        init();
-        let dir = ".reckless";
-        create_dir_in_home(dir);
+    fn create_dir_in_home(relative_path: &str) -> String {
         let mut path = env::home_dir()
             .unwrap()
             .into_os_string()
             .into_string()
-            .unwrap()
-            .to_owned();
-        path = format!("{}/{}", path, dir);
+            .unwrap();
+        path = format!("{}/{}", path, relative_path);
+        let os_path = Path::new(&path);
+        create_dir_all(os_path).unwrap();
+        path
+    }
+
+    #[test]
+    fn test_create_dir_in_home() {
+        init();
+        let dir = ".reckless";
+        let path = create_dir_in_home(dir);
         assert_eq!(Path::new(&path).exists(), true);
         remove_dir_all(path).unwrap();
     }

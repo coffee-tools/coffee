@@ -63,8 +63,8 @@ impl PluginManager for RecklessManager {
                     let result = plugin.configure().await;
                     match result {
                         Ok(path) => {
-                            debug!("plugin path {path}");
-                            // TODO: add this to the plugin manager config
+                            debug!("runnable plugin path {path}");
+                            self.config.plugins_path.push(path);
                             installed.insert(plugin_name);
                             continue;
                         }
@@ -107,7 +107,7 @@ impl PluginManager for RecklessManager {
     }
 
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), RecklessError> {
-        let url = URL::new(url, Some(name));
+        let url = URL::new(&self.config.root_path, url, name);
         debug!("remote adding: {} {}", name, &url.url_string);
         let mut repo = Github::new(name, &url);
         repo.init().await?;

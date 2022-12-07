@@ -26,8 +26,9 @@ mod tests {
         init();
         let name = "hello";
         let url = URL::new(
+            "/tmp",
             "https://github.com/lightningd/plugins",
-            Some("lightningd_plugins"),
+            "lightningd_plugins",
         );
         let mut repo = Github::new(name, &url);
         let repo = repo.init().await;
