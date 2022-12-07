@@ -68,30 +68,14 @@ impl fmt::Display for URL {
 
 #[cfg(test)]
 mod tests {
-    use crate::url::get_path_from_url;
-
     use super::URL;
 
     #[test]
     fn test_remote() {
         let u = "https://github.com/lightningd/plugins";
-        let url = URL::new(u, Some("lightningd_plugins"));
+        let url = URL::new("/tmp/", u, "lightningd_plugins");
         assert_eq!(url.repo_name, "plugins");
         assert_eq!(url.url_string, u);
-        assert_eq!(
-            url.path_string,
-            get_path_from_url(u, Some("lightningd_plugins"))
-        );
-        println!("{}", &url);
-    }
-
-    #[test]
-    fn test_plugin() {
-        let u = "https://github.com/lightningd/plugins";
-        let url = URL::new(u, None);
-        assert_eq!(url.repo_name, "plugins");
-        assert_eq!(url.url_string, u);
-        assert_eq!(url.path_string, get_path_from_url(u, None));
         println!("{}", &url);
     }
 }

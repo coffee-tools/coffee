@@ -43,7 +43,7 @@ pub fn clone_recursive_fix(repo: git2::Repository, url: &URL) -> Result<(), Reck
 
 #[cfg(test)]
 mod tests {
-    use super::create_dir_in_home;
+    use std::fs::create_dir_all;
 
     use std::env;
     use std::path::Path;
@@ -58,18 +58,23 @@ mod tests {
         });
     }
 
-    #[test]
-    fn test_create_dir_in_home() {
-        init();
-        let dir = ".reckless";
-        create_dir_in_home(dir);
+    fn create_dir_in_home(relative_path: &str) -> String {
         let mut path = env::home_dir()
             .unwrap()
             .into_os_string()
             .into_string()
-            .unwrap()
-            .to_owned();
-        path = format!("{}/{}", path, dir);
+            .unwrap();
+        path = format!("{}/{}", path, relative_path);
+        let os_path = Path::new(&path);
+        create_dir_all(os_path).unwrap();
+        path
+    }
+
+    #[test]
+    fn test_create_dir_in_home() {
+        init();
+        let dir = ".reckless";
+        let path = create_dir_in_home(dir);
         assert_eq!(Path::new(&path).exists(), true);
     }
 }
