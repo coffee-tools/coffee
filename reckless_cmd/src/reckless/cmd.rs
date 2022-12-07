@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 
 /// Reckless main command line definition for the command line tools.
 #[derive(Debug, Parser)]
-#[clap(name = "rkl")]
+#[clap(name = "coffe")]
 #[clap(about = "A reckless plugin manager for core lightning", long_about = None)]
 pub struct RecklessArgs {
     #[clap(subcommand)]

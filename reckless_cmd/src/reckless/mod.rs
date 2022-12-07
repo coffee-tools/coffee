@@ -1,7 +1,11 @@
 //! Reckless mod implementation
+use coffe_storage::file::FileStorage;
+use coffe_storage::storage::StorageManager;
 use log::debug;
 use reckless_lib::url::URL;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::process::Output;
 use std::vec::Vec;
 
 use async_trait::async_trait;
@@ -16,12 +20,20 @@ use self::config::RecklessConf;
 pub mod cmd;
 mod config;
 
+#[derive(Serialize, Deserialize)]
+/// FIXME: move the list of plugin
+/// and the list of repository inside this struct.
+pub struct CoffeStorageInfo {}
+
 pub struct RecklessManager {
     config: config::RecklessConf,
     /// List of repositories
     repos: Vec<Box<dyn Repository + Send + Sync>>,
     /// List of plugins installed
     plugins: Vec<String>,
+    /// storage instance to make persistent all the
+    /// plugin manager information on disk
+    storage: Box<dyn StorageManager<CoffeStorageInfo, Err = RecklessError> + Send + Sync>,
 }
 
 impl RecklessManager {
@@ -30,6 +42,10 @@ impl RecklessManager {
             config: RecklessConf::new(conf).await?,
             repos: vec![],
             plugins: vec![],
+            // FIXME: store the path from the conf inside the
+            // storage, this is needed to get the position
+            // where to store the disk info
+            storage: Box::new(FileStorage {}),
         };
         reckless.inventory().await?;
         Ok(reckless)
@@ -38,7 +54,16 @@ impl RecklessManager {
     /// when reckless is configure run an inventory to collect all the necessary information
     /// about the reckless ecosystem.
     async fn inventory(&mut self) -> Result<(), RecklessError> {
+        let mut stored = CoffeStorageInfo {};
+        self.storage.load(&mut stored).await?;
+        // FIXME: bind the information from the storage
+        // FIXME: what are the information missed that
+        // needed to be indexed?
         Ok(())
+    }
+
+    pub fn storage_info(&self) -> CoffeStorageInfo {
+        todo!()
     }
 }
 
@@ -74,6 +99,7 @@ impl PluginManager for RecklessManager {
 
                 // if we install all the plugin we return Ok
                 if plugins.len() == installed.len() {
+                    self.storage.store(&self.storage_info()).await?;
                     return Ok(());
                 }
             }
@@ -120,3 +146,6 @@ impl PluginManager for RecklessManager {
 // FIXME: we need to move on but this is not safe and with the reckless
 // implementation is not true!
 unsafe impl Send for RecklessManager {}
+unsafe impl Sync for RecklessManager {}
+unsafe impl Send for CoffeStorageInfo {}
+unsafe impl Sync for CoffeStorageInfo {}
