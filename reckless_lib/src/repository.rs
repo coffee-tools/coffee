@@ -13,6 +13,9 @@ pub trait Repository {
     /// This should work like a `git fetch`.
     async fn init(&mut self) -> Result<(), RecklessError>;
 
+    /// search inside the repository a plugin by name.
+    fn get_plugin_by_name(&self, name: &str) -> Option<Plugin>;
+
     /// return the list of plugin that are register contained inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, RecklessError>;
 }
