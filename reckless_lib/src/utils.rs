@@ -74,6 +74,7 @@ mod tests {
     use super::create_dir_in_home;
 
     use std::env;
+    use std::fs::remove_dir_all;
     use std::path::Path;
     use std::sync::Once;
 
@@ -99,5 +100,6 @@ mod tests {
             .to_owned();
         path = format!("{}/{}", path, dir);
         assert_eq!(Path::new(&path).exists(), true);
+        remove_dir_all(path).unwrap();
     }
 }

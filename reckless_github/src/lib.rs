@@ -8,6 +8,7 @@ mod tests {
 
     use reckless_lib::repository::Repository;
     use reckless_lib::url::URL;
+    use std::fs::remove_dir_all;
 
     use crate::repository::Github;
 
@@ -32,5 +33,6 @@ mod tests {
         let repo = repo.init().await;
         assert!(repo.is_ok());
         assert_eq!(Path::new(&url.path_string).exists(), true);
+        remove_dir_all(&url.path_string).unwrap();
     }
 }
