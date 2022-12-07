@@ -104,6 +104,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "coffe_storage"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "reckless_lib",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "env_logger"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -421,10 +431,12 @@ version = "0.0.1-alpha.1"
 dependencies = [
  "async-trait",
  "clap",
+ "coffe_storage",
  "env_logger",
  "log",
  "reckless_github",
  "reckless_lib",
+ "serde",
  "tokio",
 ]
 
@@ -511,6 +523,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.89"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "020ff22c755c2ed3f8cf162dbb41a7268d934702f3ed3631656ea597e08fc3db"
+dependencies = [
+ "itoa",
+ "ryu",
+ "serde",
 ]
 
 [[package]]
