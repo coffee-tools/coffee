@@ -50,20 +50,6 @@ impl Github {
     /// related to the plugins
     pub async fn index_repository(&mut self) -> Result<(), RecklessError> {
         let repo_path = &self.url.path_string;
-        // FIXME rewrite it in a way that is more clear that
-        // we are walking all the plugins.
-        // for plugin_dir in repo_pat:
-        //    let conf = None
-        //    let plugin = None
-        //    for file in plugin_dir:
-        //
-        //     let lang = match file {
-        //          ...
-        //      }
-        //      plugun = {conf, lang ...}
-        //      self.plugins(plugin)
-
-        // We are filtering to not iterate through files or any directories such as .git, .ci, .github
         for plugin_dir in WalkDir::new(repo_path)
             .max_depth(1)
             .into_iter()
