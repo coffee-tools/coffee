@@ -87,12 +87,12 @@ pub struct Plugin {
 
 impl Plugin {
     /// create a new instance of the plugin.
-    pub fn new(name: &str, path: &str, plugin_lang: PluginLang) -> Self {
+    pub fn new(name: &str, path: &str, plugin_lang: PluginLang, config: Option<Conf>) -> Self {
         Plugin {
             name: name.to_owned(),
             path: path.to_owned(),
             lang: plugin_lang,
-            conf: None,
+            conf: config,
         }
     }
 

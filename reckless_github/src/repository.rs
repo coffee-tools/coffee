@@ -9,6 +9,9 @@ use reckless_lib::repository::Repository;
 use reckless_lib::url::URL;
 use reckless_lib::utils::clone_recursive_fix;
 use reckless_lib::utils::get_plugin_info_from_path;
+use tokio::fs::File;
+use tokio::io::AsyncReadExt;
+use walkdir::DirEntry;
 use walkdir::WalkDir;
 
 pub struct Github {
@@ -21,6 +24,14 @@ pub struct Github {
     /// all the plugin that are listed inside the
     /// repository
     plugins: Vec<Plugin>,
+}
+
+fn is_hidden(entry: &DirEntry) -> bool {
+    entry
+        .file_name()
+        .to_str()
+        .map(|s| s.starts_with("."))
+        .unwrap_or(false)
 }
 
 impl Github {
@@ -56,32 +67,24 @@ impl Github {
         for plugin_dir in WalkDir::new(repo_path)
             .max_depth(1)
             .into_iter()
-            .filter_entry(|dir_entry| {
-                dir_entry
-                    .file_name()
-                    .to_str()
-                    .map(|s| {
-                        dir_entry.depth() == 0 || !s.starts_with(".") && dir_entry.path().is_dir()
-                    })
-                    .unwrap()
-            })
+            .filter_entry(|dir_entry| !is_hidden(dir_entry))
         {
             match plugin_dir {
                 Ok(plugin_path) => {
-                    let mut conf = ();
+                    let mut conf = None;
                     for file in WalkDir::new(plugin_path.path().to_str().unwrap()).max_depth(1) {
                         let file_dir = file.unwrap().clone();
                         let (path_to_plugin, plugin_name) =
                             get_plugin_info_from_path(file_dir.path()).unwrap();
-                        let plugin_lang = match file_dir.file_name().to_str().unwrap() {
+                        let file_name = file_dir.file_name().to_str().unwrap();
+                        let plugin_lang = match file_name {
                             "requirements.txt" => PluginLang::Python,
                             "go.mod" => PluginLang::Go,
                             "cargo.toml" => PluginLang::Rust,
                             "pubspec.yaml" => PluginLang::Dart,
                             "package.json" => PluginLang::JavaScript,
                             "tsconfig.json" => PluginLang::TypeScript,
-                            /*
-                            FIXME: WHAT NEEDS TO BE DONE HERE??
+
                             "reckless.yml" | "reckless.yaml" => {
                                 let conf_path = format!("{}/{}", path_to_plugin, file_name);
                                 let mut conf_str = String::new();
@@ -89,10 +92,10 @@ impl Github {
                                     .await?
                                     .read_to_string(&mut conf_str)
                                     .await?;
-                                let _: Conf = serde_yaml::from_str(&conf_str).unwrap();
+                                conf = serde_yaml::from_str(&conf_str).unwrap();
+                                continue;
                                 // FIXME: store the conf inside the plugin
                             }
-                             */
                             _ => continue,
                         };
                         debug!("PLUGIN: {} {}", plugin_name, path_to_plugin);
@@ -100,6 +103,7 @@ impl Github {
                             plugin_name.as_str(),
                             path_to_plugin.as_str(),
                             plugin_lang,
+                            conf.clone(),
                         ));
                     }
                 }
