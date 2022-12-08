@@ -5,7 +5,6 @@ use log::debug;
 use reckless_lib::url::URL;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::process::Output;
 use std::vec::Vec;
 
 use async_trait::async_trait;

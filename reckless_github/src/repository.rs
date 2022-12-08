@@ -1,8 +1,5 @@
-use std::fmt::format;
-
 use async_trait::async_trait;
 use git2;
-use glob::glob;
 use log::debug;
 use reckless_lib::errors::RecklessError;
 use reckless_lib::plugin::Plugin;
@@ -14,6 +11,7 @@ use reckless_lib::utils::clone_recursive_fix;
 use reckless_lib::utils::get_plugin_info_from_path;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
+use walkdir::WalkDir;
 
 pub struct Github {
     /// the url of the repository to be able
@@ -43,8 +41,6 @@ impl Github {
     /// related to the plugins
     pub async fn index_repository(&mut self) -> Result<(), RecklessError> {
         let repo_path = &self.url.path_string;
-        let pattern = format!("{}/[!.]*/*", &repo_path);
-
         // FIXME rewrite it in a way that is more clear that
         // we are walking all the plugins.
         // for plugin_dir in repo_pat:
@@ -57,13 +53,13 @@ impl Github {
         //      }
         //      plugun = {conf, lang ...}
         //      self.plugins(plugin)
-        for plugin in glob(&pattern).unwrap() {
+        for plugin in WalkDir::new(repo_path) {
             match plugin {
                 Ok(path) => {
                     let (path_to_plugin, plugin_name) =
-                        get_plugin_info_from_path(path.clone()).unwrap();
+                        get_plugin_info_from_path(path.clone().path()).unwrap();
 
-                    let file_name = path.file_name().unwrap().to_str().unwrap();
+                    let file_name = path.file_name().to_str().unwrap();
                     match file_name {
                         "requirements.txt" => {
                             self.plugins.push(Plugin::new(
