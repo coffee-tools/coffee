@@ -20,13 +20,13 @@ impl<T> StorageManager<T> for FileStorage {
     where
         T: Deserialize<'static> + Send + Sync,
     {
-        todo!()
+        Ok(())
     }
 
     async fn store(&self, to_store: &T) -> Result<(), Self::Err>
     where
         T: Serialize + Send + Sync,
     {
-        todo!()
+        Ok(())
     }
 }
