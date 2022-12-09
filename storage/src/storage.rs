@@ -1,4 +1,4 @@
-//! storage define the interface of the storage
+//! storage defines the interface of the storage
 //! manager that need to be implemented in other
 //! to work with the the plugin manager
 //! architecture.

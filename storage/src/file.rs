@@ -7,14 +7,14 @@
 //! a more smart version of storage manager
 use crate::storage::StorageManager;
 use async_trait::async_trait;
-use reckless_lib::{errors::RecklessError, plugin_manager::PluginManager};
+use coffee_lib::{errors::CoffeeError, plugin_manager::PluginManager};
 use serde::{Deserialize, Serialize};
 
 pub struct FileStorage {}
 
 #[async_trait]
 impl<T> StorageManager<T> for FileStorage {
-    type Err = RecklessError;
+    type Err = CoffeeError;
 
     async fn load(&self, to_load: &mut T) -> Result<(), Self::Err>
     where

@@ -1,5 +1,5 @@
 [package]
-name = "reckless_cmd"
+name = "coffee_cmd"
 version = "0.0.1-alpha.1"
 edition = "2021"
 
@@ -8,9 +8,9 @@ edition = "2021"
 tokio = { version = "1.22.0", features = ["full"] }
 clap = { version = "4.0.26", features = ["derive"] }
 async-trait = "0.1.57"
-reckless_lib = { path = "../reckless_lib" }
-reckless_github = { path = "../reckless_github"  }
+coffee_lib = { path = "../coffee_lib" }
+coffee_github = { path = "../coffee_github"  }
 log = "0.4.17"
 env_logger = "0.9.3"
-coffe_storage = { path = "../storage"  }
+coffee_storage = { path = "../storage"  }
 serde = { version = "1.0", features = ["derive"] }

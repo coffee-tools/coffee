@@ -1,10 +1,10 @@
 [package]
-name = "reckless_github"
+name = "coffee_github"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-reckless_lib = { path = "../reckless_lib" }
+coffee_lib = { path = "../coffee_lib" }
 async-trait = "0.1.57"
 tokio = { version = "1.22.0", features = ["fs"] }
 git2 = "0.15.0"

@@ -1,14 +1,14 @@
 use async_trait::async_trait;
+use coffee_lib::errors::CoffeeError;
+use coffee_lib::plugin::Plugin;
+use coffee_lib::plugin::PluginLang;
+use coffee_lib::plugin_conf::Conf;
+use coffee_lib::repository::Repository;
+use coffee_lib::url::URL;
+use coffee_lib::utils::clone_recursive_fix;
+use coffee_lib::utils::get_plugin_info_from_path;
 use git2;
 use log::debug;
-use reckless_lib::errors::RecklessError;
-use reckless_lib::plugin::Plugin;
-use reckless_lib::plugin::PluginLang;
-use reckless_lib::plugin_conf::Conf;
-use reckless_lib::repository::Repository;
-use reckless_lib::url::URL;
-use reckless_lib::utils::clone_recursive_fix;
-use reckless_lib::utils::get_plugin_info_from_path;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 use walkdir::DirEntry;
@@ -19,7 +19,7 @@ pub struct Github {
     /// to get all the plugin information.
     url: URL,
     /// the name of the repository that can be used
-    /// by reckless as repository key.
+    /// by coffee as repository key.
     name: String,
     /// all the plugin that are listed inside the
     /// repository
@@ -49,7 +49,7 @@ impl Github {
 
     /// Index the repository to store information
     /// related to the plugins
-    pub async fn index_repository(&mut self) -> Result<(), RecklessError> {
+    pub async fn index_repository(&mut self) -> Result<(), CoffeeError> {
         let repo_path = &self.url.path_string;
         let target_dirs = WalkDir::new(repo_path)
             .max_depth(1)
@@ -85,7 +85,7 @@ impl Github {
 
                     // check if the plugin has the custom configuration to read.
                     let mut conf = None;
-                    for file in ["reckless.yaml", "reckless.yml"] {
+                    for file in ["coffee.yaml", "coffee.yml"] {
                         let conf_path = format!("{}/{}", path_to_plugin, file);
                         if let Ok(mut conf_file) = File::open(conf_path).await {
                             let mut conf_str = String::new();
@@ -111,7 +111,7 @@ impl Github {
                     );
                     self.plugins.push(plugin);
                 }
-                Err(err) => return Err(RecklessError::new(1, err.to_string().as_str())),
+                Err(err) => return Err(CoffeeError::new(1, err.to_string().as_str())),
             }
         }
         Ok(())
@@ -125,7 +125,7 @@ impl Repository for Github {
     ///
     /// Where to store the index is an implementation
     /// details.
-    async fn init(&mut self) -> Result<(), RecklessError> {
+    async fn init(&mut self) -> Result<(), CoffeeError> {
         debug!(
             "INITIALIZING REPOSITORY: {} {} > {}",
             self.name, &self.url.url_string, &self.url.path_string,
@@ -137,7 +137,7 @@ impl Repository for Github {
                 self.index_repository().await?;
                 clone
             }
-            Err(err) => Err(RecklessError::new(1, err.message())),
+            Err(err) => Err(CoffeeError::new(1, err.message())),
         }
     }
 
@@ -145,7 +145,7 @@ impl Repository for Github {
     ///
     /// M.B: in the future we want also list all the plugin installed
     /// inside the repository.
-    async fn list(&self) -> Result<Vec<Plugin>, RecklessError> {
+    async fn list(&self) -> Result<Vec<Plugin>, CoffeeError> {
         Ok(self.plugins.clone())
     }
 

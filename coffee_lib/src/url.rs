@@ -9,7 +9,7 @@ pub struct URL {
     pub name: String,
     /// the url string
     pub url_string: String,
-    /// the reckless path associated with the url
+    /// the coffee path associated with the url
     pub path_string: String,
     /// the repo name associated with the url
     pub repo_name: String,
@@ -31,7 +31,7 @@ fn remove_trailing_slash_from_url(url: &str) -> &str {
     }
 }
 
-/// Handle Reckless non-compliant URLs
+/// Handle coffee non-compliant URLs
 fn handle_incorrect_url(mut url: &str) -> String {
     url = remove_trailing_slash_from_url(&url);
     url = remove_dot_git_from_url(&url);

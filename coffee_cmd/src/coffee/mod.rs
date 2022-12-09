@@ -1,20 +1,20 @@
-//! Reckless mod implementation
-use coffe_storage::file::FileStorage;
-use coffe_storage::storage::StorageManager;
+//! Coffee mod implementation
+use coffee_lib::url::URL;
+use coffee_storage::file::FileStorage;
+use coffee_storage::storage::StorageManager;
 use log::debug;
-use reckless_lib::url::URL;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::vec::Vec;
 
 use async_trait::async_trait;
-use reckless_github::repository::Github;
-use reckless_lib::errors::RecklessError;
-use reckless_lib::plugin_manager::PluginManager;
-use reckless_lib::repository::Repository;
+use coffee_github::repository::Github;
+use coffee_lib::errors::CoffeeError;
+use coffee_lib::plugin_manager::PluginManager;
+use coffee_lib::repository::Repository;
 
-use self::cmd::RecklessArgs;
-use self::config::RecklessConf;
+use self::cmd::CoffeeArgs;
+use self::config::CoffeeConf;
 
 pub mod cmd;
 mod config;
@@ -24,21 +24,21 @@ mod config;
 /// and the list of repository inside this struct.
 pub struct CoffeStorageInfo {}
 
-pub struct RecklessManager {
-    config: config::RecklessConf,
+pub struct CoffeeManager {
+    config: config::CoffeeConf,
     /// List of repositories
     repos: Vec<Box<dyn Repository + Send + Sync>>,
     /// List of plugins installed
     plugins: Vec<String>,
     /// storage instance to make persistent all the
     /// plugin manager information on disk
-    storage: Box<dyn StorageManager<CoffeStorageInfo, Err = RecklessError> + Send + Sync>,
+    storage: Box<dyn StorageManager<CoffeStorageInfo, Err = CoffeeError> + Send + Sync>,
 }
 
-impl RecklessManager {
-    pub async fn new(conf: &RecklessArgs) -> Result<Self, RecklessError> {
-        let mut reckless = RecklessManager {
-            config: RecklessConf::new(conf).await?,
+impl CoffeeManager {
+    pub async fn new(conf: &CoffeeArgs) -> Result<Self, CoffeeError> {
+        let mut coffee = CoffeeManager {
+            config: CoffeeConf::new(conf).await?,
             repos: vec![],
             plugins: vec![],
             // FIXME: store the path from the conf inside the
@@ -46,13 +46,13 @@ impl RecklessManager {
             // where to store the disk info
             storage: Box::new(FileStorage {}),
         };
-        reckless.inventory().await?;
-        Ok(reckless)
+        coffee.inventory().await?;
+        Ok(coffee)
     }
 
-    /// when reckless is configure run an inventory to collect all the necessary information
-    /// about the reckless ecosystem.
-    async fn inventory(&mut self) -> Result<(), RecklessError> {
+    /// when coffee is configure run an inventory to collect all the necessary information
+    /// about the coffee ecosystem.
+    async fn inventory(&mut self) -> Result<(), CoffeeError> {
         let mut stored = CoffeStorageInfo {};
         self.storage.load(&mut stored).await?;
         // FIXME: bind the information from the storage
@@ -67,13 +67,13 @@ impl RecklessManager {
 }
 
 #[async_trait]
-impl PluginManager for RecklessManager {
-    async fn configure(&mut self) -> Result<(), RecklessError> {
+impl PluginManager for CoffeeManager {
+    async fn configure(&mut self) -> Result<(), CoffeeError> {
         debug!("plugin configured");
         Ok(())
     }
 
-    async fn install(&mut self, plugins: &HashSet<String>) -> Result<(), RecklessError> {
+    async fn install(&mut self, plugins: &HashSet<String>) -> Result<(), CoffeeError> {
         debug!("installing plugins {:?}", plugins);
 
         // keep track if the plugin that are installed with success
@@ -111,7 +111,7 @@ impl PluginManager for RecklessManager {
                 missed_plugins.push(plugin_name);
             }
         }
-        let err = RecklessError::new(
+        let err = CoffeeError::new(
             1,
             &format!(
                 "plugin {:?} are not present inside the repositories",
@@ -121,17 +121,17 @@ impl PluginManager for RecklessManager {
         Err(err)
     }
 
-    async fn list(&mut self) -> Result<(), RecklessError> {
+    async fn list(&mut self) -> Result<(), CoffeeError> {
         Ok(())
     }
 
-    async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), RecklessError> {
+    async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), CoffeeError> {
         // FIXME: Fix debug message with the list of plugins to be upgraded
         debug!("upgrading plugins");
         Ok(())
     }
 
-    async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), RecklessError> {
+    async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError> {
         let url = URL::new(&self.config.root_path, url, name);
         debug!("remote adding: {} {}", name, &url.url_string);
         let mut repo = Github::new(name, &url);
@@ -142,9 +142,9 @@ impl PluginManager for RecklessManager {
     }
 }
 
-// FIXME: we need to move on but this is not safe and with the reckless
+// FIXME: we need to move on but this is not safe and with the coffee
 // implementation is not true!
-unsafe impl Send for RecklessManager {}
-unsafe impl Sync for RecklessManager {}
+unsafe impl Send for CoffeeManager {}
+unsafe impl Sync for CoffeeManager {}
 unsafe impl Send for CoffeStorageInfo {}
 unsafe impl Sync for CoffeStorageInfo {}

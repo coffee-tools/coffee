@@ -1,6 +1,6 @@
 //! Plugin module that abstract the concept of a cln plugin
 //! from a plugin manager point of view.
-use crate::{errors::RecklessError, plugin_conf::Conf};
+use crate::{errors::CoffeeError, plugin_conf::Conf};
 use std::fmt;
 use tokio::process::Command;
 
@@ -17,7 +17,7 @@ pub enum PluginLang {
 }
 
 impl PluginLang {
-    pub async fn default_install(&self, path: &str, name: &str) -> Result<String, RecklessError> {
+    pub async fn default_install(&self, path: &str, name: &str) -> Result<String, CoffeeError> {
         match self {
             PluginLang::Python => {
                 /* 1. RUN PIP install or poetry install
@@ -33,7 +33,7 @@ impl PluginLang {
                 {
                     Ok(_) => Ok(main_file),
                     Err(err) => {
-                        return Err(RecklessError::new(
+                        return Err(CoffeeError::new(
                             1,
                             &format!("problem installing python plugin {err}"),
                         ))
@@ -66,7 +66,7 @@ impl PluginLang {
             }
             PluginLang::Unknown => {
                 /* 1. emit an error message  */
-                let err = RecklessError::new(
+                let err = CoffeeError::new(
                     2,
                     "unknown default install procedure, the language in undefined",
                 );
@@ -99,7 +99,7 @@ impl Plugin {
     /// configure the plugin in order to work with cln.
     ///
     /// In case of success return the path of the executable.
-    pub async fn configure(&mut self) -> Result<String, RecklessError> {
+    pub async fn configure(&mut self) -> Result<String, CoffeeError> {
         let exec_path = if let Some(conf) = &self.conf {
             if let Some(script) = &conf.plugin.install {
                 let cmds = script.split("\n"); // Check if the script contains `\`
@@ -111,7 +111,7 @@ impl Plugin {
                     match cmd_result {
                         Ok(_) => {}
                         Err(err) => {
-                            return Err(RecklessError::new(
+                            return Err(CoffeeError::new(
                                 1,
                                 &format!(
                                     "problem installing, error executing plugin commands : {err}"
@@ -131,12 +131,12 @@ impl Plugin {
     }
 
     /// upgrade the plugin to a new version.
-    pub async fn upgrade(&mut self) -> Result<(), RecklessError> {
+    pub async fn upgrade(&mut self) -> Result<(), CoffeeError> {
         todo!("not implemented yet")
     }
 
     /// remove the plugin and clean up all the data.
-    async fn remove(&mut self) -> Result<(), RecklessError> {
+    async fn remove(&mut self) -> Result<(), CoffeeError> {
         todo!("not implemented yet")
     }
 

@@ -1,4 +1,4 @@
-//! FIXME : put some docs here!
+//! Coffee configuration serialization file.
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]

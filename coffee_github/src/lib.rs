@@ -6,8 +6,8 @@ pub mod repository;
 mod tests {
     use std::{path::Path, sync::Once};
 
-    use reckless_lib::repository::Repository;
-    use reckless_lib::url::URL;
+    use coffee_lib::repository::Repository;
+    use coffee_lib::url::URL;
     use std::fs::remove_dir_all;
 
     use crate::repository::Github;

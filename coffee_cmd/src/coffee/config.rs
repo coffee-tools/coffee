@@ -1,14 +1,14 @@
-//! Reckless configuration utils.
+//! Coffee configuration utils.
 
 use std::env;
 
-use reckless_lib::errors::RecklessError;
+use coffee_lib::errors::CoffeeError;
 
-use super::cmd::RecklessArgs;
+use super::cmd::CoffeeArgs;
 
-/// Custom reckless configuration, given by a command line list of arguments
-/// or a reckless configuration file.
-pub struct RecklessConf {
+/// Custom coffee configuration, given by a command line list of arguments
+/// or a coffee configuration file.
+pub struct CoffeeConf {
     /// Network configuration related
     /// to core lightning network
     network: String,
@@ -21,38 +21,38 @@ pub struct RecklessConf {
     pub plugins_path: Vec<String>,
 }
 
-impl RecklessConf {
-    /// Create a new instance of the reckless configuration from the args.
-    pub async fn new(conf: &RecklessArgs) -> Result<Self, RecklessError> {
+impl CoffeeConf {
+    /// Create a new instance of the coffee configuration from the args.
+    pub async fn new(conf: &CoffeeArgs) -> Result<Self, CoffeeError> {
         let mut def_path = env::home_dir().unwrap().to_str().unwrap().to_string();
         // FIXME: check for double slash
-        def_path += "/.coffe";
-        let mut reckless = RecklessConf {
+        def_path += "/.coffee";
+        let mut coffee = CoffeeConf {
             network: "bitcoin".to_owned(),
             root_path: format!("{def_path}"),
-            config: format!("{def_path}/bitcoin/coffe.conf"),
+            config: format!("{def_path}/bitcoin/coffee.conf"),
             plugins_path: vec![],
         };
 
         // check the command line arguments and bind them
-        // inside the reckles conf
-        reckless.bind_cmd_line_params(&conf)?;
+        // inside the coffee conf
+        coffee.bind_cmd_line_params(&conf)?;
         // after we know all the information regarding
         // the configuration we try to see if there is
         // something stored already to the disk.
-        reckless.load_from_file().await?;
+        coffee.load_from_file().await?;
 
-        Ok(reckless)
+        Ok(coffee)
     }
 
-    async fn load_from_file(&mut self) -> Result<(), RecklessError> {
+    async fn load_from_file(&mut self) -> Result<(), CoffeeError> {
         Ok(())
     }
 
-    fn bind_cmd_line_params(&mut self, conf: &RecklessArgs) -> Result<(), RecklessError> {
+    fn bind_cmd_line_params(&mut self, conf: &CoffeeArgs) -> Result<(), CoffeeError> {
         if let Some(network) = &conf.network {
             self.network = network.to_owned();
-            self.config = format!("{}/{}/coffe.conf", self.root_path, self.network);
+            self.config = format!("{}/{}/coffee.conf", self.root_path, self.network);
         }
 
         if let Some(config) = &conf.conf {
