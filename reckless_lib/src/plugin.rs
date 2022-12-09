@@ -5,7 +5,7 @@ use std::fmt;
 use tokio::process::Command;
 
 /// Plugin language definition
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum PluginLang {
     Python,
     Go,

@@ -26,6 +26,7 @@ pub struct Github {
     plugins: Vec<Plugin>,
 }
 
+// FIXME: move this inside a utils dir craters
 fn is_hidden(entry: &DirEntry) -> bool {
     entry
         .file_name()
@@ -38,7 +39,7 @@ impl Github {
     /// Create a new instance of the Repository
     /// with a name and a url
     pub fn new(name: &str, url: &URL) -> Self {
-        debug!("ADDING REPOSITORY: {} {}", name, url.url_string);
+        debug!("creating repository: {} {}", name, url.url_string);
         Github {
             name: name.to_owned(),
             url: url.clone(),
@@ -54,43 +55,61 @@ impl Github {
             .max_depth(1)
             .into_iter()
             .filter_entry(|dir_entry| !is_hidden(dir_entry));
+
         for plugin_dir in target_dirs {
             match plugin_dir {
                 Ok(plugin_path) => {
-                    let mut conf = None;
-                    for file in WalkDir::new(plugin_path.path().to_str().unwrap()).max_depth(1) {
+                    let mut path_to_plugin = String::new();
+                    let mut plugin_name = String::new();
+                    let mut plugin_lang = PluginLang::Unknown;
+
+                    /// try to understand the language from the file
+                    let files = WalkDir::new(plugin_path.path()).max_depth(1);
+                    for file in files {
                         let file_dir = file.unwrap().clone();
-                        let (path_to_plugin, plugin_name) =
+                        (path_to_plugin, plugin_name) =
                             get_plugin_info_from_path(file_dir.path()).unwrap();
+
                         let file_name = file_dir.file_name().to_str().unwrap();
-                        let plugin_lang = match file_name {
+                        plugin_lang = match file_name {
                             "requirements.txt" => PluginLang::Python,
                             "go.mod" => PluginLang::Go,
                             "cargo.toml" => PluginLang::Rust,
                             "pubspec.yaml" => PluginLang::Dart,
                             "package.json" => PluginLang::JavaScript,
                             "tsconfig.json" => PluginLang::TypeScript,
-
-                            "reckless.yml" | "reckless.yaml" => {
-                                let conf_path = format!("{}/{}", path_to_plugin, file_name);
-                                let mut conf_str = String::new();
-                                File::open(conf_path.as_str())
-                                    .await?
-                                    .read_to_string(&mut conf_str)
-                                    .await?;
-                                conf = serde_yaml::from_str(&conf_str).unwrap();
-                                continue;
-                            }
                             _ => continue,
                         };
-                        debug!("new plugin: {} {}", plugin_name, path_to_plugin);
-                        self.plugins.push(Plugin::new(
-                            plugin_name.as_str(),
-                            path_to_plugin.as_str(),
-                            plugin_lang,
-                            conf.clone(),
-                        ));
                     }
+                    debug!("possible plugin language: {:?}", plugin_lang);
+
+                    // check if the plugin has the custom configuration to read.
+                    let mut conf = None;
+                    for file in ["reckless.yaml", "reckless.yml"] {
+                        let conf_path = format!("{}/{}", path_to_plugin, file);
+                        if let Ok(mut conf_file) = File::open(conf_path).await {
+                            let mut conf_str = String::new();
+                            conf_file.read_to_string(&mut conf_str).await?;
+                            debug!("found plugin configuration: {}", conf_str);
+
+                            let conf_file = serde_yaml::from_str::<Conf>(&conf_str).unwrap();
+                            conf = Some(conf_file)
+                        }
+                    }
+
+                    // FIXME: the language should be just a guess, so in case the configuration
+                    // file is read, we should use the information inside this configuration
+                    // file and skip the iteration on all the file to understand the language.
+                    //
+                    // The language is already contained inside the configuration file.
+                    debug!("new plugin: {} {}", plugin_name, path_to_plugin);
+                    let plugin = Plugin::new(
+                        plugin_name.as_str(),
+                        path_to_plugin.as_str(),
+                        plugin_lang,
+                        conf.clone(),
+                    );
+                    self.plugins.push(plugin);
                 }
                 Err(err) => return Err(RecklessError::new(1, err.to_string().as_str())),
             }
