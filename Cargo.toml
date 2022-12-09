@@ -1,8 +1,8 @@
 [workspace]
 members = [
-        "reckless_lib",
-        "reckless_cmd",
-        "reckless_github",
+        "coffee_lib",
+        "coffee_cmd",
+        "coffee_github",
         "storage",
 ]
 resolver = "2"

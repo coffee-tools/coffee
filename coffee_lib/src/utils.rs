@@ -1,10 +1,10 @@
-use crate::errors::RecklessError;
+use crate::errors::CoffeeError;
 use crate::url::URL;
 use git2;
 use log::debug;
 use std::path::Path;
 
-pub fn get_plugin_info_from_path(path: &Path) -> Result<(String, String), RecklessError> {
+pub fn get_plugin_info_from_path(path: &Path) -> Result<(String, String), CoffeeError> {
     match path.parent() {
         Some(parent_path) => {
             let path_to_plugin = parent_path.to_path_buf().to_string_lossy().to_string();
@@ -15,11 +15,11 @@ pub fn get_plugin_info_from_path(path: &Path) -> Result<(String, String), Reckle
                 .to_string();
             Ok((path_to_plugin, plugin_name))
         }
-        None => Err(RecklessError::new(1, "Incorrect path")),
+        None => Err(CoffeeError::new(1, "Incorrect path")),
     }
 }
 
-pub fn clone_recursive_fix(repo: git2::Repository, url: &URL) -> Result<(), RecklessError> {
+pub fn clone_recursive_fix(repo: git2::Repository, url: &URL) -> Result<(), CoffeeError> {
     let repository = repo.submodules().unwrap_or_default();
     debug!("SUBMODULE COUNT: {}", repository.len());
     for (index, sub) in repository.iter().enumerate() {
@@ -32,7 +32,7 @@ pub fn clone_recursive_fix(repo: git2::Repository, url: &URL) -> Result<(), Reck
                 debug!("AT PATH {}", &path);
                 Ok(())
             }
-            Err(err) => Err(RecklessError::new(1, err.message())),
+            Err(err) => Err(CoffeeError::new(1, err.message())),
         };
     }
     Ok(())
@@ -71,7 +71,7 @@ mod tests {
     #[test]
     fn test_create_dir_in_home() {
         init();
-        let dir = ".reckless";
+        let dir = ".coffee";
         let path = create_dir_in_home(dir);
         assert_eq!(Path::new(&path).exists(), true);
         remove_dir_all(path).unwrap();

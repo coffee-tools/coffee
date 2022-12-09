@@ -1,4 +1,4 @@
-//! Reckless library, provides the building blocks to build a custom
+//! Coffee library, provides the building blocks to build a custom
 //! plugin manager for core lightning.
 //!
 //!

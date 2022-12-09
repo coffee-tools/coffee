@@ -1,5 +1,5 @@
 [package]
-name = "coffe_storage"
+name = "coffee_storage"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,4 +7,4 @@ edition = "2021"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 async-trait = "^0.1.57"
-reckless_lib = { path = "../reckless_lib" }
+coffee_lib = { path = "../coffee_lib" }
