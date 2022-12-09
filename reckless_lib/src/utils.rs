@@ -2,12 +2,9 @@ use crate::errors::RecklessError;
 use crate::url::URL;
 use git2;
 use log::debug;
-use std::env;
-use std::fs::create_dir_all;
 use std::path::Path;
-use std::path::PathBuf;
 
-pub fn get_plugin_info_from_path(path: PathBuf) -> Result<(String, String), RecklessError> {
+pub fn get_plugin_info_from_path(path: &Path) -> Result<(String, String), RecklessError> {
     match path.parent() {
         Some(parent_path) => {
             let path_to_plugin = parent_path.to_path_buf().to_string_lossy().to_string();

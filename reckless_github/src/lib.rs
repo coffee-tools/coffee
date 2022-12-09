@@ -24,7 +24,7 @@ mod tests {
     #[tokio::test]
     async fn repository_is_initialized_ok() {
         init();
-        let name = "hello";
+        let name = "cln_plugins";
         let url = URL::new(
             "/tmp",
             "https://github.com/lightningd/plugins",

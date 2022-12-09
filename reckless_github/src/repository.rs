@@ -1,8 +1,5 @@
-use std::fmt::format;
-
 use async_trait::async_trait;
 use git2;
-use glob::glob;
 use log::debug;
 use reckless_lib::errors::RecklessError;
 use reckless_lib::plugin::Plugin;
@@ -14,6 +11,8 @@ use reckless_lib::utils::clone_recursive_fix;
 use reckless_lib::utils::get_plugin_info_from_path;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
+use walkdir::DirEntry;
+use walkdir::WalkDir;
 
 pub struct Github {
     /// the url of the repository to be able
@@ -25,6 +24,14 @@ pub struct Github {
     /// all the plugin that are listed inside the
     /// repository
     plugins: Vec<Plugin>,
+}
+
+fn is_hidden(entry: &DirEntry) -> bool {
+    entry
+        .file_name()
+        .to_str()
+        .map(|s| s.starts_with("."))
+        .unwrap_or(false)
 }
 
 impl Github {
@@ -43,82 +50,46 @@ impl Github {
     /// related to the plugins
     pub async fn index_repository(&mut self) -> Result<(), RecklessError> {
         let repo_path = &self.url.path_string;
-        let pattern = format!("{}/[!.]*/*", &repo_path);
+        let target_dirs = WalkDir::new(repo_path)
+            .max_depth(1)
+            .into_iter()
+            .filter_entry(|dir_entry| !is_hidden(dir_entry));
+        for plugin_dir in target_dirs {
+            match plugin_dir {
+                Ok(plugin_path) => {
+                    let mut conf = None;
+                    for file in WalkDir::new(plugin_path.path().to_str().unwrap()).max_depth(1) {
+                        let file_dir = file.unwrap().clone();
+                        let (path_to_plugin, plugin_name) =
+                            get_plugin_info_from_path(file_dir.path()).unwrap();
+                        let file_name = file_dir.file_name().to_str().unwrap();
+                        let plugin_lang = match file_name {
+                            "requirements.txt" => PluginLang::Python,
+                            "go.mod" => PluginLang::Go,
+                            "cargo.toml" => PluginLang::Rust,
+                            "pubspec.yaml" => PluginLang::Dart,
+                            "package.json" => PluginLang::JavaScript,
+                            "tsconfig.json" => PluginLang::TypeScript,
 
-        // FIXME rewrite it in a way that is more clear that
-        // we are walking all the plugins.
-        // for plugin_dir in repo_pat:
-        //    let conf = None
-        //    let plugin = None
-        //    for file in plugin_dir:
-        //
-        //     let lang = match file {
-        //          ...
-        //      }
-        //      plugun = {conf, lang ...}
-        //      self.plugins(plugin)
-        for plugin in glob(&pattern).unwrap() {
-            match plugin {
-                Ok(path) => {
-                    let (path_to_plugin, plugin_name) =
-                        get_plugin_info_from_path(path.clone()).unwrap();
-
-                    let file_name = path.file_name().unwrap().to_str().unwrap();
-                    match file_name {
-                        "requirements.txt" => {
-                            self.plugins.push(Plugin::new(
-                                &plugin_name,
-                                &path_to_plugin,
-                                PluginLang::Python,
-                            ));
-                        }
-                        "go.mod" => {
-                            self.plugins.push(Plugin::new(
-                                &plugin_name,
-                                &path_to_plugin,
-                                PluginLang::Go,
-                            ));
-                        }
-                        "cargo.toml" => {
-                            self.plugins.push(Plugin::new(
-                                &plugin_name,
-                                &path_to_plugin,
-                                PluginLang::Rust,
-                            ));
-                        }
-                        "pubspec.yaml" => {
-                            self.plugins.push(Plugin::new(
-                                &plugin_name,
-                                &path_to_plugin,
-                                PluginLang::Dart,
-                            ));
-                        }
-                        "package.json" => {
-                            self.plugins.push(Plugin::new(
-                                &plugin_name,
-                                &path_to_plugin,
-                                PluginLang::JavaScript,
-                            ));
-                        }
-                        "tsconfig.json" => {
-                            // FIXME: avoid to unwrap here
-                            self.plugins.push(Plugin::new(
-                                plugin_name.as_str(),
-                                path_to_plugin.as_str(),
-                                PluginLang::TypeScript,
-                            ));
-                        }
-                        "reckless.yml" | "reckless.yaml" => {
-                            let conf_path = format!("{}/{}", path_to_plugin, file_name);
-                            let mut conf_str = String::new();
-                            File::open(conf_path.as_str())
-                                .await?
-                                .read_to_string(&mut conf_str)
-                                .await?;
-                            let _: Conf = serde_yaml::from_str(&conf_str).unwrap();
-                            // FIXME: store the conf inside the plugin
-                        }
-                        _ => continue,
+                            "reckless.yml" | "reckless.yaml" => {
+                                let conf_path = format!("{}/{}", path_to_plugin, file_name);
+                                let mut conf_str = String::new();
+                                File::open(conf_path.as_str())
+                                    .await?
+                                    .read_to_string(&mut conf_str)
+                                    .await?;
+                                conf = serde_yaml::from_str(&conf_str).unwrap();
+                                continue;
+                            }
+                            _ => continue,
+                        };
+                        debug!("new plugin: {} {}", plugin_name, path_to_plugin);
+                        self.plugins.push(Plugin::new(
+                            plugin_name.as_str(),
+                            path_to_plugin.as_str(),
+                            plugin_lang,
+                            conf.clone(),
+                        ));
                     }
                 }
                 Err(err) => return Err(RecklessError::new(1, err.to_string().as_str())),
