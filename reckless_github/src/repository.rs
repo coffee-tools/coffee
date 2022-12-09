@@ -50,11 +50,11 @@ impl Github {
     /// related to the plugins
     pub async fn index_repository(&mut self) -> Result<(), RecklessError> {
         let repo_path = &self.url.path_string;
-        for plugin_dir in WalkDir::new(repo_path)
+        let target_dirs = WalkDir::new(repo_path)
             .max_depth(1)
             .into_iter()
-            .filter_entry(|dir_entry| !is_hidden(dir_entry))
-        {
+            .filter_entry(|dir_entry| !is_hidden(dir_entry));
+        for plugin_dir in target_dirs {
             match plugin_dir {
                 Ok(plugin_path) => {
                     let mut conf = None;
@@ -80,11 +80,10 @@ impl Github {
                                     .await?;
                                 conf = serde_yaml::from_str(&conf_str).unwrap();
                                 continue;
-                                // FIXME: store the conf inside the plugin
                             }
                             _ => continue,
                         };
-                        debug!("PLUGIN: {} {}", plugin_name, path_to_plugin);
+                        debug!("new plugin: {} {}", plugin_name, path_to_plugin);
                         self.plugins.push(Plugin::new(
                             plugin_name.as_str(),
                             path_to_plugin.as_str(),
