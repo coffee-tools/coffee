@@ -26,10 +26,10 @@ impl RecklessConf {
     pub async fn new(conf: &RecklessArgs) -> Result<Self, RecklessError> {
         let mut def_path = env::home_dir().unwrap().to_str().unwrap().to_string();
         // FIXME: check for double slash
-        def_path += ".coffe";
+        def_path += "/.coffe";
         let mut reckless = RecklessConf {
             network: "bitcoin".to_owned(),
-            root_path: format!("{def_path}/"),
+            root_path: format!("{def_path}"),
             config: format!("{def_path}/bitcoin/coffe.conf"),
             plugins_path: vec![],
         };
