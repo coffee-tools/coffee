@@ -37,14 +37,12 @@ pub struct CoffeeManager {
 
 impl CoffeeManager {
     pub async fn new(conf: &CoffeeArgs) -> Result<Self, CoffeeError> {
+        let conf = CoffeeConf::new(conf).await?;
         let mut coffee = CoffeeManager {
-            config: CoffeeConf::new(conf).await?,
+            config: conf.clone(),
             repos: vec![],
             plugins: vec![],
-            // FIXME: store the path from the conf inside the
-            // storage, this is needed to get the position
-            // where to store the disk info
-            storage: Box::new(FileStorage {}),
+            storage: Box::new(FileStorage::new(&conf.root_path)),
         };
         coffee.inventory().await?;
         Ok(coffee)
@@ -53,8 +51,7 @@ impl CoffeeManager {
     /// when coffee is configure run an inventory to collect all the necessary information
     /// about the coffee ecosystem.
     async fn inventory(&mut self) -> Result<(), CoffeeError> {
-        let mut stored = CoffeStorageInfo {};
-        self.storage.load(&mut stored).await?;
+        let store: CoffeStorageInfo = self.storage.load().await?;
         // FIXME: bind the information from the storage
         // FIXME: what are the information missed that
         // needed to be indexed?

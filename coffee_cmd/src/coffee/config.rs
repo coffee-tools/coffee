@@ -8,6 +8,7 @@ use super::cmd::CoffeeArgs;
 
 /// Custom coffee configuration, given by a command line list of arguments
 /// or a coffee configuration file.
+#[derive(Clone)]
 pub struct CoffeeConf {
     /// Network configuration related
     /// to core lightning network
