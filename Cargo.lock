@@ -124,6 +124,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "coffee_lib",
+ "coffee_storage",
  "env_logger",
  "git2",
  "log",

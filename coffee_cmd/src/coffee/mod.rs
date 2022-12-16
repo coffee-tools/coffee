@@ -1,6 +1,7 @@
 //! Coffee mod implementation
 use coffee_lib::url::URL;
 use coffee_storage::file::FileStorage;
+use coffee_storage::model::repository::Repository as RepositoryInfo;
 use coffee_storage::storage::StorageManager;
 use log::debug;
 use serde::{Deserialize, Serialize};
@@ -22,7 +23,10 @@ mod config;
 #[derive(Serialize, Deserialize)]
 /// FIXME: move the list of plugin
 /// and the list of repository inside this struct.
-pub struct CoffeStorageInfo {}
+pub struct CoffeStorageInfo {
+    pub config: config::CoffeeConf,
+    pub repositories: Vec<RepositoryInfo>,
+}
 
 pub struct CoffeeManager {
     config: config::CoffeeConf,

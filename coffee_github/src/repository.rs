@@ -7,6 +7,8 @@ use coffee_lib::repository::Repository;
 use coffee_lib::url::URL;
 use coffee_lib::utils::clone_recursive_fix;
 use coffee_lib::utils::get_plugin_info_from_path;
+use coffee_storage::model::repository::Kind;
+use coffee_storage::model::repository::Repository as StorageRepository;
 use git2;
 use log::debug;
 use tokio::fs::File;
@@ -157,5 +159,26 @@ impl Repository for Github {
             }
         }
         None
+    }
+}
+
+impl From<StorageRepository> for Github {
+    fn from(value: StorageRepository) -> Self {
+        Github {
+            url: value.url,
+            name: value.name,
+            plugins: value.plugins,
+        }
+    }
+}
+
+impl From<Github> for StorageRepository {
+    fn from(value: Github) -> Self {
+        StorageRepository {
+            kind: Kind::Git,
+            name: value.name,
+            url: value.url,
+            plugins: value.plugins,
+        }
     }
 }

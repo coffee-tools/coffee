@@ -3,12 +3,13 @@
 use std::env;
 
 use coffee_lib::errors::CoffeeError;
+use serde::{Deserialize, Serialize};
 
 use super::cmd::CoffeeArgs;
 
 /// Custom coffee configuration, given by a command line list of arguments
 /// or a coffee configuration file.
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct CoffeeConf {
     /// Network configuration related
     /// to core lightning network
