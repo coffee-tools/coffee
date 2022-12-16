@@ -1,11 +1,12 @@
 //! Plugin module that abstract the concept of a cln plugin
 //! from a plugin manager point of view.
 use crate::{errors::CoffeeError, plugin_conf::Conf};
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use tokio::process::Command;
 
 /// Plugin language definition
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum PluginLang {
     Python,
     Go,
@@ -77,7 +78,7 @@ impl PluginLang {
 }
 
 /// Plugin struct definition
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Plugin {
     name: String,
     path: String,
