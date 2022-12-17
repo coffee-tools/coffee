@@ -19,9 +19,9 @@ async fn main() -> Result<(), CoffeeError> {
     let result = match args.command {
         CoffeeCommand::Install { plugin } => {
             let mut unique_plugin: HashSet<String> = HashSet::new();
-            plugin
-                .iter()
-                .map(|plugin| unique_plugin.insert(plugin.to_owned()));
+            plugin.iter().for_each(|plugin| {
+                unique_plugin.insert(plugin.to_owned());
+            });
             coffee.install(&unique_plugin).await
         }
         CoffeeCommand::Remove => todo!(),

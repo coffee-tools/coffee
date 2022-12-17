@@ -1,12 +1,14 @@
 //! Repository module implementation that contains all the code to build a repository
 //! for a plugin manager.
+use std::any::Any;
+
 use crate::errors::CoffeeError;
 use crate::plugin::Plugin;
 
 use async_trait::async_trait;
 
 #[async_trait]
-pub trait Repository {
+pub trait Repository: Any {
     /// init the plugin manager repository in local
     /// machine.
     ///
@@ -18,4 +20,6 @@ pub trait Repository {
 
     /// return the list of plugin that are register contained inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, CoffeeError>;
+
+    fn as_any(&self) -> &dyn Any;
 }

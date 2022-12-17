@@ -3,4 +3,5 @@
 //! order to define the interface to manage the
 //! information to store on disk.
 pub mod file;
+pub mod model;
 pub mod storage;

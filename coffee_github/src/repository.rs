@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use async_trait::async_trait;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin::Plugin;
@@ -7,6 +9,8 @@ use coffee_lib::repository::Repository;
 use coffee_lib::url::URL;
 use coffee_lib::utils::clone_recursive_fix;
 use coffee_lib::utils::get_plugin_info_from_path;
+use coffee_storage::model::repository::Kind;
+use coffee_storage::model::repository::Repository as StorageRepository;
 use git2;
 use log::debug;
 use tokio::fs::File;
@@ -157,5 +161,51 @@ impl Repository for Github {
             }
         }
         None
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl From<StorageRepository> for Github {
+    fn from(value: StorageRepository) -> Self {
+        Github {
+            url: value.url,
+            name: value.name,
+            plugins: value.plugins,
+        }
+    }
+}
+
+impl From<&StorageRepository> for Github {
+    fn from(value: &StorageRepository) -> Self {
+        Github {
+            url: value.url.to_owned(),
+            name: value.name.to_owned(),
+            plugins: value.plugins.to_owned(),
+        }
+    }
+}
+
+impl From<Github> for StorageRepository {
+    fn from(value: Github) -> Self {
+        StorageRepository {
+            kind: Kind::Git,
+            name: value.name,
+            url: value.url,
+            plugins: value.plugins,
+        }
+    }
+}
+
+impl From<&Github> for StorageRepository {
+    fn from(value: &Github) -> Self {
+        StorageRepository {
+            kind: Kind::Git,
+            name: value.name.to_owned(),
+            url: value.url.to_owned(),
+            plugins: value.plugins.to_owned(),
+        }
     }
 }

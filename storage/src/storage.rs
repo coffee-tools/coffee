@@ -3,7 +3,7 @@
 //! to work with the the plugin manager
 //! architecture.
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 
 #[async_trait]
 pub trait StorageManager<T> {
@@ -17,7 +17,7 @@ pub trait StorageManager<T> {
 
     /// async call to load the data that was made persistent
     /// from the previous `store` call.
-    async fn load(&self, to_load: &mut T) -> Result<(), Self::Err>
+    async fn load<'c>(&self) -> Result<T, Self::Err>
     where
-        T: Deserialize<'static> + Send + Sync;
+        T: DeserializeOwned + Send + Sync;
 }
