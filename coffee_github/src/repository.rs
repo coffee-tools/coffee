@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use async_trait::async_trait;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin::Plugin;
@@ -160,6 +162,10 @@ impl Repository for Github {
         }
         None
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 impl From<StorageRepository> for Github {
@@ -172,6 +178,16 @@ impl From<StorageRepository> for Github {
     }
 }
 
+impl From<&StorageRepository> for Github {
+    fn from(value: &StorageRepository) -> Self {
+        Github {
+            url: value.url.to_owned(),
+            name: value.name.to_owned(),
+            plugins: value.plugins.to_owned(),
+        }
+    }
+}
+
 impl From<Github> for StorageRepository {
     fn from(value: Github) -> Self {
         StorageRepository {
@@ -179,6 +195,17 @@ impl From<Github> for StorageRepository {
             name: value.name,
             url: value.url,
             plugins: value.plugins,
+        }
+    }
+}
+
+impl From<&Github> for StorageRepository {
+    fn from(value: &Github) -> Self {
+        StorageRepository {
+            kind: Kind::Git,
+            name: value.name.to_owned(),
+            url: value.url.to_owned(),
+            plugins: value.plugins.to_owned(),
         }
     }
 }
