@@ -3,6 +3,7 @@
 //!
 //!
 //! author: Vincenzo Palazzo <vincenzopalazzodev@gmail.com>
+pub mod cln_conf;
 pub mod errors;
 pub mod plugin;
 pub mod plugin_conf;
