@@ -3,6 +3,6 @@ members = [
         "coffee_lib",
         "coffee_cmd",
         "coffee_github",
-        "storage",
+        "coffee_storage",
 ]
 resolver = "2"

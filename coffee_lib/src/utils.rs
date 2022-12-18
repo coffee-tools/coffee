@@ -19,25 +19,6 @@ pub fn get_plugin_info_from_path(path: &Path) -> Result<(String, String), Coffee
     }
 }
 
-pub fn clone_recursive_fix(repo: git2::Repository, url: &URL) -> Result<(), CoffeeError> {
-    let repository = repo.submodules().unwrap_or_default();
-    debug!("SUBMODULE COUNT: {}", repository.len());
-    for (index, sub) in repository.iter().enumerate() {
-        debug!("URL {}: {}", index + 1, sub.url().unwrap());
-        let path = format!("{}/{}", &url.path_string, sub.path().to_str().unwrap());
-        match git2::Repository::clone(sub.url().unwrap(), &path) {
-            // Fix error handling
-            Ok(_) => {
-                debug!("ADDED {}", sub.url().unwrap());
-                debug!("AT PATH {}", &path);
-                Ok(())
-            }
-            Err(err) => Err(CoffeeError::new(1, err.message())),
-        };
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use std::fs::create_dir_all;

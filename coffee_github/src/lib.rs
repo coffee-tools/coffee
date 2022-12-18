@@ -1,6 +1,7 @@
 //! Github repository implementation
 
 pub mod repository;
+mod utils;
 
 #[cfg(test)]
 mod tests {

@@ -1,5 +1,6 @@
 use std::any::Any;
 
+use crate::utils::clone_recursive_fix;
 use async_trait::async_trait;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin::Plugin;
@@ -7,7 +8,6 @@ use coffee_lib::plugin::PluginLang;
 use coffee_lib::plugin_conf::Conf;
 use coffee_lib::repository::Repository;
 use coffee_lib::url::URL;
-use coffee_lib::utils::clone_recursive_fix;
 use coffee_lib::utils::get_plugin_info_from_path;
 use coffee_storage::model::repository::Kind;
 use coffee_storage::model::repository::Repository as StorageRepository;
@@ -137,7 +137,7 @@ impl Repository for Github {
         let res = git2::Repository::clone(&self.url.url_string, &self.url.path_string);
         match res {
             Ok(repo) => {
-                let clone = clone_recursive_fix(repo, &self.url);
+                let clone = clone_recursive_fix(repo, &self.url).await;
                 self.index_repository().await?;
                 clone
             }
