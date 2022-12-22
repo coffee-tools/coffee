@@ -131,7 +131,7 @@ impl Repository for Github {
     /// details.
     async fn init(&mut self) -> Result<(), CoffeeError> {
         debug!(
-            "INITIALIZING REPOSITORY: {} {} > {}",
+            "initializing repository: {} {} > {}",
             self.name, &self.url.url_string, &self.url.path_string,
         );
         let res = git2::Repository::clone(&self.url.url_string, &self.url.path_string);

@@ -7,7 +7,7 @@
 //! a more smart version of storage manager
 use crate::storage::StorageManager;
 use async_trait::async_trait;
-use coffee_lib::{errors::CoffeeError, plugin_manager::PluginManager};
+use coffee_lib::errors::CoffeeError;
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::{
     fs::File,

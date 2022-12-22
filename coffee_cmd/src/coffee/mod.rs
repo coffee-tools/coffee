@@ -1,4 +1,6 @@
 //! Coffee mod implementation
+use coffee_lib::cln_conf::CLNConf;
+use coffee_lib::plugin::Plugin;
 use coffee_lib::url::URL;
 use coffee_storage::file::FileStorage;
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
@@ -6,7 +8,11 @@ use coffee_storage::storage::StorageManager;
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::io::prelude;
+use std::path::Path;
 use std::vec::Vec;
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 
 use async_trait::async_trait;
 use coffee_github::repository::Github;
@@ -52,8 +58,8 @@ pub struct CoffeeManager {
     config: config::CoffeeConf,
     /// List of repositories
     repos: Vec<Box<dyn Repository + Send + Sync>>,
-    /// List of plugins installed
-    plugins: Vec<String>,
+    /// Core lightning configuration
+    cln_config: CLNConf,
     /// storage instance to make persistent all the
     /// plugin manager information on disk
     storage: Box<dyn StorageManager<CoffeStorageInfo, Err = CoffeeError> + Send + Sync>,
@@ -64,8 +70,8 @@ impl CoffeeManager {
         let conf = CoffeeConf::new(conf).await?;
         let mut coffee = CoffeeManager {
             config: conf.clone(),
+            cln_config: CLNConf::new(&conf.network, &conf.cln_config),
             repos: vec![],
-            plugins: vec![],
             storage: Box::new(FileStorage::new(&conf.root_path)),
         };
         coffee.inventory().await?;
@@ -90,6 +96,7 @@ impl CoffeeManager {
                 self.repos.push(Box::new(repo));
             }
         });
+        debug!("finish pligin manager inventory");
         // FIXME: what are the information missed that
         // needed to be indexed?
         Ok(())
@@ -97,6 +104,14 @@ impl CoffeeManager {
 
     pub fn storage_info(&self) -> CoffeStorageInfo {
         CoffeStorageInfo::from(self)
+    }
+
+    pub async fn update_cln_conf(&self) -> Result<(), CoffeeError> {
+        let mut file = File::create(self.cln_config.path.as_str()).await?;
+        file.write(self.cln_config.to_string().as_bytes()).await?;
+        file.flush().await?;
+        debug!("stored all the cln info in {}", self.cln_config.path);
+        Ok(())
     }
 }
 
@@ -109,7 +124,6 @@ impl PluginManager for CoffeeManager {
 
     async fn install(&mut self, plugins: &HashSet<String>) -> Result<(), CoffeeError> {
         debug!("installing plugins {:?}", plugins);
-
         // keep track if the plugin that are installed with success
         let mut installed = HashSet::new();
         for repo in &self.repos {
@@ -123,17 +137,12 @@ impl PluginManager for CoffeeManager {
                         Ok(path) => {
                             debug!("runnable plugin path {path}");
                             self.config.plugins_path.push(path);
+                            self.cln_config.plugins.push(plugin.clone());
                             installed.insert(plugin_name);
                             continue;
                         }
                         Err(err) => return Err(err),
                     }
-                }
-
-                // if we install all the plugin we return Ok
-                if plugins.len() == installed.len() {
-                    self.storage.store(&self.storage_info()).await?;
-                    return Ok(());
                 }
             }
         }
@@ -144,6 +153,12 @@ impl PluginManager for CoffeeManager {
             if !installed.contains(plugin_name) {
                 missed_plugins.push(plugin_name);
             }
+        }
+
+        if missed_plugins.is_empty() {
+            self.storage.store(&self.storage_info()).await?;
+            self.update_cln_conf().await?;
+            return Ok(());
         }
         let err = CoffeeError::new(
             1,
