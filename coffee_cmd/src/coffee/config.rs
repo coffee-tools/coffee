@@ -1,9 +1,10 @@
 //! Coffee configuration utils.
 
-use std::env;
+use std::{env, path::Path};
 
 use coffee_lib::errors::CoffeeError;
 use serde::{Deserialize, Serialize};
+use tokio::fs::create_dir;
 
 use super::cmd::CoffeeArgs;
 
@@ -13,14 +14,21 @@ use super::cmd::CoffeeArgs;
 pub struct CoffeeConf {
     /// Network configuration related
     /// to core lightning network
-    network: String,
-    /// plugin manager configuration path
-    config: String,
+    pub network: String,
+    /// core lightning configuration file path
+    pub cln_config: String,
     /// root path plugin manager
     pub root_path: String,
     /// path of all plugin that are installed
     /// with the plugin manager.
     pub plugins_path: Vec<String>,
+}
+
+async fn check_dir_or_make_if_missing(path: String) -> Result<(), CoffeeError> {
+    if !Path::exists(Path::new(&path.to_owned())) {
+        create_dir(path).await?;
+    }
+    Ok(())
 }
 
 impl CoffeeConf {
@@ -29,10 +37,13 @@ impl CoffeeConf {
         let mut def_path = env::home_dir().unwrap().to_str().unwrap().to_string();
         // FIXME: check for double slash
         def_path += "/.coffee";
+        check_dir_or_make_if_missing(def_path.to_string()).await?;
+        check_dir_or_make_if_missing(format!("{def_path}/bitcoin")).await?;
+        check_dir_or_make_if_missing(format!("{def_path}/testnet")).await?;
         let mut coffee = CoffeeConf {
             network: "bitcoin".to_owned(),
             root_path: format!("{def_path}"),
-            config: format!("{def_path}/bitcoin/coffee.conf"),
+            cln_config: format!("{def_path}/bitcoin/coffee.conf"),
             plugins_path: vec![],
         };
 
@@ -54,11 +65,11 @@ impl CoffeeConf {
     fn bind_cmd_line_params(&mut self, conf: &CoffeeArgs) -> Result<(), CoffeeError> {
         if let Some(network) = &conf.network {
             self.network = network.to_owned();
-            self.config = format!("{}/{}/coffee.conf", self.root_path, self.network);
+            self.cln_config = format!("{}/{}/coffee.conf", self.root_path, self.network);
         }
 
         if let Some(config) = &conf.conf {
-            self.config = config.to_owned();
+            self.cln_config = config.to_owned();
         }
 
         // FIXME: be able to put the directory also in another place!

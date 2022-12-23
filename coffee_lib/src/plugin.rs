@@ -25,21 +25,15 @@ impl PluginLang {
                  * 2. return the path of the main file */
                 let req_file = format!("{}/requirements.txt", path);
                 let main_file = format!("{}/{}.py", path, name);
-                match Command::new("pip")
+                // FIXME: enable the verbose command
+                let mut child = Command::new("pip")
                     .arg("install")
                     .arg("-r")
                     .arg(req_file.as_str())
-                    .output()
-                    .await
-                {
-                    Ok(_) => Ok(main_file),
-                    Err(err) => {
-                        return Err(CoffeeError::new(
-                            1,
-                            &format!("problem installing python plugin {err}"),
-                        ))
-                    }
-                }
+                    .spawn()
+                    .expect("not possible run the command");
+                let _ = child.wait().await?;
+                Ok(main_file)
             }
             PluginLang::Go => {
                 /* better instructions needed here */
@@ -81,7 +75,7 @@ impl PluginLang {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Plugin {
     name: String,
-    path: String,
+    pub path: String,
     lang: PluginLang,
     conf: Option<Conf>,
 }
@@ -105,21 +99,11 @@ impl Plugin {
             if let Some(script) = &conf.plugin.install {
                 let cmds = script.split("\n"); // Check if the script contains `\`
                 for cmd in cmds {
-                    let cmd_result = Command::new(cmd)
+                    let mut child = Command::new(cmd)
                         .current_dir(self.path.clone())
-                        .output()
-                        .await;
-                    match cmd_result {
-                        Ok(_) => {}
-                        Err(err) => {
-                            return Err(CoffeeError::new(
-                                1,
-                                &format!(
-                                    "problem installing, error executing plugin commands : {err}"
-                                ),
-                            ))
-                        }
-                    }
+                        .spawn()
+                        .expect("not possible run the command");
+                    let _ = child.wait().await?;
                 }
                 format!("{}/{}", self.path, conf.plugin.main)
             } else {

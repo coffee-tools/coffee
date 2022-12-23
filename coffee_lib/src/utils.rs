@@ -1,7 +1,4 @@
 use crate::errors::CoffeeError;
-use crate::url::URL;
-use git2;
-use log::debug;
 use std::path::Path;
 
 pub fn get_plugin_info_from_path(path: &Path) -> Result<(String, String), CoffeeError> {
