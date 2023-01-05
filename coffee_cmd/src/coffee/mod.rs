@@ -1,23 +1,19 @@
 //! Coffee mod implementation
-use coffee_lib::cln_conf::CLNConf;
-use coffee_lib::url::URL;
-use coffee_storage::file::FileStorage;
-use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
-use coffee_storage::storage::StorageManager;
-use log::{debug, info};
-use serde::{Deserialize, Serialize};
-use std::vec::Vec;
-use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
-
+use self::cmd::CoffeeArgs;
+use self::config::CoffeeConf;
 use async_trait::async_trait;
+use clightningrpc_conf::{CLNConf, SyncCLNConf};
 use coffee_github::repository::Github;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
-
-use self::cmd::CoffeeArgs;
-use self::config::CoffeeConf;
+use coffee_lib::url::URL;
+use coffee_storage::file::FileStorage;
+use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
+use coffee_storage::storage::StorageManager;
+use log::{debug, error, info, warn};
+use serde::{Deserialize, Serialize};
+use std::vec::Vec;
 
 pub mod cmd;
 mod config;
@@ -52,10 +48,12 @@ impl From<&CoffeeManager> for CoffeStorageInfo {
 
 pub struct CoffeeManager {
     config: config::CoffeeConf,
-    /// List of repositories
     repos: Vec<Box<dyn Repository + Send + Sync>>,
-    /// Core lightning configuration
-    cln_config: CLNConf,
+    /// Core lightning configuration managed by coffe
+    coffe_cln_config: CLNConf,
+    /// Core lightning configuration that include the
+    /// configuration managed by coffe
+    cln_config: Option<CLNConf>,
     /// storage instance to make persistent all the
     /// plugin manager information on disk
     storage: Box<dyn StorageManager<CoffeStorageInfo, Err = CoffeeError> + Send + Sync>,
@@ -66,9 +64,10 @@ impl CoffeeManager {
         let conf = CoffeeConf::new(conf).await?;
         let mut coffee = CoffeeManager {
             config: conf.clone(),
-            cln_config: CLNConf::new(&conf.network, &conf.cln_config),
+            coffe_cln_config: CLNConf::new(conf.config_path, true),
             repos: vec![],
             storage: Box::new(FileStorage::new(&conf.root_path)),
+            cln_config: None,
         };
         coffee.inventory().await?;
         Ok(coffee)
@@ -92,6 +91,11 @@ impl CoffeeManager {
                 self.repos.push(Box::new(repo));
             }
         });
+        if let Err(err) = self.coffe_cln_config.parse() {
+            error!("{}", err.cause);
+        }
+        self.load_cln_conf().await?;
+        debug!("cln conf {:?}", self.coffe_cln_config);
         debug!("finish pligin manager inventory");
         // FIXME: what are the information missed that
         // needed to be indexed?
@@ -102,11 +106,35 @@ impl CoffeeManager {
         CoffeStorageInfo::from(self)
     }
 
-    pub async fn update_cln_conf(&self) -> Result<(), CoffeeError> {
-        let mut file = File::create(self.cln_config.path.as_str()).await?;
-        file.write(self.cln_config.to_string().as_bytes()).await?;
-        file.flush().await?;
-        debug!("stored all the cln info in {}", self.cln_config.path);
+    pub async fn update_conf(&self) -> Result<(), CoffeeError> {
+        self.coffe_cln_config.flush()?;
+        debug!("stored all the cln info in {}", self.coffe_cln_config);
+        Ok(())
+    }
+
+    pub async fn load_cln_conf(&mut self) -> Result<(), CoffeeError> {
+        if self.config.cln_config_path.is_none() {
+            return Ok(());
+        }
+        let path = self.config.cln_config_path.clone().unwrap();
+        let mut file = CLNConf::new(path, false);
+        file.parse()
+            .map_err(|err| CoffeeError::new(err.core, &err.cause))?;
+        debug!("{:#?}", file.fields);
+        self.cln_config = Some(file);
+        Ok(())
+    }
+
+    pub async fn setup_with_cln(&mut self, cln_conf_path: &str) -> Result<(), CoffeeError> {
+        if !self.cln_config.is_none() {
+            warn!("you are ovveriding the previous set up");
+        }
+        self.config.cln_config_path = Some(cln_conf_path.to_owned());
+        self.load_cln_conf().await?;
+        let mut conf = self.cln_config.clone().unwrap();
+        conf.add_subconf(self.coffe_cln_config.clone())
+            .map_err(|err| CoffeeError::new(1, &err.cause))?;
+        conf.flush()?;
         Ok(())
     }
 }
@@ -118,20 +146,23 @@ impl PluginManager for CoffeeManager {
         Ok(())
     }
 
-    async fn install(&mut self, plugin: &str) -> Result<(), CoffeeError> {
+    async fn install(&mut self, plugin: &str, verbose: bool) -> Result<(), CoffeeError> {
         debug!("installing plugin: {plugin}");
         // keep track if the plugin that are installed with success
         for repo in &self.repos {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
-                let result = plugin.configure().await;
+                // We have to insert the verbose command here!
+                let result = plugin.configure(verbose).await;
                 match result {
                     Ok(path) => {
                         debug!("runnable plugin path {path}");
-                        self.config.plugins_path.push(path);
-                        self.cln_config.plugins.push(plugin.clone());
+                        self.config.plugins_path.push(path.to_string());
+                        self.coffe_cln_config
+                            .add_conf("plugin", &path.to_owned())
+                            .map_err(|err| CoffeeError::new(1, &err.cause))?;
 
                         self.storage.store(&self.storage_info()).await?;
-                        self.update_cln_conf().await?;
+                        self.update_conf().await?;
                         return Ok(());
                     }
                     Err(err) => return Err(err),
@@ -153,6 +184,10 @@ impl PluginManager for CoffeeManager {
         // FIXME: Fix debug message with the list of plugins to be upgraded
         debug!("upgrading plugins");
         Ok(())
+    }
+
+    async fn setup(&mut self, cln_conf_path: &str) -> Result<(), CoffeeError> {
+        self.setup_with_cln(cln_conf_path).await
     }
 
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError> {

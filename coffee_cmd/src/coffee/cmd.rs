@@ -17,9 +17,14 @@ pub struct CoffeeArgs {
 /// Coffee subcommand of the command line daemon.
 #[derive(Debug, Subcommand)]
 pub enum CoffeeCommand {
-    /// Install a single or a list of plugins.
+    /// Install a single by name.
     #[clap(arg_required_else_help = true)]
-    Install { plugin: String },
+    Install {
+        plugin: String,
+
+        #[arg(short, long ,action = clap::ArgAction::SetTrue)]
+        verbose: bool,
+    },
     /// upgrade a single or a list of plugins.
     #[clap(arg_required_else_help = true)]
     Upgrade,
@@ -35,6 +40,10 @@ pub enum CoffeeCommand {
         #[clap(subcommand)]
         action: RemoteAction,
     },
+    /// Configur coffe with the core lightning
+    /// configuration
+    #[clap(arg_required_else_help = true)]
+    Setup { cln_conf: String },
 }
 
 #[derive(Debug, Subcommand)]

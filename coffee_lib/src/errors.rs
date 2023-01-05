@@ -34,3 +34,12 @@ impl From<std::io::Error> for CoffeeError {
         }
     }
 }
+
+impl From<String> for CoffeeError {
+    fn from(value: String) -> Self {
+        CoffeeError {
+            code: 1,
+            msg: value,
+        }
+    }
+}
