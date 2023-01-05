@@ -1,9 +1,9 @@
 //! Coffee configuration utils.
 
-use std::{env, path::Path};
-
+use clightningrpc_conf::CLNConf;
 use coffee_lib::errors::CoffeeError;
 use serde::{Deserialize, Serialize};
+use std::{env, path::Path};
 use tokio::fs::create_dir;
 
 use super::cmd::CoffeeArgs;
@@ -16,7 +16,7 @@ pub struct CoffeeConf {
     /// to core lightning network
     pub network: String,
     /// core lightning configuration file path
-    pub cln_config: String,
+    pub cln_config_path: String,
     /// root path plugin manager
     pub root_path: String,
     /// path of all plugin that are installed
@@ -44,7 +44,7 @@ impl CoffeeConf {
         let mut coffee = CoffeeConf {
             network: "bitcoin".to_owned(),
             root_path: format!("{def_path}"),
-            cln_config: format!("{def_path}/bitcoin/coffee.conf"),
+            cln_config_path: format!("{def_path}/bitcoin/coffee.conf"),
             plugins_path: vec![],
         };
 
@@ -66,11 +66,11 @@ impl CoffeeConf {
     fn bind_cmd_line_params(&mut self, conf: &CoffeeArgs) -> Result<(), CoffeeError> {
         if let Some(network) = &conf.network {
             self.network = network.to_owned();
-            self.cln_config = format!("{}/{}/coffee.conf", self.root_path, self.network);
+            self.cln_config_path = format!("{}/{}/coffee.conf", self.root_path, self.network);
         }
 
         if let Some(config) = &conf.conf {
-            self.cln_config = config.to_owned();
+            self.cln_config_path = config.to_owned();
         }
 
         // FIXME: be able to put the directory also in another place!
