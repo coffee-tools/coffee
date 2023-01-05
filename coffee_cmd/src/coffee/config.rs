@@ -34,6 +34,7 @@ async fn check_dir_or_make_if_missing(path: String) -> Result<(), CoffeeError> {
 impl CoffeeConf {
     /// Create a new instance of the coffee configuration from the args.
     pub async fn new(conf: &CoffeeArgs) -> Result<Self, CoffeeError> {
+        #[allow(deprecated)]
         let mut def_path = env::home_dir().unwrap().to_str().unwrap().to_string();
         // FIXME: check for double slash
         def_path += "/.coffee";

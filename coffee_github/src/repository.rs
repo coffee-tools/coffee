@@ -106,13 +106,14 @@ impl Github {
                     // file and skip the iteration on all the file to understand the language.
                     //
                     // The language is already contained inside the configuration file.
-                    debug!("new plugin: {} {}", plugin_name, path_to_plugin);
                     let plugin = Plugin::new(
                         plugin_name.as_str(),
                         path_to_plugin.as_str(),
                         plugin_lang,
                         conf.clone(),
                     );
+
+                    debug!("new plugin: {:?}", plugin);
                     self.plugins.push(plugin);
                 }
                 Err(err) => return Err(CoffeeError::new(1, err.to_string().as_str())),

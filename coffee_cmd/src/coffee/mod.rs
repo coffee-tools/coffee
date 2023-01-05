@@ -1,15 +1,11 @@
 //! Coffee mod implementation
 use coffee_lib::cln_conf::CLNConf;
-use coffee_lib::plugin::Plugin;
 use coffee_lib::url::URL;
 use coffee_storage::file::FileStorage;
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::storage::StorageManager;
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
-use std::io::prelude;
-use std::path::Path;
 use std::vec::Vec;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
@@ -122,50 +118,29 @@ impl PluginManager for CoffeeManager {
         Ok(())
     }
 
-    async fn install(&mut self, plugins: &HashSet<String>) -> Result<(), CoffeeError> {
-        debug!("installing plugins {:?}", plugins);
+    async fn install(&mut self, plugin: &str) -> Result<(), CoffeeError> {
+        debug!("installing plugin: {plugin}");
         // keep track if the plugin that are installed with success
-        let mut installed = HashSet::new();
         for repo in &self.repos {
-            for plugin_name in plugins {
-                if installed.contains(plugin_name) {
-                    continue;
-                }
-                if let Some(mut plugin) = repo.get_plugin_by_name(&plugin_name) {
-                    let result = plugin.configure().await;
-                    match result {
-                        Ok(path) => {
-                            debug!("runnable plugin path {path}");
-                            self.config.plugins_path.push(path);
-                            self.cln_config.plugins.push(plugin.clone());
-                            installed.insert(plugin_name);
-                            continue;
-                        }
-                        Err(err) => return Err(err),
+            if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
+                let result = plugin.configure().await;
+                match result {
+                    Ok(path) => {
+                        debug!("runnable plugin path {path}");
+                        self.config.plugins_path.push(path);
+                        self.cln_config.plugins.push(plugin.clone());
+
+                        self.storage.store(&self.storage_info()).await?;
+                        self.update_cln_conf().await?;
+                        return Ok(());
                     }
+                    Err(err) => return Err(err),
                 }
             }
-        }
-
-        // FIXME: improve the solution there, we can use the filter method
-        let mut missed_plugins = vec![];
-        for plugin_name in plugins {
-            if !installed.contains(plugin_name) {
-                missed_plugins.push(plugin_name);
-            }
-        }
-
-        if missed_plugins.is_empty() {
-            self.storage.store(&self.storage_info()).await?;
-            self.update_cln_conf().await?;
-            return Ok(());
         }
         let err = CoffeeError::new(
             1,
-            &format!(
-                "plugin {:?} are not present inside the repositories",
-                missed_plugins
-            ),
+            &format!("plugin `{plugin}` are not present inside the repositories"),
         );
         Err(err)
     }

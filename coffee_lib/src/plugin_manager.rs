@@ -11,11 +11,10 @@ pub trait PluginManager {
     /// configure the plugin manger.
     async fn configure(&mut self) -> Result<(), CoffeeError>;
 
-    /// install a sequence of plugin or return an error if somethings happens.
-    // FIXME: what happens if only one plugin fails?
-    async fn install(&mut self, plugins: &HashSet<String>) -> Result<(), CoffeeError>;
+    /// install a plugin by name, return an error if some error happens.
+    async fn install(&mut self, plugins: &str) -> Result<(), CoffeeError>;
 
-    /// return the list of pluing manager by the plugin manager.
+    /// return the list of plugin manager by the plugin manager.
     async fn list(&mut self) -> Result<(), CoffeeError>;
 
     /// upgrade a sequence of plugin managed by the plugin manager.

@@ -23,8 +23,8 @@ impl PluginLang {
             PluginLang::Python => {
                 /* 1. RUN PIP install or poetry install
                  * 2. return the path of the main file */
-                let req_file = format!("{}/requirements.txt", path);
-                let main_file = format!("{}/{}.py", path, name);
+                let req_file = format!("{path}/requirements.txt");
+                let main_file = format!("{path}/{name}.py");
                 // FIXME: enable the verbose command
                 let mut child = Command::new("pip")
                     .arg("install")
@@ -72,7 +72,7 @@ impl PluginLang {
 }
 
 /// Plugin struct definition
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Plugin {
     name: String,
     pub path: String,

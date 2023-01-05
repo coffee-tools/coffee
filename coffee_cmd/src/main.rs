@@ -1,7 +1,5 @@
 mod coffee;
 
-use std::collections::HashSet;
-
 use crate::coffee::cmd::CoffeeArgs;
 use clap::Parser;
 use coffee::cmd::CoffeeCommand;
@@ -17,13 +15,7 @@ async fn main() -> Result<(), CoffeeError> {
     let args = CoffeeArgs::parse();
     let mut coffee = CoffeeManager::new(&args).await?;
     let result = match args.command {
-        CoffeeCommand::Install { plugin } => {
-            let mut unique_plugin: HashSet<String> = HashSet::new();
-            plugin.iter().for_each(|plugin| {
-                unique_plugin.insert(plugin.to_owned());
-            });
-            coffee.install(&unique_plugin).await
-        }
+        CoffeeCommand::Install { plugin } => coffee.install(&plugin).await,
         CoffeeCommand::Remove => todo!(),
         CoffeeCommand::List => coffee.list().await,
         CoffeeCommand::Upgrade => coffee.upgrade(&[""]).await,
