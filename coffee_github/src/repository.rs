@@ -67,7 +67,7 @@ impl Github {
                     let mut plugin_name = String::new();
                     let mut plugin_lang = PluginLang::Unknown;
 
-                    /// try to understand the language from the file
+                    // try to understand the language from the file
                     let files = WalkDir::new(plugin_path.path()).max_depth(1);
                     for file in files {
                         let file_dir = file.unwrap().clone();
