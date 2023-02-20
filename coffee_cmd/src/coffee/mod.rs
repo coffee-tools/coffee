@@ -149,7 +149,7 @@ impl PluginManager for CoffeeManager {
         Ok(())
     }
 
-    async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), CoffeeError> {
+    async fn upgrade(&mut self, _: &[&str]) -> Result<(), CoffeeError> {
         // FIXME: Fix debug message with the list of plugins to be upgraded
         debug!("upgrading plugins");
         Ok(())

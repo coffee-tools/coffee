@@ -1,6 +1,5 @@
 //! Plugin manager module definition.
 use async_trait::async_trait;
-use std::collections::HashSet;
 
 use crate::errors::CoffeeError;
 
