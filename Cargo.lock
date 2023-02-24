@@ -13,9 +13,9 @@ dependencies = [
 
 [[package]]
 name = "albert_stream"
-version = "0.0.3"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c42ab6215693a7c43f820b3bada0583c87920d1011e4f7c6f59a52bcd3b3c380"
+checksum = "c0eb452e0d760aaeb2339812aef595b287a782b10ccb9a09ec9fefddf809f1ca"
 
 [[package]]
 name = "async-trait"
@@ -111,9 +111,9 @@ dependencies = [
 
 [[package]]
 name = "clightningrpc-conf"
-version = "0.0.1-alpha.3"
+version = "0.0.1-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f53a85efb17b350dcebb183f78f6bde278d55b85f84de1d874f0156989a8d8a7"
+checksum = "8f9e2b71aa99d573c8fa451928c0805f1341394c02c8869c0035ec2263b27154"
 dependencies = [
  "albert_stream",
  "multimap",
