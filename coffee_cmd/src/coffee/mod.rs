@@ -1,23 +1,19 @@
 //! Coffee mod implementation
-use coffee_lib::cln_conf::CLNConf;
-use coffee_lib::url::URL;
-use coffee_storage::file::FileStorage;
-use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
-use coffee_storage::storage::StorageManager;
-use log::{debug, info};
-use serde::{Deserialize, Serialize};
-use std::vec::Vec;
-use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
-
+use self::cmd::CoffeeArgs;
+use self::config::CoffeeConf;
 use async_trait::async_trait;
+use clightningrpc_conf::{CLNConf, SyncCLNConf};
 use coffee_github::repository::Github;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
-
-use self::cmd::CoffeeArgs;
-use self::config::CoffeeConf;
+use coffee_lib::url::URL;
+use coffee_storage::file::FileStorage;
+use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
+use coffee_storage::storage::StorageManager;
+use log::{debug, error, info};
+use serde::{Deserialize, Serialize};
+use std::vec::Vec;
 
 pub mod cmd;
 mod config;
@@ -66,7 +62,7 @@ impl CoffeeManager {
         let conf = CoffeeConf::new(conf).await?;
         let mut coffee = CoffeeManager {
             config: conf.clone(),
-            cln_config: CLNConf::new(&conf.network, &conf.cln_config),
+            cln_config: CLNConf::new(conf.cln_config_path, true),
             repos: vec![],
             storage: Box::new(FileStorage::new(&conf.root_path)),
         };
@@ -92,6 +88,10 @@ impl CoffeeManager {
                 self.repos.push(Box::new(repo));
             }
         });
+        if let Err(err) = self.cln_config.parse() {
+            error!("{}", err.cause);
+        }
+        debug!("cln conf {:?}", self.cln_config);
         debug!("finish pligin manager inventory");
         // FIXME: what are the information missed that
         // needed to be indexed?
@@ -103,10 +103,8 @@ impl CoffeeManager {
     }
 
     pub async fn update_cln_conf(&self) -> Result<(), CoffeeError> {
-        let mut file = File::create(self.cln_config.path.as_str()).await?;
-        file.write(self.cln_config.to_string().as_bytes()).await?;
-        file.flush().await?;
-        debug!("stored all the cln info in {}", self.cln_config.path);
+        self.cln_config.flush()?;
+        debug!("stored all the cln info in {}", self.cln_config);
         Ok(())
     }
 }
@@ -127,8 +125,8 @@ impl PluginManager for CoffeeManager {
                 match result {
                     Ok(path) => {
                         debug!("runnable plugin path {path}");
-                        self.config.plugins_path.push(path);
-                        self.cln_config.plugins.push(plugin.clone());
+                        self.config.plugins_path.push(path.to_string());
+                        self.cln_config.add_conf("plugin", &path.to_owned());
 
                         self.storage.store(&self.storage_info()).await?;
                         self.update_cln_conf().await?;
