@@ -14,8 +14,13 @@ pub struct CoffeeConf {
     /// Network configuration related
     /// to core lightning network
     pub network: String,
-    /// core lightning configuration file path
-    pub cln_config_path: String,
+    /// path of core lightning configuration file
+    /// managed by coffe
+    pub config_path: String,
+    /// path of the core lightnign configuration file
+    /// not managed by core lightning
+    /// (this file included the file managed by coffe)
+    pub cln_config_path: Option<String>,
     /// root path plugin manager
     pub root_path: String,
     /// path of all plugin that are installed
@@ -43,8 +48,9 @@ impl CoffeeConf {
         let mut coffee = CoffeeConf {
             network: "bitcoin".to_owned(),
             root_path: format!("{def_path}"),
-            cln_config_path: format!("{def_path}/bitcoin/coffee.conf"),
+            config_path: format!("{def_path}/bitcoin/coffee.conf"),
             plugins_path: vec![],
+            cln_config_path: None,
         };
 
         // check the command line arguments and bind them
@@ -65,11 +71,11 @@ impl CoffeeConf {
     fn bind_cmd_line_params(&mut self, conf: &CoffeeArgs) -> Result<(), CoffeeError> {
         if let Some(network) = &conf.network {
             self.network = network.to_owned();
-            self.cln_config_path = format!("{}/{}/coffee.conf", self.root_path, self.network);
+            self.config_path = format!("{}/{}/coffee.conf", self.root_path, self.network);
         }
 
         if let Some(config) = &conf.conf {
-            self.cln_config_path = config.to_owned();
+            self.config_path = config.to_owned();
         }
 
         // FIXME: be able to put the directory also in another place!

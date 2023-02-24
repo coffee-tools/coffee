@@ -111,12 +111,12 @@ dependencies = [
 
 [[package]]
 name = "clightningrpc-conf"
-version = "0.0.1-alpha.6"
+version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f9e2b71aa99d573c8fa451928c0805f1341394c02c8869c0035ec2263b27154"
+checksum = "05ae2939b521bad1373cab778c552deac98872ca59895104767cea1005cdbd5d"
 dependencies = [
  "albert_stream",
- "multimap",
+ "indexmap",
 ]
 
 [[package]]
@@ -411,15 +411,6 @@ dependencies = [
  "log",
  "wasi",
  "windows-sys",
-]
-
-[[package]]
-name = "multimap"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
-dependencies = [
- "serde",
 ]
 
 [[package]]

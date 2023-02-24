@@ -26,6 +26,11 @@ async fn main() -> Result<(), CoffeeError> {
                 Err(CoffeeError::new(1, "unsupported command"))
             }
         }
+        CoffeeCommand::Setup { cln_conf } => {
+            // FIXME: read the core lightning confi and
+            // and the coffe script
+            coffee.setup(&cln_conf).await
+        }
     };
 
     if let Err(err) = result {
