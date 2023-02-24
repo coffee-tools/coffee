@@ -11,11 +11,9 @@ use coffee_lib::url::URL;
 use coffee_storage::file::FileStorage;
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::storage::StorageManager;
-use log::{debug, info};
+use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use std::vec::Vec;
-use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
 
 pub mod cmd;
 mod config;
@@ -64,7 +62,7 @@ impl CoffeeManager {
         let conf = CoffeeConf::new(conf).await?;
         let mut coffee = CoffeeManager {
             config: conf.clone(),
-            cln_config: CLNConf::new(conf.cln_config_path),
+            cln_config: CLNConf::new(conf.cln_config_path, true),
             repos: vec![],
             storage: Box::new(FileStorage::new(&conf.root_path)),
         };
@@ -90,7 +88,9 @@ impl CoffeeManager {
                 self.repos.push(Box::new(repo));
             }
         });
-        self.cln_config.parse()?;
+        if let Err(err) = self.cln_config.parse() {
+            error!("{}", err.cause);
+        }
         debug!("cln conf {:?}", self.cln_config);
         debug!("finish pligin manager inventory");
         // FIXME: what are the information missed that

@@ -1,6 +1,5 @@
 //! Coffee configuration utils.
 
-use clightningrpc_conf::CLNConf;
 use coffee_lib::errors::CoffeeError;
 use serde::{Deserialize, Serialize};
 use std::{env, path::Path};
