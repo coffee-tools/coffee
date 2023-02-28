@@ -28,7 +28,7 @@ async fn main() -> Result<(), CoffeeError> {
         }
         CoffeeCommand::Setup { cln_conf } => {
             // FIXME: read the core lightning confi and
-            // and the coffe script
+            // and the coffee script
             coffee.setup(&cln_conf).await
         }
     };

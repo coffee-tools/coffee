@@ -15,11 +15,11 @@ pub struct CoffeeConf {
     /// to core lightning network
     pub network: String,
     /// path of core lightning configuration file
-    /// managed by coffe
+    /// managed by coffee
     pub config_path: String,
     /// path of the core lightnign configuration file
     /// not managed by core lightning
-    /// (this file included the file managed by coffe)
+    /// (this file included the file managed by coffee)
     pub cln_config_path: Option<String>,
     /// root path plugin manager
     pub root_path: String,
@@ -79,7 +79,7 @@ impl CoffeeConf {
         }
 
         // FIXME: be able to put the directory also in another place!
-        // for now it is fixed in the Home/.coffe but another good place
+        // for now it is fixed in the Home/.coffee but another good place
         // will be, the .lightning dir
         Ok(())
     }

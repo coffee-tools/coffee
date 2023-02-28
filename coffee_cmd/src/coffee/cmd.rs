@@ -35,7 +35,7 @@ pub enum CoffeeCommand {
         #[clap(subcommand)]
         action: RemoteAction,
     },
-    /// Configur coffe with the core lightning
+    /// Configur coffee with the core lightning
     /// configuration
     #[clap(arg_required_else_help = true)]
     Setup { cln_conf: String },

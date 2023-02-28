@@ -49,10 +49,10 @@ impl From<&CoffeeManager> for CoffeStorageInfo {
 pub struct CoffeeManager {
     config: config::CoffeeConf,
     repos: Vec<Box<dyn Repository + Send + Sync>>,
-    /// Core lightning configuration managed by coffe
+    /// Core lightning configuration managed by coffee
     coffe_cln_config: CLNConf,
     /// Core lightning configuration that include the
-    /// configuration managed by coffe
+    /// configuration managed by coffee
     cln_config: Option<CLNConf>,
     /// storage instance to make persistent all the
     /// plugin manager information on disk
