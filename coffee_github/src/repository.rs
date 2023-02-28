@@ -67,26 +67,6 @@ impl Github {
                     let mut plugin_name = String::new();
                     let mut plugin_lang = PluginLang::Unknown;
 
-                    // try to understand the language from the file
-                    let files = WalkDir::new(plugin_path.path()).max_depth(1);
-                    for file in files {
-                        let file_dir = file.unwrap().clone();
-                        (path_to_plugin, plugin_name) =
-                            get_plugin_info_from_path(file_dir.path()).unwrap();
-
-                        let file_name = file_dir.file_name().to_str().unwrap();
-                        plugin_lang = match file_name {
-                            "requirements.txt" => PluginLang::Python,
-                            "go.mod" => PluginLang::Go,
-                            "cargo.toml" => PluginLang::Rust,
-                            "pubspec.yaml" => PluginLang::Dart,
-                            "package.json" => PluginLang::JavaScript,
-                            "tsconfig.json" => PluginLang::TypeScript,
-                            _ => continue,
-                        };
-                    }
-                    debug!("possible plugin language: {:?}", plugin_lang);
-
                     // check if the plugin has the custom configuration to read.
                     let mut conf = None;
                     for file in ["coffee.yaml", "coffee.yml"] {
@@ -97,14 +77,48 @@ impl Github {
                             debug!("found plugin configuration: {}", conf_str);
 
                             let conf_file = serde_yaml::from_str::<Conf>(&conf_str).unwrap();
+                            let conf_lang = (&conf_file.plugin.lang).to_owned();
+                            match conf_lang.as_str() {
+                                "py" => plugin_lang = PluginLang::Python,
+                                "go" => plugin_lang = PluginLang::Go,
+                                "rs" => plugin_lang = PluginLang::Rust,
+                                "dart" => plugin_lang = PluginLang::Dart,
+                                "js" => plugin_lang = PluginLang::JavaScript,
+                                "ts" => plugin_lang = PluginLang::TypeScript,
+                                _ => {
+                                    return Err(CoffeeError::new(
+                                        1,
+                                        &format!("language {conf_lang} not supported"),
+                                    ))
+                                }
+                            };
                             conf = Some(conf_file)
                         }
                     }
 
-                    // FIXME: the language should be just a guess, so in case the configuration
-                    // file is read, we should use the information inside this configuration
-                    // file and skip the iteration on all the file to understand the language.
-                    //
+                    // check if there was a coffee configuration file
+                    if conf == None {
+                        // try to understand the language from the file
+                        let files = WalkDir::new(plugin_path.path()).max_depth(1);
+                        for file in files {
+                            let file_dir = file.unwrap().clone();
+                            (path_to_plugin, plugin_name) =
+                                get_plugin_info_from_path(file_dir.path()).unwrap();
+
+                            let file_name = file_dir.file_name().to_str().unwrap();
+                            plugin_lang = match file_name {
+                                "requirements.txt" => PluginLang::Python,
+                                "go.mod" => PluginLang::Go,
+                                "cargo.toml" => PluginLang::Rust,
+                                "pubspec.yaml" => PluginLang::Dart,
+                                "package.json" => PluginLang::JavaScript,
+                                "tsconfig.json" => PluginLang::TypeScript,
+                                _ => PluginLang::Unknown,
+                            };
+                        }
+                        debug!("possible plugin language: {:?}", plugin_lang);
+                    }
+
                     // The language is already contained inside the configuration file.
                     let plugin = Plugin::new(
                         plugin_name.as_str(),
