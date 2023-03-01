@@ -18,7 +18,12 @@ pub enum PluginLang {
 }
 
 impl PluginLang {
-    pub async fn default_install(&self, path: &str, name: &str) -> Result<String, CoffeeError> {
+    pub async fn default_install(
+        &self,
+        path: &str,
+        name: &str,
+        verbose: bool,
+    ) -> Result<String, CoffeeError> {
         match self {
             PluginLang::Python => {
                 /* 1. RUN PIP install or poetry install
@@ -94,7 +99,7 @@ impl Plugin {
     /// configure the plugin in order to work with cln.
     ///
     /// In case of success return the path of the executable.
-    pub async fn configure(&mut self) -> Result<String, CoffeeError> {
+    pub async fn configure(&mut self, verbose: bool) -> Result<String, CoffeeError> {
         let exec_path = if let Some(conf) = &self.conf {
             if let Some(script) = &conf.plugin.install {
                 let cmds = script.split("\n"); // Check if the script contains `\`
@@ -107,10 +112,14 @@ impl Plugin {
                 }
                 format!("{}/{}", self.path, conf.plugin.main)
             } else {
-                self.lang.default_install(&self.path, &self.name).await?
+                self.lang
+                    .default_install(&self.path, &self.name, verbose)
+                    .await?
             }
         } else {
-            self.lang.default_install(&self.path, &self.name).await?
+            self.lang
+                .default_install(&self.path, &self.name, verbose)
+                .await?
         };
         Ok(exec_path)
     }

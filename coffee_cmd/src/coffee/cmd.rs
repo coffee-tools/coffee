@@ -19,7 +19,12 @@ pub struct CoffeeArgs {
 pub enum CoffeeCommand {
     /// Install a single by name.
     #[clap(arg_required_else_help = true)]
-    Install { plugin: String },
+    Install {
+        plugin: String,
+
+        #[arg(short, long, action = clap::ArgAction::SetTrue)]
+        verbose: bool,
+    },
     /// upgrade a single or a list of plugins.
     #[clap(arg_required_else_help = true)]
     Upgrade,
