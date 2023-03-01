@@ -30,14 +30,17 @@ impl PluginLang {
                  * 2. return the path of the main file */
                 let req_file = format!("{path}/requirements.txt");
                 let main_file = format!("{path}/{name}.py");
-                // FIXME: enable the verbose command
-                let mut child = Command::new("pip")
-                    .arg("install")
-                    .arg("-r")
-                    .arg(req_file.as_str())
-                    .spawn()
-                    .expect("not possible run the command");
-                let _ = child.wait().await?;
+                let mut cmd = Command::new("pip");
+                cmd.arg("install").arg("-r").arg(&req_file.clone());
+                if verbose {
+                    let _ = cmd
+                        .spawn()
+                        .expect("Unable to run the command")
+                        .wait()
+                        .await?;
+                } else {
+                    let _ = cmd.output().await?;
+                }
                 Ok(main_file)
             }
             PluginLang::Go => {
