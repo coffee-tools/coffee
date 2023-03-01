@@ -11,7 +11,7 @@ pub trait PluginManager {
     async fn configure(&mut self) -> Result<(), CoffeeError>;
 
     /// install a plugin by name, return an error if some error happens.
-    async fn install(&mut self, plugins: &str) -> Result<(), CoffeeError>;
+    async fn install(&mut self, plugins: &str, verbose: bool) -> Result<(), CoffeeError>;
 
     /// return the list of plugin manager by the plugin manager.
     async fn list(&mut self) -> Result<(), CoffeeError>;

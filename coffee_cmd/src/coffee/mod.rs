@@ -146,12 +146,12 @@ impl PluginManager for CoffeeManager {
         Ok(())
     }
 
-    async fn install(&mut self, plugin: &str) -> Result<(), CoffeeError> {
+    async fn install(&mut self, plugin: &str, verbose: bool) -> Result<(), CoffeeError> {
         debug!("installing plugin: {plugin}");
         // keep track if the plugin that are installed with success
         for repo in &self.repos {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
-                let result = plugin.configure().await;
+                let result = plugin.configure(verbose).await;
                 match result {
                     Ok(path) => {
                         debug!("runnable plugin path {path}");

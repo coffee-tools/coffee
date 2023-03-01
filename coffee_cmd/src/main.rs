@@ -15,7 +15,7 @@ async fn main() -> Result<(), CoffeeError> {
     let args = CoffeeArgs::parse();
     let mut coffee = CoffeeManager::new(&args).await?;
     let result = match args.command {
-        CoffeeCommand::Install { plugin } => coffee.install(&plugin).await,
+        CoffeeCommand::Install { plugin, verbose } => coffee.install(&plugin, verbose).await,
         CoffeeCommand::Remove => todo!(),
         CoffeeCommand::List => coffee.list().await,
         CoffeeCommand::Upgrade => coffee.upgrade(&[""]).await,
