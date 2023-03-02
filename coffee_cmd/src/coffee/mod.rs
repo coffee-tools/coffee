@@ -151,6 +151,7 @@ impl PluginManager for CoffeeManager {
         // keep track if the plugin that are installed with success
         for repo in &self.repos {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
+                debug!("{:#?}", plugin);
                 let result = plugin.configure(verbose).await;
                 match result {
                     Ok(path) => {
