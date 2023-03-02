@@ -92,19 +92,21 @@ impl Github {
                                     ))
                                 }
                             };
-                            conf = Some(conf_file)
+                            conf = Some(conf_file);
+                            break;
                         }
                     }
 
                     // check if there was a coffee configuration file
                     if conf == None {
+                        debug!("conf file not found, so we try to guess the language");
                         // try to understand the language from the file
                         let files = WalkDir::new(plugin_path.path()).max_depth(1);
                         for file in files {
                             let file_dir = file.unwrap().clone();
                             (path_to_plugin, plugin_name) =
                                 get_plugin_info_from_path(file_dir.path()).unwrap();
-
+                            debug!("looking for {plugin_name} in {path_to_plugin}");
                             let file_name = file_dir.file_name().to_str().unwrap();
                             plugin_lang = match file_name {
                                 "requirements.txt" => PluginLang::Python,
@@ -115,6 +117,9 @@ impl Github {
                                 "tsconfig.json" => PluginLang::TypeScript,
                                 _ => PluginLang::Unknown,
                             };
+                            if plugin_lang != PluginLang::Unknown {
+                                break;
+                            }
                         }
                         debug!("possible plugin language: {:?}", plugin_lang);
                     }
