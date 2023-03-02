@@ -1,6 +1,6 @@
 //! Coffee configuration utils.
 
-use coffee_lib::errors::CoffeeError;
+use coffee_lib::{errors::CoffeeError, plugin::Plugin};
 use serde::{Deserialize, Serialize};
 use std::{env, path::Path};
 use tokio::fs::create_dir;
@@ -23,9 +23,9 @@ pub struct CoffeeConf {
     pub cln_config_path: Option<String>,
     /// root path plugin manager
     pub root_path: String,
-    /// path of all plugin that are installed
+    /// all plugins that are installed
     /// with the plugin manager.
-    pub plugins_path: Vec<String>,
+    pub plugins: Vec<Plugin>,
 }
 
 async fn check_dir_or_make_if_missing(path: String) -> Result<(), CoffeeError> {
@@ -49,7 +49,7 @@ impl CoffeeConf {
             network: "bitcoin".to_owned(),
             root_path: format!("{def_path}"),
             config_path: format!("{def_path}/bitcoin/coffee.conf"),
-            plugins_path: vec![],
+            plugins: vec![],
             cln_config_path: None,
         };
 

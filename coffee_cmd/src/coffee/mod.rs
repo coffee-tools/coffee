@@ -156,7 +156,7 @@ impl PluginManager for CoffeeManager {
                 match result {
                     Ok(path) => {
                         debug!("runnable plugin path {path}");
-                        self.config.plugins_path.push(path.to_string());
+                        self.config.plugins.push(plugin);
                         self.coffe_cln_config
                             .add_conf("plugin", &path.to_owned())
                             .map_err(|err| CoffeeError::new(1, &err.cause))?;
