@@ -117,7 +117,7 @@ impl CoffeeManager {
             return Ok(());
         }
         let path = self.config.cln_config_path.clone().unwrap();
-        let mut file = CLNConf::new(path, false);
+        let mut file = CLNConf::new(path, true);
         file.parse()
             .map_err(|err| CoffeeError::new(err.core, &err.cause))?;
         debug!("{:#?}", file.fields);
