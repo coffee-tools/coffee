@@ -13,6 +13,7 @@ pub enum PluginLang {
     Go,
     Rust,
     Dart,
+    JVM,
     JavaScript,
     TypeScript,
     Unknown,
@@ -68,6 +69,7 @@ impl PluginLang {
                  * 2. run the ts file */
                 todo!()
             }
+            PluginLang::JVM => todo!(),
             PluginLang::Unknown => {
                 /* 1. emit an error message  */
                 let err = CoffeeError::new(
@@ -122,11 +124,12 @@ impl Plugin {
                 for cmd in cmds {
                     debug!("cmd {:#?}", cmd);
                     let cmd_tok: Vec<&str> = cmd.split(" ").collect();
-                    let mut cmd = Command::new(cmd_tok.first().unwrap().to_owned());
+                    let command = cmd_tok.first().unwrap().to_string();
+                    let mut cmd = Command::new(command);
                     cmd.args(&cmd_tok[1..cmd_tok.len()]);
+                    cmd.current_dir(self.root_path.clone());
                     if verbose {
                         let _ = cmd
-                            .current_dir(self.root_path.clone())
                             .spawn()
                             .expect("Unable to run the command")
                             .wait()
