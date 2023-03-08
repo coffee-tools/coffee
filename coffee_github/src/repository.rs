@@ -87,7 +87,7 @@ impl Github {
                                     CoffeeError::new(1, &format!("Coffe manifest malformed: {err}"))
                                 })?;
                             plugin_name = Some(conf_file.plugin.name.to_string());
-                            path_to_plugin = Some(format!("{root_path}/{}", conf_file.plugin.main));
+                            path_to_plugin = Some(root_path.to_owned());
                             let conf_lang = (&conf_file.plugin.lang).to_owned();
                             match conf_lang.as_str() {
                                 "py" => plugin_lang = PluginLang::Python,
@@ -96,6 +96,7 @@ impl Github {
                                 "dart" => plugin_lang = PluginLang::Dart,
                                 "js" => plugin_lang = PluginLang::JavaScript,
                                 "ts" => plugin_lang = PluginLang::TypeScript,
+                                "java" | "kotlin" | "scala" => plugin_lang = PluginLang::JVM,
                                 _ => {
                                     return Err(CoffeeError::new(
                                         1,
