@@ -63,20 +63,31 @@ impl Github {
         for plugin_dir in target_dirs {
             match plugin_dir {
                 Ok(plugin_path) => {
-                    let mut path_to_plugin = String::new();
-                    let mut plugin_name = String::new();
+                    let root_path = plugin_path
+                        .path()
+                        .as_os_str()
+                        .to_os_string()
+                        .to_string_lossy()
+                        .to_string();
+                    let mut path_to_plugin = None;
+                    let mut plugin_name = None;
                     let mut plugin_lang = PluginLang::Unknown;
 
                     // check if the plugin has the custom configuration to read.
                     let mut conf = None;
                     for file in ["coffee.yaml", "coffee.yml"] {
-                        let conf_path = format!("{}/{}", path_to_plugin, file);
+                        let conf_path = format!("{}/{}", root_path, file);
                         if let Ok(mut conf_file) = File::open(conf_path).await {
                             let mut conf_str = String::new();
                             conf_file.read_to_string(&mut conf_str).await?;
                             debug!("found plugin configuration: {}", conf_str);
 
-                            let conf_file = serde_yaml::from_str::<Conf>(&conf_str).unwrap();
+                            let conf_file =
+                                serde_yaml::from_str::<Conf>(&conf_str).map_err(|err| {
+                                    CoffeeError::new(1, &format!("Coffe manifest malformed: {err}"))
+                                })?;
+                            plugin_name = Some(conf_file.plugin.name.to_string());
+                            path_to_plugin = Some(format!("{root_path}/{}", conf_file.plugin.main));
                             let conf_lang = (&conf_file.plugin.lang).to_owned();
                             match conf_lang.as_str() {
                                 "py" => plugin_lang = PluginLang::Python,
@@ -92,6 +103,7 @@ impl Github {
                                     ))
                                 }
                             };
+
                             conf = Some(conf_file);
                             break;
                         }
@@ -104,9 +116,11 @@ impl Github {
                         let files = WalkDir::new(plugin_path.path()).max_depth(1);
                         for file in files {
                             let file_dir = file.unwrap().clone();
-                            (path_to_plugin, plugin_name) =
+                            let (tmp_path_to_plugin, tmp_plugin_name) =
                                 get_plugin_info_from_path(file_dir.path()).unwrap();
-                            debug!("looking for {plugin_name} in {path_to_plugin}");
+                            path_to_plugin = Some(tmp_path_to_plugin.to_string());
+                            plugin_name = Some(tmp_plugin_name.to_string());
+                            debug!("looking for {tmp_plugin_name} in {tmp_path_to_plugin}");
                             let file_name = file_dir.file_name().to_str().unwrap();
                             plugin_lang = match file_name {
                                 "requirements.txt" => PluginLang::Python,
@@ -126,8 +140,9 @@ impl Github {
 
                     // The language is already contained inside the configuration file.
                     let plugin = Plugin::new(
-                        plugin_name.as_str(),
-                        path_to_plugin.as_str(),
+                        plugin_name.unwrap().as_str(),
+                        &root_path,
+                        path_to_plugin.unwrap().as_str(),
                         plugin_lang,
                         conf.clone(),
                     );

@@ -187,7 +187,8 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn setup(&mut self, cln_conf_path: &str) -> Result<(), CoffeeError> {
-        self.setup_with_cln(cln_conf_path).await
+        self.setup_with_cln(cln_conf_path).await?;
+        self.storage.store(&self.storage_info()).await
     }
 
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError> {

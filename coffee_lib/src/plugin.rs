@@ -1,6 +1,7 @@
 //! Plugin module that abstract the concept of a cln plugin
 //! from a plugin manager point of view.
 use crate::{errors::CoffeeError, plugin_conf::Conf};
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use tokio::process::Command;
@@ -83,6 +84,9 @@ impl PluginLang {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Plugin {
     name: String,
+    /// root path of the plugin
+    root_path: String,
+    /// path of the main file
     pub path: String,
     lang: PluginLang,
     conf: Option<Conf>,
@@ -90,9 +94,16 @@ pub struct Plugin {
 
 impl Plugin {
     /// create a new instance of the plugin.
-    pub fn new(name: &str, path: &str, plugin_lang: PluginLang, config: Option<Conf>) -> Self {
+    pub fn new(
+        name: &str,
+        root_path: &str,
+        path: &str,
+        plugin_lang: PluginLang,
+        config: Option<Conf>,
+    ) -> Self {
         Plugin {
             name: name.to_owned(),
+            root_path: root_path.to_owned(),
             path: path.to_owned(),
             lang: plugin_lang,
             conf: config,
@@ -105,13 +116,24 @@ impl Plugin {
     pub async fn configure(&mut self, verbose: bool) -> Result<String, CoffeeError> {
         let exec_path = if let Some(conf) = &self.conf {
             if let Some(script) = &conf.plugin.install {
+                let script = script.trim();
                 let cmds = script.split("\n"); // Check if the script contains `\`
+                debug!("cmds: {:#?}", cmds);
                 for cmd in cmds {
-                    let mut child = Command::new(cmd)
-                        .current_dir(self.path.clone())
-                        .spawn()
-                        .expect("not possible run the command");
-                    let _ = child.wait().await?;
+                    debug!("cmd {:#?}", cmd);
+                    let cmd_tok: Vec<&str> = cmd.split(" ").collect();
+                    let mut cmd = Command::new(cmd_tok.first().unwrap().to_owned());
+                    cmd.args(&cmd_tok[1..cmd_tok.len()]);
+                    if verbose {
+                        let _ = cmd
+                            .current_dir(self.root_path.clone())
+                            .spawn()
+                            .expect("Unable to run the command")
+                            .wait()
+                            .await?;
+                    } else {
+                        let _ = cmd.output().await?;
+                    }
                 }
                 format!("{}/{}", self.path, conf.plugin.main)
             } else {
