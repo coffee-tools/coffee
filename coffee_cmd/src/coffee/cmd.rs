@@ -21,9 +21,10 @@ pub enum CoffeeCommand {
     #[clap(arg_required_else_help = true)]
     Install {
         plugin: String,
-
         #[arg(short, long, action = clap::ArgAction::SetTrue)]
         verbose: bool,
+        #[arg(short, long, action = clap::ArgAction::SetTrue)]
+        dynamic: bool,
     },
     /// upgrade a single or a list of plugins.
     #[clap(arg_required_else_help = true)]
