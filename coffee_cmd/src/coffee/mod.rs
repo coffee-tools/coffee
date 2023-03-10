@@ -3,6 +3,7 @@ use self::cmd::CoffeeArgs;
 use self::config::CoffeeConf;
 use async_trait::async_trait;
 use clightningrpc_common::client::Client;
+use clightningrpc_common::json_utils;
 use clightningrpc_conf::{CLNConf, SyncCLNConf};
 use coffee_github::repository::Github;
 use coffee_lib::errors::CoffeeError;
@@ -15,7 +16,6 @@ use coffee_storage::storage::StorageManager;
 use log::{debug, error, info, trace, warn};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fmt::Debug;
 use std::vec::Vec;
 
@@ -131,15 +131,14 @@ impl CoffeeManager {
     }
 
     pub async fn start_pluing(&self, path: &str) -> Result<(), CoffeeError> {
-        debug!("calling getinfo");
+        let mut payload = json_utils::init_payload();
+        json_utils::add_str(&mut payload, "subcommand", "start");
+        json_utils::add_str(&mut payload, "plugin", path);
         let response = self
-            .cln("getinfo", HashMap::<String, String>::new())
+            .cln::<serde_json::Value, serde_json::Value>("plugin", payload)
             .await?;
-        debug!("{:?}", response);
-        let mut payload = HashMap::<String, String>::new();
-        payload.insert("subcommand".to_owned(), "start".to_owned());
-        payload.insert("plugin".to_owned(), path.to_owned());
-        self.cln("plugin", payload).await
+        debug!("plugin registered: {response}");
+        Ok(())
     }
 
     pub fn storage_info(&self) -> CoffeStorageInfo {
