@@ -125,11 +125,13 @@ impl CoffeeManager {
         Ok(())
     }
 
-    pub async fn setup_with_cln(&mut self, cln_conf_path: &str) -> Result<(), CoffeeError> {
+    pub async fn setup_with_cln(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
         if !self.cln_config.is_none() {
             warn!("you are ovveriding the previous set up");
         }
-        self.config.cln_config_path = Some(cln_conf_path.to_owned());
+        let path_with_network = format!("{cln_dir}/{}/config", self.config.network);
+        info!("configure coffe in the following cln config {path_with_network}");
+        self.config.cln_config_path = Some(path_with_network);
         self.load_cln_conf().await?;
         let mut conf = self.cln_config.clone().unwrap();
         conf.add_subconf(self.coffe_cln_config.clone())
@@ -186,8 +188,8 @@ impl PluginManager for CoffeeManager {
         Ok(())
     }
 
-    async fn setup(&mut self, cln_conf_path: &str) -> Result<(), CoffeeError> {
-        self.setup_with_cln(cln_conf_path).await?;
+    async fn setup(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
+        self.setup_with_cln(cln_dir).await?;
         self.storage.store(&self.storage_info()).await
     }
 
