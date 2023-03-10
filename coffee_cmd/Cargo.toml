@@ -15,3 +15,4 @@ env_logger = "0.9.3"
 coffee_storage = { path = "../coffee_storage"  }
 serde = { version = "1.0", features = ["derive"] }
 clightningrpc-conf = "0.0.1"
+clightningrpc-common = "0.3.0-beta.3"
