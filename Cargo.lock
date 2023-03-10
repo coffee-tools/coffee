@@ -110,6 +110,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "clightningrpc-common"
+version = "0.3.0-beta.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04d9821ddb8b5eee8f922fea6871f8684cf3eb74a1cb54f6a6782df70fe28b37"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "clightningrpc-conf"
 version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -125,6 +135,7 @@ version = "0.0.1-alpha.1"
 dependencies = [
  "async-trait",
  "clap",
+ "clightningrpc-common",
  "clightningrpc-conf",
  "coffee_github",
  "coffee_lib",

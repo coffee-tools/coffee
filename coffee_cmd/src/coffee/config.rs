@@ -1,6 +1,7 @@
 //! Coffee configuration utils.
 
 use coffee_lib::{errors::CoffeeError, plugin::Plugin};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use std::{env, path::Path};
 use tokio::fs::create_dir;
@@ -32,7 +33,8 @@ pub struct CoffeeConf {
 
 async fn check_dir_or_make_if_missing(path: String) -> Result<(), CoffeeError> {
     if !Path::exists(Path::new(&path.to_owned())) {
-        create_dir(path).await?;
+        create_dir(path.clone()).await?;
+        debug!("created dir {path}");
     }
     Ok(())
 }
@@ -45,6 +47,7 @@ impl CoffeeConf {
         // FIXME: check for double slash
         def_path += "/.coffee";
         check_dir_or_make_if_missing(def_path.to_string()).await?;
+        info!("creating coffee home at {def_path}");
         check_dir_or_make_if_missing(format!("{def_path}/bitcoin")).await?;
         check_dir_or_make_if_missing(format!("{def_path}/testnet")).await?;
         let mut coffee = CoffeeConf {

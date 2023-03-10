@@ -12,9 +12,11 @@ use coffee_lib::url::URL;
 use coffee_storage::file::FileStorage;
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::storage::StorageManager;
-use log::{debug, error, info, warn};
+use log::{debug, error, info, trace, warn};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fmt::Debug;
 use std::vec::Vec;
 
 pub mod cmd;
@@ -107,7 +109,7 @@ impl CoffeeManager {
         Ok(())
     }
 
-    pub fn cln<T: Serialize, U: DeserializeOwned>(
+    pub async fn cln<T: Serialize, U: DeserializeOwned + Debug>(
         &self,
         method: &str,
         payload: T,
@@ -115,13 +117,29 @@ impl CoffeeManager {
         if let Some(rpc) = &self.rpc {
             let response = rpc
                 .send_request(method, payload)
-                .map_err(|err| CoffeeError::new(1, &format!("{err}",)))?;
+                .map_err(|err| CoffeeError::new(1, &format!("{err}")))?;
+            trace!("cln answer with {:#?}", response);
+            if let Some(err) = response.error {
+                return Err(CoffeeError::new(1, &format!("cln error: {}", err.message)));
+            }
             return Ok(response.result.unwrap());
         }
         Err(CoffeeError::new(
             1,
             "rpc connection to core lightning not available",
         ))
+    }
+
+    pub async fn start_pluing(&self, path: &str) -> Result<(), CoffeeError> {
+        debug!("calling getinfo");
+        let response = self
+            .cln("getinfo", HashMap::<String, String>::new())
+            .await?;
+        debug!("{:?}", response);
+        let mut payload = HashMap::<String, String>::new();
+        payload.insert("subcommand".to_owned(), "start".to_owned());
+        payload.insert("plugin".to_owned(), path.to_owned());
+        self.cln("plugin", payload).await
     }
 
     pub fn storage_info(&self) -> CoffeStorageInfo {
@@ -142,7 +160,8 @@ impl CoffeeManager {
         let rpc = Client::new(format!("{root}/{}/lightning-rpc", self.config.network));
         self.rpc = Some(rpc);
         let path = self.config.cln_config_path.clone().unwrap();
-        let mut file = CLNConf::new(path, true);
+        let mut file = CLNConf::new(path.clone(), true);
+        info!("looking for the cln config: {path}");
         file.parse()
             .map_err(|err| CoffeeError::new(err.core, &err.cause))?;
         debug!("{:#?}", file.fields);
@@ -174,23 +193,32 @@ impl PluginManager for CoffeeManager {
         Ok(())
     }
 
-    async fn install(&mut self, plugin: &str, verbose: bool) -> Result<(), CoffeeError> {
+    async fn install(
+        &mut self,
+        plugin: &str,
+        verbose: bool,
+        try_dynamic: bool,
+    ) -> Result<(), CoffeeError> {
         debug!("installing plugin: {plugin}");
         // keep track if the plugin that are installed with success
         for repo in &self.repos {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
-                debug!("{:#?}", plugin);
+                trace!("{:#?}", plugin);
                 let result = plugin.configure(verbose).await;
                 match result {
                     Ok(path) => {
                         debug!("runnable plugin path {path}");
-                        self.config.plugins.push(plugin);
-                        self.coffe_cln_config
-                            .add_conf("plugin", &path.to_owned())
-                            .map_err(|err| CoffeeError::new(1, &err.cause))?;
+                        if !try_dynamic {
+                            self.config.plugins.push(plugin);
+                            self.coffe_cln_config
+                                .add_conf("plugin", &path.to_owned())
+                                .map_err(|err| CoffeeError::new(1, &err.cause))?;
 
-                        self.storage.store(&self.storage_info()).await?;
-                        self.update_conf().await?;
+                            self.storage.store(&self.storage_info()).await?;
+                            self.update_conf().await?;
+                        } else {
+                            self.start_pluing(&path).await?;
+                        }
                         return Ok(());
                     }
                     Err(err) => return Err(err),
@@ -216,6 +244,7 @@ impl PluginManager for CoffeeManager {
 
     async fn setup(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
         self.setup_with_cln(cln_dir).await?;
+        info!("cln configured");
         self.storage.store(&self.storage_info()).await
     }
 
