@@ -2,6 +2,7 @@
 use self::cmd::CoffeeArgs;
 use self::config::CoffeeConf;
 use async_trait::async_trait;
+use clightningrpc_common::client::Client;
 use clightningrpc_conf::{CLNConf, SyncCLNConf};
 use coffee_github::repository::Github;
 use coffee_lib::errors::CoffeeError;
@@ -12,6 +13,7 @@ use coffee_storage::file::FileStorage;
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::storage::StorageManager;
 use log::{debug, error, info, warn};
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::vec::Vec;
 
@@ -57,6 +59,8 @@ pub struct CoffeeManager {
     /// storage instance to make persistent all the
     /// plugin manager information on disk
     storage: Box<dyn StorageManager<CoffeStorageInfo, Err = CoffeeError> + Send + Sync>,
+    /// core lightning rpc connection
+    rpc: Option<Client>,
 }
 
 impl CoffeeManager {
@@ -68,6 +72,7 @@ impl CoffeeManager {
             repos: vec![],
             storage: Box::new(FileStorage::new(&conf.root_path)),
             cln_config: None,
+            rpc: None,
         };
         coffee.inventory().await?;
         Ok(coffee)
@@ -102,6 +107,23 @@ impl CoffeeManager {
         Ok(())
     }
 
+    pub fn cln<T: Serialize, U: DeserializeOwned>(
+        &self,
+        method: &str,
+        payload: T,
+    ) -> Result<U, CoffeeError> {
+        if let Some(rpc) = &self.rpc {
+            let response = rpc
+                .send_request(method, payload)
+                .map_err(|err| CoffeeError::new(1, &format!("{err}",)))?;
+            return Ok(response.result.unwrap());
+        }
+        Err(CoffeeError::new(
+            1,
+            "rpc connection to core lightning not available",
+        ))
+    }
+
     pub fn storage_info(&self) -> CoffeStorageInfo {
         CoffeStorageInfo::from(self)
     }
@@ -116,6 +138,9 @@ impl CoffeeManager {
         if self.config.cln_config_path.is_none() {
             return Ok(());
         }
+        let root = self.config.cln_root.clone().unwrap();
+        let rpc = Client::new(format!("{root}/{}/lightning-rpc", self.config.network));
+        self.rpc = Some(rpc);
         let path = self.config.cln_config_path.clone().unwrap();
         let mut file = CLNConf::new(path, true);
         file.parse()
@@ -132,6 +157,7 @@ impl CoffeeManager {
         let path_with_network = format!("{cln_dir}/{}/config", self.config.network);
         info!("configure coffe in the following cln config {path_with_network}");
         self.config.cln_config_path = Some(path_with_network);
+        self.config.cln_root = Some(cln_dir.to_owned());
         self.load_cln_conf().await?;
         let mut conf = self.cln_config.clone().unwrap();
         conf.add_subconf(self.coffe_cln_config.clone())

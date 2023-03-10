@@ -21,6 +21,8 @@ pub struct CoffeeConf {
     /// not managed by core lightning
     /// (this file included the file managed by coffee)
     pub cln_config_path: Option<String>,
+    /// root cln directory path
+    pub cln_root: Option<String>,
     /// root path plugin manager
     pub root_path: String,
     /// all plugins that are installed
@@ -51,6 +53,7 @@ impl CoffeeConf {
             config_path: format!("{def_path}/bitcoin/coffee.conf"),
             plugins: vec![],
             cln_config_path: None,
+            cln_root: None,
         };
 
         // check the command line arguments and bind them
