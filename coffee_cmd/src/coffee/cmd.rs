@@ -12,6 +12,8 @@ pub struct CoffeeArgs {
     pub conf: Option<String>,
     #[clap(short, long, value_parser)]
     pub network: Option<String>,
+    #[clap(short, long, value_parser, name = "data-dir")]
+    pub data_dir: Option<String>,
 }
 
 /// Coffee subcommand of the command line daemon.

@@ -44,6 +44,10 @@ impl CoffeeConf {
     pub async fn new(conf: &CoffeeArgs) -> Result<Self, CoffeeError> {
         #[allow(deprecated)]
         let mut def_path = env::home_dir().unwrap().to_str().unwrap().to_string();
+        if let Some(data_dir) = &conf.data_dir {
+            def_path = data_dir.to_owned();
+        }
+
         // FIXME: check for double slash
         def_path += "/.coffee";
         check_dir_or_make_if_missing(def_path.to_string()).await?;
@@ -62,6 +66,7 @@ impl CoffeeConf {
         // check the command line arguments and bind them
         // inside the coffee conf
         coffee.bind_cmd_line_params(&conf)?;
+
         // after we know all the information regarding
         // the configuration we try to see if there is
         // something stored already to the disk.
