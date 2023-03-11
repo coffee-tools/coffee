@@ -4,6 +4,7 @@ use std::any::Any;
 
 use crate::errors::CoffeeError;
 use crate::plugin::Plugin;
+use crate::url::URL;
 
 use async_trait::async_trait;
 
@@ -20,6 +21,12 @@ pub trait Repository: Any {
 
     /// return the list of plugin that are register contained inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, CoffeeError>;
+
+    /// return the name of the repository.
+    fn name(&self) -> String;
+
+    /// return the url of the repository.
+    fn url(&self) -> URL;
 
     fn as_any(&self) -> &dyn Any;
 }

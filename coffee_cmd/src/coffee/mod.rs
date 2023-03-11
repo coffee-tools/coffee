@@ -7,6 +7,7 @@ use clightningrpc_common::json_utils;
 use clightningrpc_conf::{CLNConf, SyncCLNConf};
 use coffee_github::repository::Github;
 use coffee_lib::errors::CoffeeError;
+use coffee_lib::plugin::Plugin;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
 use coffee_lib::url::URL;
@@ -16,6 +17,8 @@ use coffee_storage::storage::StorageManager;
 use log::{debug, error, info, trace, warn};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
+use serde_json::Value;
 use std::fmt::Debug;
 use std::vec::Vec;
 
@@ -231,8 +234,30 @@ impl PluginManager for CoffeeManager {
         Err(err)
     }
 
-    async fn list(&mut self) -> Result<(), CoffeeError> {
-        Ok(())
+    async fn list(&mut self, remotes: bool) -> Result<Value, CoffeeError> {
+        let installed_plugins_vec: Vec<Plugin> = self.config.plugins.clone();
+        let plugin_json;
+        if remotes {
+            let mut remote_list: Vec<Value> = Vec::new();
+            for repo in &self.repos {
+                let remote_repo_json = json!(
+                {
+                    "local_name": repo.name(),
+                    "link": repo.url().url_string,
+                    "plugins": repo.list().await.unwrap(),
+                 });
+                remote_list.push(remote_repo_json);
+            }
+            plugin_json = json!({
+               "plugins": serde_json::to_value(&installed_plugins_vec).unwrap(),
+               "remotes": remote_list,
+            });
+        } else {
+            plugin_json = json!({
+               "plugins": serde_json::to_value(&installed_plugins_vec).unwrap(),
+            });
+        }
+        Ok(plugin_json)
     }
 
     async fn upgrade(&mut self, _: &[&str]) -> Result<(), CoffeeError> {

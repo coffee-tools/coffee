@@ -31,9 +31,12 @@ pub enum CoffeeCommand {
     /// upgrade a single or a list of plugins.
     #[clap(arg_required_else_help = true)]
     Upgrade,
-    /// Print the list of plugin installed in cln.
-    #[clap(arg_required_else_help = true)]
-    List,
+    /// Print the list of plugins installed in cln.
+    #[clap(arg_required_else_help = false)]
+    List {
+        #[arg(short, long, action = clap::ArgAction::SetTrue)]
+        remotes: bool,
+    },
     /// Remove a plugin installed in cln.
     #[clap(arg_required_else_help = true)]
     Remove,
