@@ -21,7 +21,13 @@ async fn main() -> Result<(), CoffeeError> {
             dynamic,
         } => coffee.install(&plugin, verbose, dynamic).await,
         CoffeeCommand::Remove => todo!(),
-        CoffeeCommand::List => coffee.list().await,
+        CoffeeCommand::List { remotes } => match coffee.list(remotes).await {
+            Ok(val) => {
+                println!("{}", serde_json::to_string_pretty(&val).unwrap());
+                Ok(())
+            }
+            Err(err) => Err(err),
+        },
         CoffeeCommand::Upgrade => coffee.upgrade(&[""]).await,
         CoffeeCommand::Remote { action } => {
             if let RemoteAction::Add { name, url } = action {

@@ -171,6 +171,7 @@ dependencies = [
  "git2",
  "log",
  "serde",
+ "serde_json",
  "tokio",
 ]
 

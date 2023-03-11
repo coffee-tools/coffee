@@ -182,11 +182,18 @@ impl Repository for Github {
     }
 
     /// list of the plugin installed inside the repository.
-    ///
-    /// M.B: in the future we want also list all the plugin installed
-    /// inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, CoffeeError> {
         Ok(self.plugins.clone())
+    }
+
+    /// name of the repository.
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    /// url of the repository.
+    fn url(&self) -> URL {
+        self.url.clone()
     }
 
     /// search inside the repository a plugin by name.

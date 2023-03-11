@@ -1,5 +1,6 @@
 //! Plugin manager module definition.
 use async_trait::async_trait;
+use serde_json::Value;
 
 use crate::errors::CoffeeError;
 
@@ -18,8 +19,8 @@ pub trait PluginManager {
         try_dynamic: bool,
     ) -> Result<(), CoffeeError>;
 
-    /// return the list of plugin manager by the plugin manager.
-    async fn list(&mut self) -> Result<(), CoffeeError>;
+    /// return the list of plugins installed by the plugin manager.
+    async fn list(&mut self, remotes: bool) -> Result<Value, CoffeeError>;
 
     /// upgrade a sequence of plugin managed by the plugin manager.
     async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), CoffeeError>;
