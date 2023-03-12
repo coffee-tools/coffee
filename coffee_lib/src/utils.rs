@@ -35,6 +35,7 @@ mod tests {
     }
 
     fn create_dir_in_home(relative_path: &str) -> String {
+        #![allow(deprecated)]
         let mut path = env::home_dir()
             .unwrap()
             .into_os_string()
