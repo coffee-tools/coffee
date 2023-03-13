@@ -25,7 +25,6 @@ use std::vec::Vec;
 //use super::cmd;
 use super::config;
 
-
 #[derive(Serialize, Deserialize)]
 /// FIXME: move the list of plugin
 /// and the list of repository inside this struct.
