@@ -1,6 +1,6 @@
 //! Coffee mod implementation
-use self::cmd::CoffeeArgs;
-use self::config::CoffeeConf;
+use crate::cmd::CoffeeArgs;
+use crate::config::CoffeeConf;
 use async_trait::async_trait;
 use clightningrpc_common::client::Client;
 use clightningrpc_common::json_utils;
@@ -22,8 +22,9 @@ use serde_json::Value;
 use std::fmt::Debug;
 use std::vec::Vec;
 
-pub mod cmd;
-mod config;
+//use super::cmd;
+use super::config;
+
 
 #[derive(Serialize, Deserialize)]
 /// FIXME: move the list of plugin
