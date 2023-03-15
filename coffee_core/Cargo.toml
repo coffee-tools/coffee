@@ -9,6 +9,7 @@ tokio = { version = "1.22.0", features = ["full"] }
 clap = { version = "4.0.26", features = ["derive"] }
 async-trait = "0.1.57"
 coffee_lib = { path = "../coffee_lib" }
+coffee_cmd = { path = "../coffee_cmd" }
 coffee_github = { path = "../coffee_github"  }
 log = "0.4.17"
 env_logger = "0.9.3"

@@ -1,5 +1,5 @@
 //! Coffee mod implementation
-use crate::cmd::CoffeeArgs;
+use coffee_cmd::cmd::CoffeeArgs;
 use crate::config::CoffeeConf;
 use async_trait::async_trait;
 use clightningrpc_common::client::Client;

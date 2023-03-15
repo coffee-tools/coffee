@@ -1,12 +1,11 @@
 //! Coffee configuration utils.
 
+use coffee_cmd::CoffeeArgs;
 use coffee_lib::{errors::CoffeeError, plugin::Plugin};
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use std::{env, path::Path};
 use tokio::fs::create_dir;
-
-use super::cmd::CoffeeArgs;
 
 /// Custom coffee configuration, given by a command line list of arguments
 /// or a coffee configuration file.

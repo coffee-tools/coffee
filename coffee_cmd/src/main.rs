@@ -1,9 +1,10 @@
-use clap::Parser;
-use coffee_core::cmd::CoffeeArgs;
-use coffee_core::cmd::CoffeeCommand;
-use coffee_core::cmd::RemoteAction;
-use coffee_core::coffee::CoffeeManager;
+mod cmd;
 
+use clap::Parser;
+use coffee_core::coffee::CoffeeManager;
+use crate::cmd::CoffeeArgs;
+use crate::cmd::CoffeeCommand;
+use crate::cmd::RemoteAction;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 
