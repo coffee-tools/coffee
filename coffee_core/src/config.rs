@@ -1,6 +1,5 @@
 //! Coffee configuration utils.
-
-use coffee_cmd::CoffeeArgs;
+use crate::CoffeeArgs;
 use coffee_lib::{errors::CoffeeError, plugin::Plugin};
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
@@ -40,10 +39,10 @@ async fn check_dir_or_make_if_missing(path: String) -> Result<(), CoffeeError> {
 
 impl CoffeeConf {
     /// Create a new instance of the coffee configuration from the args.
-    pub async fn new(conf: &CoffeeArgs) -> Result<Self, CoffeeError> {
+    pub async fn new(conf: &dyn CoffeeArgs) -> Result<Self, CoffeeError> {
         #[allow(deprecated)]
         let mut def_path = env::home_dir().unwrap().to_str().unwrap().to_string();
-        if let Some(data_dir) = &conf.data_dir {
+        if let Some(data_dir) = &conf.data_dir() {
             def_path = data_dir.to_owned();
         }
 
@@ -64,7 +63,7 @@ impl CoffeeConf {
 
         // check the command line arguments and bind them
         // inside the coffee conf
-        coffee.bind_cmd_line_params(&conf)?;
+        coffee.bind_cmd_line_params(conf)?;
 
         // after we know all the information regarding
         // the configuration we try to see if there is
@@ -78,13 +77,13 @@ impl CoffeeConf {
         Ok(())
     }
 
-    fn bind_cmd_line_params(&mut self, conf: &CoffeeArgs) -> Result<(), CoffeeError> {
-        if let Some(network) = &conf.network {
+    fn bind_cmd_line_params(&mut self, conf: &dyn CoffeeArgs) -> Result<(), CoffeeError> {
+        if let Some(network) = &conf.network() {
             self.network = network.to_owned();
             self.config_path = format!("{}/{}/coffee.conf", self.root_path, self.network);
         }
 
-        if let Some(config) = &conf.conf {
+        if let Some(config) = &conf.conf() {
             self.config_path = config.to_owned();
         }
 

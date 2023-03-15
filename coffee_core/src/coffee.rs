@@ -1,6 +1,6 @@
 //! Coffee mod implementation
-use coffee_cmd::cmd::CoffeeArgs;
 use crate::config::CoffeeConf;
+use crate::CoffeeArgs;
 use async_trait::async_trait;
 use clightningrpc_common::client::Client;
 use clightningrpc_common::json_utils;
@@ -22,7 +22,6 @@ use serde_json::Value;
 use std::fmt::Debug;
 use std::vec::Vec;
 
-//use super::cmd;
 use super::config;
 
 #[derive(Serialize, Deserialize)]
@@ -69,7 +68,7 @@ pub struct CoffeeManager {
 }
 
 impl CoffeeManager {
-    pub async fn new(conf: &CoffeeArgs) -> Result<Self, CoffeeError> {
+    pub async fn new(conf: &dyn CoffeeArgs) -> Result<Self, CoffeeError> {
         let conf = CoffeeConf::new(conf).await?;
         let mut coffee = CoffeeManager {
             config: conf.clone(),

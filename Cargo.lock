@@ -151,7 +151,6 @@ name = "coffee_core"
 version = "0.0.1-alpha.1"
 dependencies = [
  "async-trait",
- "clap",
  "clightningrpc-common",
  "clightningrpc-conf",
  "coffee_github",
