@@ -1,17 +1,10 @@
 # Overview
+- [Introduction](./introduction.md)
 
-- [Introduction](./intro.md)
+# For plugin users/developers
+- [Installing Coffee](./install-coffee.md)
+- [Using Coffee](./using-coffee.md)
+- [Support Coffee](./support-coffee.md)
 
-# For Plugin User
-
-- [How to Install](./how-to-install.md)
-- [How to Use](./how-to-use.md)
-- [How support coffee](./how-to-support.md)
-
-# For Plguins developers
-
-- [How to Install](./how-to-install.md)
-
-# For Coffee Contributors Contributors
-
-- [How to Contribute](./how-to-contribute.md)
+# For Coffee contributors
+- [Contributing to Coffee](./contributing-to-coffee.md)

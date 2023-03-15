@@ -1,4 +1,4 @@
-# How to Install
+# Install Coffee
 
 ## Binary Installation
 
