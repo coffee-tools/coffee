@@ -22,12 +22,6 @@ has to follow a different procedure for installing a plugin and building it.
 Despite allowing all users to write plugins in their own way, this can have a
 detrimental effect in fragmenting the ecosystem.
 
-In fact, currently, we had many ways to write a plugin in core lightning
-with different languages, like rust, go, java, kotlin, scala, dart, python
-and many others. And this can cause confusion around the community and
-the user now has a different way to install a plugin and different
-way to compile and install a plugin.
-
 ## Solution
 
 We are offering Coffee as a solution to help install and develop a plugin for
@@ -71,3 +65,5 @@ To empower everyone, we need the help and the vision of everyone, so
 if you want to contribute with ideas please submit an
 [issue](https://github.com/coffee-tools/coffee/issues) or if you want to
 contribute please read our [hacking guide](./contributing-to-coffee.md)
+
+In addition, consider subscribing to [our mailing list](https://lists.sr.ht/~vincenzopalazzo/coffee-dev)
