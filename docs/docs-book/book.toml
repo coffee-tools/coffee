@@ -3,8 +3,8 @@ authors = ["Vincenzo Palazzo"]
 language = "en"
 multilingual = false
 src = "src"
-title = "One Day with Coffee Plugin Manager"
-description = "A complete description of coffee plugin manager."
+title = "Coffee Plugin Manager"
+description = "Coffee is a flexible core lightning plugin manager."
 
 [build]
 build-dir = "doc-build"

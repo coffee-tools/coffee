@@ -1,4 +1,4 @@
-# How support Coffee
+# How to support?
 
 ## Add a Manifest file
 
