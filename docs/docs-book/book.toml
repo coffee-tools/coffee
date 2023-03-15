@@ -1,0 +1,18 @@
+[book]
+authors = ["Vincenzo Palazzo"]
+language = "en"
+multilingual = false
+src = "src"
+title = "One Day with Coffee Plugin Manager"
+description = "A complete description of coffee plugin manager."
+
+[build]
+build-dir = "doc-build"
+create-missing = false
+
+[preprocessor.index]
+
+[preprocessor.links]
+
+[output.html.search]
+limit-results = 15
