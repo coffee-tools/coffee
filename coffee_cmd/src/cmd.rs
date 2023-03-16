@@ -57,3 +57,47 @@ pub enum RemoteAction {
     Add { name: String, url: String },
     Remove { name: String },
 }
+
+impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
+    fn from(value: &CoffeeCommand) -> Self {
+        match value {
+            CoffeeCommand::Install {
+                plugin,
+                verbose,
+                dynamic,
+            } => Self::Install(plugin.to_owned(), *verbose, *dynamic),
+            CoffeeCommand::Upgrade => Self::Upgrade,
+            CoffeeCommand::List { remotes } => Self::List(*remotes),
+            CoffeeCommand::Setup { cln_conf } => Self::Setup(cln_conf.to_owned()),
+            CoffeeCommand::Remote { action } => Self::Remote(action.into()),
+            CoffeeCommand::Remove => Self::Remove,
+        }
+    }
+}
+
+impl From<&RemoteAction> for coffee_core::RemoteAction {
+    fn from(value: &RemoteAction) -> Self {
+        match value {
+            RemoteAction::Add { name, url } => Self::Add(name.to_owned(), url.to_owned()),
+            RemoteAction::Remove { name } => Self::Remove(name.to_owned()),
+        }
+    }
+}
+
+impl coffee_core::CoffeeArgs for CoffeeArgs {
+    fn command(&self) -> coffee_core::CoffeeOperation {
+        coffee_core::CoffeeOperation::from(&self.command)
+    }
+
+    fn conf(&self) -> Option<String> {
+        self.conf.clone()
+    }
+
+    fn data_dir(&self) -> Option<String> {
+        self.data_dir.clone()
+    }
+
+    fn network(&self) -> Option<String> {
+        self.network.clone()
+    }
+}

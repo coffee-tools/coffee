@@ -130,11 +130,27 @@ dependencies = [
 ]
 
 [[package]]
-name = "coffee_cmd"
+name = "coffee"
 version = "0.0.1-alpha.1"
 dependencies = [
  "async-trait",
  "clap",
+ "clightningrpc-common",
+ "clightningrpc-conf",
+ "coffee_core",
+ "coffee_lib",
+ "env_logger",
+ "log",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "coffee_core"
+version = "0.0.1-alpha.1"
+dependencies = [
+ "async-trait",
  "clightningrpc-common",
  "clightningrpc-conf",
  "coffee_github",
