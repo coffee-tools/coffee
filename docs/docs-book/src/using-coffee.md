@@ -22,7 +22,8 @@ coffee setup /home/alice/.lightning
 ```
 
 Then you will find an include at the end of the config file at
-`/home/alice/.lightnig/bitcoin/config`, in case this config file do not exist.
+`/home/alice/.lightnig/bitcoin/config`, in case this config file do not exist
+Coffee will create it.
 
 ```text
 include /home/alice/.coffee/testnet/coffee.conf
@@ -31,8 +32,8 @@ include /home/alice/.coffee/testnet/coffee.conf
 In addition there are the following additional option that you can specify:
 
 - `--network`: by default set to `bitcoin`, but if you want specify the network
-that Core Lightning is using, if you are running Core Lightning on a network
-other than `bitcoin`, you must ensure that the flag is set.
+that Core Lightning is using, you must ensure that the flag is set to
+the correct network.
 - `--data-dir`: by default this `/home/<home>/.coffee`, you may want to set
 this option if you are looking to specify a different directory for the
 Coffee home.
@@ -109,8 +110,6 @@ coffee upgrade <NAME_OF_PLUGIN>
 ## Listing all the plugins
 
 > ✅ Implemented
-
-Coffee tightly integrates with git, allowing you to easily upgrade your plugins through the command line interface (CLI). This eliminates the need for tedious tasks such as downloading the latest updates and creating new versions of plugins. To upgrade a plugin, all you need to do is run.
 
 ```bash
 coffee list
