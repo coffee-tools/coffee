@@ -14,5 +14,8 @@ create-missing = false
 
 [preprocessor.links]
 
+[output.html]
+default-theme = "ayu"
+
 [output.html.search]
 limit-results = 15
