@@ -1,6 +1,8 @@
 # Using Coffee
 
-Coffee is a plugin manager and development tool for core lightning nodes. It helps automate configuration and installation of plugins, and provides plugin templates for all the official languages.
+Coffee is a plugin manager and development tool for core lightning nodes. It
+helps automate configuration and installation of plugins, and provides plugin
+templates for all the official languages.
 
 Coffee is a command line utility that provides access to a wide range of tasks.
 
@@ -9,8 +11,8 @@ Coffee is a command line utility that provides access to a wide range of tasks.
 > ✅ Implemented
 
 Coffee is able to manage the configuration of your core lightning and all the
-plugins connected with it, so in order to use coffe the user need to point
-coffee in the current home of Core Lightning.
+plugins connected with it, so in order to use Coffee, the user needs to point
+Coffee to the current root of core lightning.
 
 By default the Core Lightning home is stored in the `/home/<user>/.lightning`,
 and you can do it with the following command
