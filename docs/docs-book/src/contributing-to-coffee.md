@@ -89,6 +89,7 @@ The version in our package.json gets copied to the one we publish, and users nee
 
 ### Scopes
 
+- **core**: Changes related to the main functions
 - **cmd**: Changes related to the cli package
 - **docs**: Changes related to the documentation of the crate
 - **github**: Changes related to the github interface
