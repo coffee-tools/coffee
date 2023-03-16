@@ -9,11 +9,11 @@
 
 ## Introduction
 
-Welcome to the HACKING guide and let's peek into how a day in the life of a **Coffee** plugin manager maintainer looks like.
+Welcome to the HACKING guide and let's peek into how a day in the life of
+a **Coffee** plugin manager maintainer looks like.
 
-After reading this, you should be prepared to contribute to the repository and be a potential maintainer in the future if you desire!
-
-Before beginning, please review the most frequent mistakes people make when creating patches at https://www.kernel.org/doc/html/next/process/applying-patches.html#common-errors-when-patching.
+After reading this, you should be prepared to contribute to the repository
+and be a potential maintainer in the future if you desire!
 
 ## Code style
 
@@ -26,9 +26,12 @@ To ensure consistency throughout the source code, these rules are to be kept in 
 - If you can, GPG-sign at least your top commit when filing a PR
 
 ### If You Don’t Know The Right Thing, Do The Simplest Thing
-Sometimes the right way is unclear, so it’s best not to spend time on it. It’s far easier to rewrite simple code than complex code, too.
+
+Sometimes the right way is unclear, so it’s best not to spend time on it.
+It’s far easier to rewrite simple code than complex code, too.
 
 ### Use of `FIXME`
+
 There are two cases in which you should use a `/* FIXME: */`
 comment: one is where an optimization seems possible, but it’s unclear if it’s yet worthwhile, and the second one is in the case of an ugly corner case which could be improved (and may be in a following patch).
 
@@ -36,12 +39,13 @@ There are always compromises in code: eventually, it needs to ship. `FIXME` is g
 as well as useful warning signs if we later encounter an issue in some part of the code.
 
 ### Write For Today: Unused Code Is Buggy Code
+
 Don’t overdesign: complexity is a killer. If you need a fancy data structure, start with a brute force linked list. Once that’s working, perhaps consider your fancy structure, but don’t implement a generic thing. Use `/* FIXME: ...*/` to salve your conscience.
 
 ### Keep Your Patches Reviewable
+
 Try to make a single change at a time. It’s tempting to do “drive-by” fixes as you see other things, and a minimal amount is unavoidable,
 but you can end up shaving infinite yaks. This is a good time to drop a `/* FIXME: ...*/` comment and move on.
-
 
 ## Commit Style
 
@@ -50,7 +54,7 @@ The commit style is one of the more important concepts when managing a monorepo 
 Each commit message consists of a **header**, a **body** and a **footer**. The header has a special
 format that includes a **type**, a **scope** and a **subject**:
 
-```
+```text
 <type>(<scope>): <subject>
 <BLANK LINE>
 <body>
@@ -101,8 +105,8 @@ The subject contains a succinct description of the change:
 
 ### Body
 
-You are free to put all the content you want inside the body, but if you are fixing try to follow
-this indication (https://www.kernel.org/doc/html/latest/process/submitting-patches.html?highlight=signed%20off#describe-your-changes) and do not waste the body space, also it is preferable that if
+You are free to put all the content you want inside the body, but if you are fixing try to 
+[follow this indication](https://www.kernel.org/doc/html/latest/process/submitting-patches.html?highlight=signed%20off#describe-your-changes) and do not waste the body space, also it is preferable that if
 you fix an exception or some wrong behavior you must put the details or stacktrace inside the body ensure sure that the search engine indexes it.
 
 An example of commit body is the following one
@@ -124,6 +128,7 @@ description: "`Rust core lightning Rust framework` HACKING guide"
 ```
 
 ## How to make the release
+
 TODO
 
 N.B: Part of this document is stolen from [core lightning](https://github.com/ElementsProject/lightning/blob/master/doc/HACKING.md) docs made with from @rustyrussell 's experience.
