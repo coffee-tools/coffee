@@ -20,6 +20,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use serde_json::Value;
 use std::fmt::Debug;
+use std::fs;
 use std::vec::Vec;
 
 use super::config;
@@ -278,6 +279,21 @@ impl PluginManager for CoffeeManager {
         repo.init().await?;
         self.repos.push(Box::new(repo));
         debug!("remote added: {} {}", name, &url.url_string);
+        self.storage.store(&self.storage_info()).await?;
+        Ok(())
+    }
+
+    async fn rm_remote(&mut self, name: &str) -> Result<(), CoffeeError> {
+        debug!("remote removing: {}", name);
+        let index = self
+            .repos
+            .iter()
+            .position(|x| &*x.to_owned().name() == name)
+            .unwrap();
+        let repo_path = &self.repos[index].url().path_string;
+        fs::remove_dir_all(repo_path)?;
+        self.repos.remove(index);
+        debug!("remote removed: {}", name);
         self.storage.store(&self.storage_info()).await?;
         Ok(())
     }

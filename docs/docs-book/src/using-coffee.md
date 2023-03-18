@@ -54,10 +54,10 @@ coffee remote add <name repository> <url repository>
 
 To remove a plugin repository, simply run the following command.
 
-> ⚠️  this feature is under development, see [the tracking issue](https://github.com/coffee-tools/coffee/issues/13)
+> ✅ Implemented
 
 ```bash
-coffee remote remove <NAME_OF_THE_REPOSITORY>
+coffee remote rm <NAME_OF_THE_REPOSITORY>
 ```
 
 ## Install a Plugin
