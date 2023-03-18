@@ -39,7 +39,7 @@ commands after you [install it](./install-coffee.md)
 ```bash
 coffee --network testnet setup /home/alice/.lightning
 coffee --network testnet remote add lightningd https://github.com/lightningd/plugins.git
-coffee --network install btcli4j
+coffee --network testnet install btcli4j
 ```
 
 >The plugin manager is currently under development, so some of the plugins can
