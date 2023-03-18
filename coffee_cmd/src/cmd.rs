@@ -55,7 +55,7 @@ pub enum CoffeeCommand {
 #[derive(Debug, Subcommand)]
 pub enum RemoteAction {
     Add { name: String, url: String },
-    Remove { name: String },
+    Rm { name: String },
 }
 
 impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
@@ -79,7 +79,7 @@ impl From<&RemoteAction> for coffee_core::RemoteAction {
     fn from(value: &RemoteAction) -> Self {
         match value {
             RemoteAction::Add { name, url } => Self::Add(name.to_owned(), url.to_owned()),
-            RemoteAction::Remove { name } => Self::Remove(name.to_owned()),
+            RemoteAction::Rm { name } => Self::Rm(name.to_owned()),
         }
     }
 }

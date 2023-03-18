@@ -31,6 +31,8 @@ async fn main() -> Result<(), CoffeeError> {
         CoffeeCommand::Remote { action } => {
             if let RemoteAction::Add { name, url } = action {
                 coffee.add_remote(name.as_str(), url.as_str()).await
+            } else if let RemoteAction::Rm { name } = action {
+                coffee.rm_remote(name.as_str()).await
             } else {
                 Err(CoffeeError::new(1, "unsupported command"))
             }

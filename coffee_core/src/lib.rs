@@ -18,7 +18,7 @@ pub enum CoffeeOperation {
 #[derive(Clone, Debug)]
 pub enum RemoteAction {
     Add(String, String),
-    Remove(String),
+    Rm(String),
 }
 
 pub trait CoffeeArgs {
