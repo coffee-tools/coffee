@@ -3,12 +3,12 @@ FMT=fmt
 
 OPTIONS=
 
-doc-deps:
-	$(CC) install mdbook
-
 default: fmt
 	$(CC) build
 	@make example
+
+doc-deps:
+	$(CC) install mdbook
 
 fmt:
 	$(CC) fmt --all
