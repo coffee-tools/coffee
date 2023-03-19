@@ -1,9 +1,10 @@
 [workspace]
 members = [
         "coffee_lib",
-        "coffee_core",
-        "coffee_cmd",
         "coffee_github",
         "coffee_storage",
+        "coffee_core",
+        "coffee_cmd",
+        "coffee_httpd",
 ]
 resolver = "2"

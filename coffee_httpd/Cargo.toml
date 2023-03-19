@@ -1,0 +1,9 @@
+[package]
+name = "coffee_httpd"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = "4"
+clap = "4.1.11"
+coffee_core = { path = "../coffee_core" }
