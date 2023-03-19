@@ -6,6 +6,7 @@ pub mod httpd;
 
 #[actix_web::main]
 async fn main() {
+    env_logger::init();
     let cmd = cmd::HttpdArgs::parse();
     let coffee = CoffeeManager::new(&cmd).await;
     if let Err(err) = &coffee {
