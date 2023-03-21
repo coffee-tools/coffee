@@ -1,4 +1,3 @@
-#![feature(async_closure)]
 mod plugin;
 use clightningrpc_plugin::errors::PluginError;
 use plugin::build_plugin;
