@@ -8,6 +8,9 @@ use coffee_core::coffee::CoffeeManager;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 
+use termimad::crossterm::style::Color::*;
+use termimad::{Alignment, MadSkin};
+
 #[tokio::main]
 async fn main() -> Result<(), CoffeeError> {
     env_logger::init();
@@ -42,6 +45,21 @@ async fn main() -> Result<(), CoffeeError> {
             // and the coffee script
             coffee.setup(&cln_conf).await
         }
+        CoffeeCommand::Show { plugin } => match coffee.show(&plugin).await {
+            Ok(val) => {
+                let mut skin = MadSkin::default();
+                skin.table.align = Alignment::Center;
+                skin.set_headers_fg(AnsiValue(178));
+                skin.bold.set_fg(Yellow);
+                skin.italic.set_fg(Magenta);
+                skin.scrollbar.thumb.set_fg(AnsiValue(178));
+                skin.code_block.align = Alignment::Center;
+
+                skin.print_text(val["show"].as_str().unwrap());
+                Ok(())
+            }
+            Err(err) => Err(err),
+        },
     };
 
     if let Err(err) = result {

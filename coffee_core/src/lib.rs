@@ -13,6 +13,7 @@ pub enum CoffeeOperation {
     Remote(RemoteAction),
     /// Setup(core lightning root path)
     Setup(String),
+    Show(String),
 }
 
 #[derive(Clone, Debug)]
