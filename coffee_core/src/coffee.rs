@@ -297,6 +297,21 @@ impl PluginManager for CoffeeManager {
         self.storage.store(&self.storage_info()).await?;
         Ok(())
     }
+
+    async fn show(&mut self, plugin: &str) -> Result<Value, CoffeeError> {
+        for repo in &self.repos {
+            if let Some(plugin) = repo.get_plugin_by_name(plugin) {
+                let readme_path = format!("{}/README.md", plugin.path);
+                let contents = fs::read_to_string(readme_path)?;
+                return Ok(json!({ "show": contents }));
+            }
+        }
+        let err = CoffeeError::new(
+            1,
+            &format!("plugin `{plugin}` are not present inside the repositories"),
+        );
+        Err(err)
+    }
 }
 
 // FIXME: we need to move on but this is not safe and with the coffee

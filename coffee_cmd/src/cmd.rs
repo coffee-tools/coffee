@@ -46,10 +46,13 @@ pub enum CoffeeCommand {
         #[clap(subcommand)]
         action: RemoteAction,
     },
-    /// Configur coffee with the core lightning
+    /// Configure coffee with the core lightning
     /// configuration
     #[clap(arg_required_else_help = true)]
     Setup { cln_conf: String },
+    /// show the README file of the plugin
+    #[clap(arg_required_else_help = true)]
+    Show { plugin: String },
 }
 
 #[derive(Debug, Subcommand)]
@@ -71,6 +74,7 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
             CoffeeCommand::Setup { cln_conf } => Self::Setup(cln_conf.to_owned()),
             CoffeeCommand::Remote { action } => Self::Remote(action.into()),
             CoffeeCommand::Remove => Self::Remove,
+            CoffeeCommand::Show { plugin } => Self::Show(plugin.to_owned()),
         }
     }
 }

@@ -121,3 +121,10 @@ or to see all the plugins inside the repositories
 coffee list --remotes
 ```
 
+## Showing the README file of the plugin
+
+> ✅ Implemented
+
+```bash
+coffee show <NAME_OF_PLUGIN>
+```
