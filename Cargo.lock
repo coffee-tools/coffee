@@ -412,6 +412,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "clightningrpc-plugin"
+version = "0.3.0-beta.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "653c5c4427d241cf13d5aba6d2f30e4a594167a925391c2394050956f30789c2"
+dependencies = [
+ "clightningrpc-common",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "coffee"
 version = "0.0.1-alpha.1"
 dependencies = [
@@ -482,6 +493,17 @@ dependencies = [
  "git2",
  "log",
  "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "coffee_plugin"
+version = "0.1.0"
+dependencies = [
+ "clightningrpc-common",
+ "clightningrpc-plugin",
+ "coffee_core",
  "serde_json",
  "tokio",
 ]
