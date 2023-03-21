@@ -27,6 +27,7 @@ your business applications :smile:.
 | [coffee_lib](../coffee_lib/)     | The core library to the Coffee plugin ecosystem      | pre_release |
 | [coffee_storage](../coffee_storage/)     | The local storage model package for the Coffee plugin manager     | pre_release |
 | [coffee_httpd](../coffee_httpd/)     | HTTP deamon that expose the public API of coffee     | under development |
+| [coffee_plugin](../coffee_plugin)     | Core Lightning plugin that allo to interact with coffee     | under development |
 
 ## How to contribute
 
