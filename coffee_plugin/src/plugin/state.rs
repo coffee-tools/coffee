@@ -1,12 +1,15 @@
 //! Coffee State struct implementation
 use std::sync::Arc;
+use std::sync::Mutex;
 
 use clightningrpc_plugin::commands::types::CLNConf;
 use coffee_core::{coffee::CoffeeManager, CoffeeArgs};
+use coffee_lib::errors::CoffeeError;
+use coffee_lib::plugin_manager::PluginManager;
 
 #[derive(Clone)]
 pub struct State {
-    pub coffee: Option<Arc<CoffeeManager>>,
+    pub coffee: Option<Arc<Mutex<CoffeeManager>>>,
     pub args: Option<PluginArgs>,
 }
 
@@ -19,11 +22,10 @@ impl State {
     }
 
     pub fn set_coffee(&mut self, coffee: CoffeeManager) {
-        self.coffee = Some(Arc::new(coffee));
+        self.coffee = Some(Arc::new(Mutex::new(coffee)));
     }
 
-    #[allow(dead_code)]
-    pub fn coffee(&self) -> Arc<CoffeeManager> {
+    pub fn coffee(&self) -> Arc<Mutex<CoffeeManager>> {
         self.coffee.clone().unwrap()
     }
 
@@ -38,9 +40,18 @@ impl State {
     pub fn args(&self) -> PluginArgs {
         self.args.clone().unwrap()
     }
+
+    pub async fn setup(&self) -> Result<(), CoffeeError> {
+        self.coffee()
+            .lock()
+            .unwrap()
+            .setup(&self.args.clone().unwrap().conf)
+            .await?;
+        Ok(())
+    }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PluginArgs {
     pub conf: String,
     pub network: String,
@@ -68,8 +79,14 @@ impl CoffeeArgs for PluginArgs {
 
 impl From<CLNConf> for PluginArgs {
     fn from(value: CLNConf) -> Self {
+        let mut root = value.lightning_dir.as_str();
+        if value.lightning_dir.ends_with("/testnet") {
+            root = value.lightning_dir.strip_suffix("/testnet").unwrap();
+        } else if value.lightning_dir.ends_with("/bitcoin") {
+            root = value.lightning_dir.strip_suffix("/bitcoin").unwrap();
+        }
         PluginArgs {
-            conf: value.lightning_dir,
+            conf: root.to_owned(),
             network: value.network,
             data_dir: None,
         }
