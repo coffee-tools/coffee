@@ -1,8 +1,15 @@
 use std::any::Any;
 
-use crate::utils::clone_recursive_fix;
 use async_trait::async_trait;
+use git2;
+use log::debug;
+use tokio::fs::File;
+use tokio::io::AsyncReadExt;
+use walkdir::DirEntry;
+use walkdir::WalkDir;
+
 use coffee_lib::errors::CoffeeError;
+use coffee_lib::macros::error;
 use coffee_lib::plugin::Plugin;
 use coffee_lib::plugin::PluginLang;
 use coffee_lib::plugin_conf::Conf;
@@ -11,12 +18,8 @@ use coffee_lib::url::URL;
 use coffee_lib::utils::get_plugin_info_from_path;
 use coffee_storage::model::repository::Kind;
 use coffee_storage::model::repository::Repository as StorageRepository;
-use git2;
-use log::debug;
-use tokio::fs::File;
-use tokio::io::AsyncReadExt;
-use walkdir::DirEntry;
-use walkdir::WalkDir;
+
+use crate::utils::clone_recursive_fix;
 
 pub struct Github {
     /// the url of the repository to be able
@@ -82,15 +85,14 @@ impl Github {
                             conf_file.read_to_string(&mut conf_str).await?;
                             debug!("found plugin configuration: {}", conf_str);
 
-                            let conf_file =
-                                serde_yaml::from_str::<Conf>(&conf_str).map_err(|err| {
-                                    CoffeeError::new(1, &format!("Coffe manifest malformed: {err}"))
-                                })?;
+                            let conf_file = serde_yaml::from_str::<Conf>(&conf_str)
+                                .map_err(|err| error!("Coffee manifest malformed: {err}"))?;
                             plugin_name = Some(conf_file.plugin.name.to_string());
                             path_to_plugin = Some(root_path.to_owned());
                             let conf_lang = (&conf_file.plugin.lang).to_owned();
                             match conf_lang.as_str() {
-                                "py" => plugin_lang = PluginLang::Python,
+                                "pypip" => plugin_lang = PluginLang::PyPip,
+                                "pypoetry" => plugin_lang = PluginLang::PyPoetry,
                                 "go" => plugin_lang = PluginLang::Go,
                                 "rs" => plugin_lang = PluginLang::Rust,
                                 "dart" => plugin_lang = PluginLang::Dart,
@@ -98,10 +100,7 @@ impl Github {
                                 "ts" => plugin_lang = PluginLang::TypeScript,
                                 "java" | "kotlin" | "scala" => plugin_lang = PluginLang::JVM,
                                 _ => {
-                                    return Err(CoffeeError::new(
-                                        1,
-                                        &format!("language {conf_lang} not supported"),
-                                    ))
+                                    return Err(error!("language {conf_lang} not supported"));
                                 }
                             };
 
@@ -124,7 +123,8 @@ impl Github {
                             debug!("looking for {tmp_plugin_name} in {tmp_path_to_plugin}");
                             let file_name = file_dir.file_name().to_str().unwrap();
                             plugin_lang = match file_name {
-                                "requirements.txt" => PluginLang::Python,
+                                "requirements.txt" => PluginLang::PyPip,
+                                "pyproject.toml" => PluginLang::PyPoetry,
                                 "go.mod" => PluginLang::Go,
                                 "cargo.toml" => PluginLang::Rust,
                                 "pubspec.yaml" => PluginLang::Dart,
@@ -151,7 +151,7 @@ impl Github {
                     debug!("new plugin: {:?}", plugin);
                     self.plugins.push(plugin);
                 }
-                Err(err) => return Err(CoffeeError::new(1, err.to_string().as_str())),
+                Err(err) => return Err(error!("{}", err)),
             }
         }
         Ok(())
