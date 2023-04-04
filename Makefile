@@ -27,3 +27,6 @@ book:
 
 dev-book:
 	cd docs/docs-book; mdbook serve --open
+
+install:
+	$(CC) install --locked --path ./coffee_cmd

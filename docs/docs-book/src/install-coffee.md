@@ -14,6 +14,6 @@ When you had Rust up and running, to install Coffee you need just to do
 
 ```bash
 git clone https://github.com/coffee-tools/coffee.git && cd coffee
-cargo install --locked --path ./coffee_cmd
+make install
 coffee --help
 ```
