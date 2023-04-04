@@ -9,6 +9,7 @@ use tokio::process::Command;
 use crate::errors::CoffeeError;
 use crate::macros::error;
 use crate::plugin_conf::Conf;
+use crate::sh;
 
 /// Plugin language definition
 #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -35,23 +36,17 @@ impl PluginLang {
             PluginLang::PyPip => {
                 /* 1. RUN PIP install or poetry install
                  * 2. return the path of the main file */
-                let req_file = format!("{path}/requirements.txt");
+                let script = "pip3 install -r requiremtents.txt";
+                sh!(path, script, verbose);
                 let main_file = format!("{path}/{name}.py");
-                let mut cmd = Command::new("pip");
-                cmd.arg("install").arg("-r").arg(&req_file.clone());
-                if verbose {
-                    let _ = cmd
-                        .spawn()
-                        .expect("Unable to run the command")
-                        .wait()
-                        .await?;
-                } else {
-                    let _ = cmd.output().await?;
-                }
                 Ok(main_file)
             }
             PluginLang::PyPoetry => {
-                todo!()
+                let script = "pip3 install poetry \
+                              poetry export -f requirements.txt --output requirements.txt \
+                              pip3 install -r requirements.txt";
+                sh!(path, script, verbose);
+                Ok(format!("{path}/{name}.py"))
             }
             PluginLang::Go => {
                 /* better instructions needed here */
@@ -124,26 +119,7 @@ impl Plugin {
     pub async fn configure(&mut self, verbose: bool) -> Result<String, CoffeeError> {
         let exec_path = if let Some(conf) = &self.conf {
             if let Some(script) = &conf.plugin.install {
-                let script = script.trim();
-                let cmds = script.split("\n"); // Check if the script contains `\`
-                debug!("cmds: {:#?}", cmds);
-                for cmd in cmds {
-                    debug!("cmd {:#?}", cmd);
-                    let cmd_tok: Vec<&str> = cmd.split(" ").collect();
-                    let command = cmd_tok.first().unwrap().to_string();
-                    let mut cmd = Command::new(command);
-                    cmd.args(&cmd_tok[1..cmd_tok.len()]);
-                    cmd.current_dir(self.root_path.clone());
-                    if verbose {
-                        let _ = cmd
-                            .spawn()
-                            .expect("Unable to run the command")
-                            .wait()
-                            .await?;
-                    } else {
-                        let _ = cmd.output().await?;
-                    }
-                }
+                sh!(self.root_path.clone(), script, verbose);
                 format!("{}/{}", self.path, conf.plugin.main)
             } else {
                 self.lang
