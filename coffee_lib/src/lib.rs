@@ -6,6 +6,7 @@
 #![allow(dead_code)]
 pub mod cln_conf;
 pub mod errors;
+pub mod macros;
 pub mod plugin;
 pub mod plugin_conf;
 pub mod plugin_manager;

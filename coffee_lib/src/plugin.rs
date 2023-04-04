@@ -1,15 +1,20 @@
 //! Plugin module that abstract the concept of a cln plugin
 //! from a plugin manager point of view.
-use crate::{errors::CoffeeError, plugin_conf::Conf};
+use std::fmt;
+
 use log::debug;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use tokio::process::Command;
+
+use crate::errors::CoffeeError;
+use crate::macros::error;
+use crate::plugin_conf::Conf;
 
 /// Plugin language definition
 #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum PluginLang {
-    Python,
+    PyPip,
+    PyPoetry,
     Go,
     Rust,
     Dart,
@@ -27,7 +32,7 @@ impl PluginLang {
         verbose: bool,
     ) -> Result<String, CoffeeError> {
         match self {
-            PluginLang::Python => {
+            PluginLang::PyPip => {
                 /* 1. RUN PIP install or poetry install
                  * 2. return the path of the main file */
                 let req_file = format!("{path}/requirements.txt");
@@ -44,6 +49,9 @@ impl PluginLang {
                     let _ = cmd.output().await?;
                 }
                 Ok(main_file)
+            }
+            PluginLang::PyPoetry => {
+                todo!()
             }
             PluginLang::Go => {
                 /* better instructions needed here */
@@ -72,11 +80,9 @@ impl PluginLang {
             PluginLang::JVM => todo!(),
             PluginLang::Unknown => {
                 /* 1. emit an error message  */
-                let err = CoffeeError::new(
-                    2,
-                    "unknown default install procedure, the language in undefined",
-                );
-                Err(err)
+                Err(error!(
+                    "unknown default install procedure, the language in undefined"
+                ))
             }
         }
     }
