@@ -441,15 +441,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "clightningrpc-common"
-version = "0.3.0-beta.3"
-source = "git+https://github.com/laanwj/cln4rust.git?branch=macros/api#aae715e77b42378c2641756738000195b7ef016c"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "clightningrpc-conf"
 version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -460,13 +451,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "clightningrpc-plugin"
-version = "0.3.0-beta.7"
-source = "git+https://github.com/laanwj/cln4rust.git?branch=macros/api#aae715e77b42378c2641756738000195b7ef016c"
+name = "cln-plugin"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb9daea6247914ed15471b2d6919f7f64354f4d6cd7e95b48ff4f553ab000f42"
 dependencies = [
- "clightningrpc-common 0.3.0-beta.3 (git+https://github.com/laanwj/cln4rust.git?branch=macros/api)",
+ "anyhow",
+ "bytes",
+ "env_logger 0.10.0",
+ "futures",
+ "log",
  "serde",
  "serde_json",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
 ]
 
 [[package]]
@@ -475,11 +474,11 @@ version = "0.0.1-alpha.1"
 dependencies = [
  "async-trait",
  "clap",
- "clightningrpc-common 0.3.0-beta.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clightningrpc-common",
  "clightningrpc-conf",
  "coffee_core",
  "coffee_lib",
- "env_logger",
+ "env_logger 0.9.3",
  "log",
  "serde",
  "serde_json",
@@ -492,12 +491,12 @@ name = "coffee_core"
 version = "0.0.1-alpha.1"
 dependencies = [
  "async-trait",
- "clightningrpc-common 0.3.0-beta.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clightningrpc-common",
  "clightningrpc-conf",
  "coffee_github",
  "coffee_lib",
  "coffee_storage",
- "env_logger",
+ "env_logger 0.9.3",
  "log",
  "serde",
  "serde_json",
@@ -511,7 +510,7 @@ dependencies = [
  "async-trait",
  "coffee_lib",
  "coffee_storage",
- "env_logger",
+ "env_logger 0.9.3",
  "git2",
  "log",
  "serde_yaml",
@@ -526,7 +525,7 @@ dependencies = [
  "actix-web",
  "clap",
  "coffee_core",
- "env_logger",
+ "env_logger 0.9.3",
  "log",
  "paperclip",
 ]
@@ -536,7 +535,7 @@ name = "coffee_lib"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "env_logger",
+ "env_logger 0.9.3",
  "git2",
  "log",
  "serde",
@@ -548,9 +547,10 @@ dependencies = [
 name = "coffee_plugin"
 version = "0.1.0"
 dependencies = [
- "clightningrpc-common 0.3.0-beta.3 (git+https://github.com/laanwj/cln4rust.git?branch=macros/api)",
- "clightningrpc-plugin",
+ "anyhow",
+ "cln-plugin",
  "coffee_core",
+ "serde",
  "serde_json",
  "tokio",
 ]
@@ -773,6 +773,19 @@ checksum = "a12e6657c4c97ebab115a42dcee77225f7f482cdd841cf7088c657a42e9e00e7"
 dependencies = [
  "atty",
  "humantime",
+ "log",
+ "regex",
+ "termcolor",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85cdab6a89accf66733ad5a1693a4dcced6aeff64602b634530dd73c1f3ee9f0"
+dependencies = [
+ "humantime",
+ "is-terminal",
  "log",
  "regex",
  "termcolor",
@@ -1864,6 +1877,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.13",
+]
+
+[[package]]
+name = "tokio-stream"
+version = "0.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8fb52b74f05dbf495a8fba459fdc331812b96aa086d9eb78101fa0d4569c3313"
+dependencies = [
+ "futures-core",
+ "pin-project-lite",
+ "tokio",
 ]
 
 [[package]]

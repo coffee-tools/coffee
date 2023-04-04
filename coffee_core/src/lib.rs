@@ -1,3 +1,7 @@
+pub use coffee_lib::error;
+pub use coffee_lib::errors::CoffeeError;
+pub use coffee_lib::plugin_manager::PluginManager;
+
 pub mod coffee;
 pub mod config;
 

@@ -1,10 +1,8 @@
-mod plugin;
-use clightningrpc_plugin::errors::PluginError;
 use plugin::build_plugin;
 
+mod plugin;
+
 #[tokio::main]
-async fn main() -> Result<(), PluginError> {
-    let plugin = build_plugin().await?;
-    plugin.start();
-    Ok(())
+async fn main() -> Result<(), anyhow::Error> {
+    build_plugin().await
 }

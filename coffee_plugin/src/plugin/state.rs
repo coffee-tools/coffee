@@ -1,30 +1,27 @@
 //! Coffe State stuct implemenation
 use std::sync::Arc;
 
-use clightningrpc_plugin::commands::types::CLNConf;
+use tokio::sync::{Mutex, MutexGuard};
+
+use cln_plugin::messages::Configuration;
 use coffee_core::{coffee::CoffeeManager, CoffeeArgs};
 
 #[derive(Clone)]
 pub struct State {
-    pub coffee: Option<Arc<CoffeeManager>>,
+    pub coffee: Arc<Mutex<CoffeeManager>>,
     pub args: Option<PluginArgs>,
 }
 
 impl State {
-    pub fn new() -> Self {
+    pub fn new(coffee: CoffeeManager) -> Self {
         State {
-            coffee: None,
+            coffee: Arc::new(Mutex::new(coffee)),
             args: None,
         }
     }
 
-    pub fn set_coffee(&mut self, coffee: CoffeeManager) {
-        self.coffee = Some(Arc::new(coffee));
-    }
-
-    #[allow(dead_code)]
-    pub fn coffe(&self) -> Arc<CoffeeManager> {
-        self.coffee.clone().unwrap()
+    pub async fn coffee(&self) -> MutexGuard<'_, CoffeeManager> {
+        self.coffee.lock().await
     }
 
     pub fn set_args(&mut self, args: PluginArgs) {
@@ -66,8 +63,8 @@ impl CoffeeArgs for PluginArgs {
     }
 }
 
-impl From<CLNConf> for PluginArgs {
-    fn from(value: CLNConf) -> Self {
+impl From<Configuration> for PluginArgs {
+    fn from(value: Configuration) -> Self {
         PluginArgs {
             conf: value.lightning_dir,
             network: value.network,
