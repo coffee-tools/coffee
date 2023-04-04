@@ -48,31 +48,24 @@ impl PluginLang {
                 sh!(path, script, verbose);
                 Ok(format!("{path}/{name}.py"))
             }
-            PluginLang::Go => {
-                /* better instructions needed here */
-                todo!()
-            }
-            PluginLang::Rust => {
-                /* 1. run cargo build in release mode
-                 * 2. return the binary path */
-                todo!()
-            }
-            PluginLang::Dart => {
-                /* 1. run dart compile exe and
-                 * 2. return the binary path */
-                todo!()
-            }
-            PluginLang::JavaScript => {
-                /* better instructions needed here */
-                todo!()
-            }
-            PluginLang::TypeScript => {
-                /* 1. From https://github.com/runcitadel/core-ln.ts
-                deno run --allow-env --allow-read --allow-write src/generate.ts
-                 * 2. run the ts file */
-                todo!()
-            }
-            PluginLang::JVM => todo!(),
+            PluginLang::Go => Err(error!(
+                "golang is not supported as default language, please us the coffee.yml manifest"
+            )),
+            PluginLang::Rust => Err(error!(
+                "rust is not supported as default language, please use the coffee.yml manifest"
+            )),
+            PluginLang::Dart => Err(error!(
+                "dart is not supported as default language, please use the cofee.yml manifest"
+            )),
+            PluginLang::JavaScript => Err(error!(
+                "js is not supported as default language, please use the coffee.yml manifest"
+            )),
+            PluginLang::TypeScript => Err(error!(
+                "ts is not supported as default language, please use the coffee.yml manifest"
+            )),
+            PluginLang::JVM => Err(error!(
+                "JVM is not supported as default language, please use the coffee.yml manifest"
+            )),
             PluginLang::Unknown => {
                 /* 1. emit an error message  */
                 Err(error!(

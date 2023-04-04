@@ -1,4 +1,6 @@
 //! Core macros implemented for coffee.
+
+/// return the Coffee Error
 #[macro_export]
 macro_rules! error {
     ($($msg:tt)*) => {{
@@ -7,6 +9,8 @@ macro_rules! error {
     }};
 }
 
+/// sh macro is the macro that allow to run a
+/// script as a sequence of commands.
 #[macro_export]
 macro_rules! sh {
     ($root: expr, $script:expr, $verbose:expr) => {
