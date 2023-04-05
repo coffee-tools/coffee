@@ -36,7 +36,7 @@ impl PluginLang {
             PluginLang::PyPip => {
                 /* 1. RUN PIP install or poetry install
                  * 2. return the path of the main file */
-                let script = "pip3 install -r requiremtents.txt";
+                let script = "pip3 install -r requirements.txt";
                 sh!(path, script, verbose);
                 let main_file = format!("{path}/{name}.py");
                 Ok(main_file)
