@@ -4,12 +4,11 @@ use crate::cmd::CoffeeArgs;
 use crate::cmd::CoffeeCommand;
 use crate::cmd::RemoteAction;
 use clap::Parser;
+use radicle_term as term;
+
 use coffee_core::coffee::CoffeeManager;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
-
-use termimad::crossterm::style::Color::*;
-use termimad::{Alignment, MadSkin};
 
 #[tokio::main]
 async fn main() -> Result<(), CoffeeError> {
@@ -21,7 +20,24 @@ async fn main() -> Result<(), CoffeeError> {
             plugin,
             verbose,
             dynamic,
-        } => coffee.install(&plugin, verbose, dynamic).await,
+        } => {
+            let spinner = if !verbose {
+                Some(term::spinner("Compiling and installing"))
+            } else {
+                None
+            };
+            let result = coffee.install(&plugin, verbose, dynamic).await;
+            if let Some(spinner) = spinner {
+                if result.is_ok() {
+                    spinner.finish();
+                } else {
+                    spinner.failed();
+                }
+            } else if result.is_ok() {
+                term::success!("Plugin {plugin} Compiled and Installed")
+            }
+            result
+        }
         CoffeeCommand::Remove => todo!(),
         CoffeeCommand::List { remotes } => match coffee.list(remotes).await {
             Ok(val) => {
@@ -47,15 +63,9 @@ async fn main() -> Result<(), CoffeeError> {
         }
         CoffeeCommand::Show { plugin } => match coffee.show(&plugin).await {
             Ok(val) => {
-                let mut skin = MadSkin::default();
-                skin.table.align = Alignment::Center;
-                skin.set_headers_fg(AnsiValue(178));
-                skin.bold.set_fg(Yellow);
-                skin.italic.set_fg(Magenta);
-                skin.scrollbar.thumb.set_fg(AnsiValue(178));
-                skin.code_block.align = Alignment::Center;
-
-                skin.print_text(val["show"].as_str().unwrap());
+                // FIXME: modify the radicle_term markdown
+                let val = val["show"].as_str().unwrap();
+                term::markdown(val);
                 Ok(())
             }
             Err(err) => Err(err),
@@ -63,7 +73,7 @@ async fn main() -> Result<(), CoffeeError> {
     };
 
     if let Err(err) = result {
-        panic!("{err}");
+        term::error(format!("{err}"));
     }
 
     Ok(())
