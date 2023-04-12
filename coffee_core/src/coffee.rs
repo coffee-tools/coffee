@@ -42,7 +42,7 @@ impl From<&CoffeeManager> for CoffeStorageInfo {
             let repo = if let Some(git) = repo.as_any().downcast_ref::<Github>() {
                 RepositoryInfo::from(git)
             } else {
-                panic!("this should never happens")
+                panic!("this should never happen")
             };
             repos.push(repo);
         });
