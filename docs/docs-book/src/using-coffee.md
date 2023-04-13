@@ -60,6 +60,14 @@ To remove a plugin repository, simply run the following command.
 coffee remote rm <NAME_OF_THE_REPOSITORY>
 ```
 
+To list plugin repositories, simply run the following command.
+
+> ✅ Implemented
+
+```bash
+coffee remote list 
+```
+
 ## Install a Plugin
 
 > ✅ Implemented

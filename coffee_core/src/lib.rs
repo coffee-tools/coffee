@@ -20,6 +20,7 @@ pub enum CoffeeOperation {
 pub enum RemoteAction {
     Add(String, String),
     Rm(String),
+    List,
 }
 
 pub trait CoffeeArgs {
