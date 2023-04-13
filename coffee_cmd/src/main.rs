@@ -52,12 +52,20 @@ async fn main() -> Result<(), CoffeeError> {
                 coffee.add_remote(name.as_str(), url.as_str()).await
             } else if let RemoteAction::Rm { name } = action {
                 coffee.rm_remote(name.as_str()).await
+            } else if let RemoteAction::List {} = action {
+                match coffee.list_remotes().await {
+                    Ok(val) => {
+                        println!("{}", serde_json::to_string_pretty(&val).unwrap());
+                        Ok(())
+                    }
+                    Err(err) => Err(err),
+                }
             } else {
                 Err(CoffeeError::new(1, "unsupported command"))
             }
         }
         CoffeeCommand::Setup { cln_conf } => {
-            // FIXME: read the core lightning confi and
+            // FIXME: read the core lightning config
             // and the coffee script
             coffee.setup(&cln_conf).await
         }

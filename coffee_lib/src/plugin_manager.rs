@@ -31,6 +31,9 @@ pub trait PluginManager {
     /// remove the remote repository from the plugin manager.
     async fn rm_remote(&mut self, name: &str) -> Result<(), CoffeeError>;
 
+    /// list the remote repositories for the plugin manager.
+    async fn list_remotes(&mut self) -> Result<Value, CoffeeError>;
+
     /// set up the core lightning configuration target for the
     /// plugin manager.
     async fn setup(&mut self, cln_conf_path: &str) -> Result<(), CoffeeError>;

@@ -59,6 +59,7 @@ pub enum CoffeeCommand {
 pub enum RemoteAction {
     Add { name: String, url: String },
     Rm { name: String },
+    List {},
 }
 
 impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
@@ -84,6 +85,7 @@ impl From<&RemoteAction> for coffee_core::RemoteAction {
         match value {
             RemoteAction::Add { name, url } => Self::Add(name.to_owned(), url.to_owned()),
             RemoteAction::Rm { name } => Self::Rm(name.to_owned()),
+            RemoteAction::List {} => Self::List,
         }
     }
 }

@@ -298,6 +298,23 @@ impl PluginManager for CoffeeManager {
         Ok(())
     }
 
+    async fn list_remotes(&mut self) -> Result<Value, CoffeeError> {
+        let mut remote_list: Vec<Value> = Vec::new();
+        for repo in &self.repos {
+            let remote_repo_json = json!(
+            {
+                "name": repo.name(),
+                "link": repo.url().url_string,
+            });
+            remote_list.push(remote_repo_json);
+        }
+
+        let repos_json = json!({
+           "remotes": remote_list,
+        });
+        Ok(repos_json)
+    }
+
     async fn show(&mut self, plugin: &str) -> Result<Value, CoffeeError> {
         for repo in &self.repos {
             if let Some(plugin) = repo.get_plugin_by_name(plugin) {
