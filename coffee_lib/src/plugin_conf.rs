@@ -2,30 +2,25 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-
 pub struct Conf {
-    pub plugin: Plugin,
+    pub plugin: Option<Plugin>,
+    pub bin: Option<Plugin>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-
 pub struct Plugin {
     pub name: String,
     pub version: String,
-    pub lang: String,
-    pub deprecated: Option<()>,
+    pub lang: Option<String>,
+    /// Is the plugin a binary?
+    pub binary: Option<bool>,
+    pub deprecated: Option<Deprecaterd>,
     pub dependencies: Option<Vec<String>>,
     pub install: Option<String>,
-    pub main: String,
+    pub main: Option<String>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Deprecaterd {
     pub reason: String,
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_remote() {}
 }

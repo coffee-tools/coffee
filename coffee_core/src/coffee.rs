@@ -287,6 +287,7 @@ impl PluginManager for CoffeeManager {
                         plugin.exec_path = new_exec_path;
 
                         log::debug!("plugin: {:?}", plugin);
+                        // TODO: install the binary and return early
                         let path = plugin.configure(verbose).await?;
                         log::debug!("runnable plugin path {path}");
                         if !try_dynamic {

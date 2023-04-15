@@ -132,7 +132,10 @@ impl Plugin {
     pub async fn configure(&mut self, verbose: bool) -> Result<String, CoffeeError> {
         log::debug!("install plugin inside from root dir {}", self.root_path);
         let exec_path = if let Some(conf) = &self.conf {
-            if let Some(script) = &conf.plugin.install {
+            let Some(ref plugin) = conf.plugin else {
+                return Err(error!("plugin {self} is not a plugin"));
+            };
+            if let Some(script) = &plugin.install {
                 sh!(self.root_path.clone(), script, verbose);
                 self.exec_path.clone()
             } else {
