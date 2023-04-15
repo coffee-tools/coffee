@@ -94,7 +94,7 @@ impl Github {
                                 "pypip" => plugin_lang = PluginLang::PyPip,
                                 "pypoetry" => plugin_lang = PluginLang::PyPoetry,
                                 "go" => plugin_lang = PluginLang::Go,
-                                "rs" => plugin_lang = PluginLang::Rust,
+                                "rs" | "rust" => plugin_lang = PluginLang::Rust,
                                 "dart" => plugin_lang = PluginLang::Dart,
                                 "js" => plugin_lang = PluginLang::JavaScript,
                                 "ts" => plugin_lang = PluginLang::TypeScript,
