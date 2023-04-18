@@ -19,6 +19,9 @@ pub trait PluginManager {
         try_dynamic: bool,
     ) -> Result<(), CoffeeError>;
 
+    // remove a plugin by name, return an error if some error happens.
+    async fn remove(&mut self, plugin: &str) -> Result<(), CoffeeError>;
+
     /// return the list of plugins installed by the plugin manager.
     async fn list(&mut self, remotes: bool) -> Result<Value, CoffeeError>;
 

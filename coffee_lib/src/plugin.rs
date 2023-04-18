@@ -26,26 +26,31 @@ pub enum PluginLang {
 }
 
 impl PluginLang {
-    pub async fn default_install(
+    pub async fn get_executable_path(
         &self,
         path: &str,
         name: &str,
         verbose: bool,
+        install_requirements: bool,
     ) -> Result<String, CoffeeError> {
         match self {
             PluginLang::PyPip => {
                 /* 1. RUN PIP install or poetry install
                  * 2. return the path of the main file */
-                let script = "pip3 install -r requirements.txt";
-                sh!(path, script, verbose);
+                if install_requirements {
+                    let script = "pip3 install -r requirements.txt";
+                    sh!(path, script, verbose);
+                }
                 let main_file = format!("{path}/{name}.py");
                 Ok(main_file)
             }
             PluginLang::PyPoetry => {
-                let script = "pip3 install poetry \
+                if install_requirements {
+                    let script = "pip3 install poetry \
                               poetry export -f requirements.txt --output requirements.txt \
                               pip3 install -r requirements.txt";
-                sh!(path, script, verbose);
+                    sh!(path, script, verbose);
+                }
                 Ok(format!("{path}/{name}.py"))
             }
             PluginLang::Go => Err(error!(
@@ -116,12 +121,12 @@ impl Plugin {
                 format!("{}/{}", self.path, conf.plugin.main)
             } else {
                 self.lang
-                    .default_install(&self.path, &self.name, verbose)
+                    .get_executable_path(&self.path, &self.name, verbose, true)
                     .await?
             }
         } else {
             self.lang
-                .default_install(&self.path, &self.name, verbose)
+                .get_executable_path(&self.path, &self.name, verbose, true)
                 .await?
         };
         Ok(exec_path)
@@ -132,9 +137,22 @@ impl Plugin {
         todo!("not implemented yet")
     }
 
-    /// remove the plugin and clean up all the data.
-    async fn remove(&mut self) -> Result<(), CoffeeError> {
-        todo!("not implemented yet")
+    /// return the path of the executable
+    pub async fn get_executable(&mut self) -> Result<String, CoffeeError> {
+        let exec_path = if let Some(conf) = &self.conf {
+            if let Some(_script) = &conf.plugin.install {
+                format!("{}/{}", self.path, conf.plugin.main)
+            } else {
+                self.lang
+                    .get_executable_path(&self.path, &self.name, false, false)
+                    .await?
+            }
+        } else {
+            self.lang
+                .get_executable_path(&self.path, &self.name, false, false)
+                .await?
+        };
+        Ok(exec_path)
     }
 
     pub fn name(&self) -> String {

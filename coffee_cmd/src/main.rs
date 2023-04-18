@@ -38,7 +38,13 @@ async fn main() -> Result<(), CoffeeError> {
             }
             result
         }
-        CoffeeCommand::Remove => todo!(),
+        CoffeeCommand::Remove { plugin } => match coffee.remove(&plugin).await {
+            Ok(_val) => {
+                term::success!("successfully uninstalled plugin {plugin}");
+                Ok(())
+            }
+            Err(err) => Err(err),
+        },
         CoffeeCommand::List { remotes } => match coffee.list(remotes).await {
             Ok(val) => {
                 println!("{}", serde_json::to_string_pretty(&val).unwrap());

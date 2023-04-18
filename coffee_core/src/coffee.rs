@@ -234,6 +234,33 @@ impl PluginManager for CoffeeManager {
         Err(err)
     }
 
+    async fn remove(&mut self, plugin: &str) -> Result<(), CoffeeError> {
+        debug!("removing plugin: {plugin}");
+        let values: &mut Vec<Plugin> = &mut self.config.plugins;
+        if let Some(index) = values.iter().position(|x| x.name() == plugin) {
+            let mut plugin = values[index].clone();
+            let result = plugin.get_executable().await;
+            match result {
+                Ok(path) => {
+                    debug!("runnable plugin path {path}");
+                    values.remove(index);
+                    self.coffe_cln_config
+                        .rm_conf("plugin", Some(&path.to_owned()))
+                        .map_err(|err| CoffeeError::new(1, &err.cause))?;
+                    self.storage.store(&self.storage_info()).await?;
+                    self.update_conf().await?;
+                    return Ok(());
+                }
+                Err(err) => return Err(err),
+            }
+        } else {
+            return Err(CoffeeError::new(
+                1,
+                &format!("plugin `{plugin}` is already not installed"),
+            ));
+        }
+    }
+
     async fn list(&mut self, remotes: bool) -> Result<Value, CoffeeError> {
         let installed_plugins_vec: Vec<Plugin> = self.config.plugins.clone();
         let plugin_json;
