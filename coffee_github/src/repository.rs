@@ -88,7 +88,8 @@ impl Github {
                             let conf_file = serde_yaml::from_str::<Conf>(&conf_str)
                                 .map_err(|err| error!("Coffee manifest malformed: {err}"))?;
                             plugin_name = Some(conf_file.plugin.name.to_string());
-                            path_to_plugin = Some(root_path.to_owned());
+                            path_to_plugin =
+                                Some(format!("{}/{}", root_path, &conf_file.plugin.main));
                             let conf_lang = (&conf_file.plugin.lang).to_owned();
                             match conf_lang.as_str() {
                                 "pypip" => plugin_lang = PluginLang::PyPip,
@@ -116,22 +117,53 @@ impl Github {
                         let files = WalkDir::new(plugin_path.path()).max_depth(1);
                         for file in files {
                             let file_dir = file.unwrap().clone();
-                            let (tmp_path_to_plugin, tmp_plugin_name) =
+                            let (tmp_root_path, tmp_plugin_name) =
                                 get_plugin_info_from_path(file_dir.path()).unwrap();
-                            path_to_plugin = Some(tmp_path_to_plugin.to_string());
                             plugin_name = Some(tmp_plugin_name.to_string());
-                            debug!("looking for {tmp_plugin_name} in {tmp_path_to_plugin}");
+                            debug!("looking for {tmp_plugin_name} in {tmp_root_path}");
                             let file_name = file_dir.file_name().to_str().unwrap();
-                            plugin_lang = match file_name {
-                                "requirements.txt" => PluginLang::PyPip,
-                                "pyproject.toml" => PluginLang::PyPoetry,
-                                "go.mod" => PluginLang::Go,
-                                "cargo.toml" => PluginLang::Rust,
-                                "pubspec.yaml" => PluginLang::Dart,
-                                "package.json" => PluginLang::JavaScript,
-                                "tsconfig.json" => PluginLang::TypeScript,
-                                _ => PluginLang::Unknown,
-                            };
+                            match file_name {
+                                "requirements.txt" => {
+                                    plugin_lang = PluginLang::PyPip;
+                                    path_to_plugin =
+                                        Some(format!("{tmp_root_path}/{tmp_plugin_name}.py"))
+                                }
+                                "pyproject.toml" => {
+                                    plugin_lang = PluginLang::PyPoetry;
+                                    path_to_plugin =
+                                        Some(format!("{tmp_root_path}/{tmp_plugin_name}.py"))
+                                }
+                                "go.mod" => {
+                                    plugin_lang = PluginLang::Go;
+                                    path_to_plugin =
+                                        Some(format!("{tmp_root_path}/{tmp_plugin_name}.go"))
+                                }
+                                "cargo.toml" => {
+                                    plugin_lang = PluginLang::Rust;
+                                    path_to_plugin =
+                                        Some(format!("{tmp_root_path}/{tmp_plugin_name}.rs"))
+                                }
+                                "pubspec.yaml" => {
+                                    plugin_lang = PluginLang::Dart;
+                                    path_to_plugin =
+                                        Some(format!("{tmp_root_path}/{tmp_plugin_name}.dart"))
+                                }
+                                "package.json" => {
+                                    plugin_lang = PluginLang::JavaScript;
+                                    path_to_plugin =
+                                        Some(format!("{tmp_root_path}/{tmp_plugin_name}.js"))
+                                }
+                                "tsconfig.json" => {
+                                    plugin_lang = PluginLang::TypeScript;
+                                    path_to_plugin =
+                                        Some(format!("{tmp_root_path}/{tmp_plugin_name}.ts"))
+                                }
+                                _ => {
+                                    plugin_lang = PluginLang::Unknown;
+                                    path_to_plugin =
+                                        Some(format!("{tmp_root_path}/{tmp_plugin_name}.ts"))
+                                }
+                            }
                             if plugin_lang != PluginLang::Unknown {
                                 break;
                             }

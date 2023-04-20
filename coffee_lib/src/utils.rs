@@ -4,13 +4,13 @@ use std::path::Path;
 pub fn get_plugin_info_from_path(path: &Path) -> Result<(String, String), CoffeeError> {
     match path.parent() {
         Some(parent_path) => {
-            let path_to_plugin = parent_path.to_path_buf().to_string_lossy().to_string();
+            let root_path = parent_path.to_path_buf().to_string_lossy().to_string();
             let plugin_name = parent_path
                 .file_name()
                 .unwrap()
                 .to_string_lossy()
                 .to_string();
-            Ok((path_to_plugin, plugin_name))
+            Ok((root_path, plugin_name))
         }
         None => Err(CoffeeError::new(1, "Incorrect path")),
     }

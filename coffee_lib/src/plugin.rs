@@ -26,27 +26,21 @@ pub enum PluginLang {
 }
 
 impl PluginLang {
-    pub async fn default_install(
-        &self,
-        path: &str,
-        name: &str,
-        verbose: bool,
-    ) -> Result<String, CoffeeError> {
+    pub async fn default_install(&self, root_path: &str, verbose: bool) -> Result<(), CoffeeError> {
         match self {
             PluginLang::PyPip => {
                 /* 1. RUN PIP install or poetry install
                  * 2. return the path of the main file */
                 let script = "pip3 install -r requirements.txt";
-                sh!(path, script, verbose);
-                let main_file = format!("{path}/{name}.py");
-                Ok(main_file)
+                sh!(root_path, script, verbose);
+                Ok(())
             }
             PluginLang::PyPoetry => {
                 let script = "pip3 install poetry \
                               poetry export -f requirements.txt --output requirements.txt \
                               pip3 install -r requirements.txt";
-                sh!(path, script, verbose);
-                Ok(format!("{path}/{name}.py"))
+                sh!(root_path, script, verbose);
+                Ok(())
             }
             PluginLang::Go => Err(error!(
                 "golang is not supported as default language, please us the coffee.yml manifest"
@@ -81,7 +75,7 @@ impl PluginLang {
 pub struct Plugin {
     name: String,
     /// root path of the plugin
-    root_path: String,
+    pub root_path: String,
     /// path of the main file
     pub path: String,
     lang: PluginLang,
@@ -110,21 +104,16 @@ impl Plugin {
     ///
     /// In case of success return the path of the executable.
     pub async fn configure(&mut self, verbose: bool) -> Result<String, CoffeeError> {
-        let exec_path = if let Some(conf) = &self.conf {
+        if let Some(conf) = &self.conf {
             if let Some(script) = &conf.plugin.install {
                 sh!(self.root_path.clone(), script, verbose);
-                format!("{}/{}", self.path, conf.plugin.main)
             } else {
-                self.lang
-                    .default_install(&self.path, &self.name, verbose)
-                    .await?
+                self.lang.default_install(&self.root_path, verbose).await?;
             }
         } else {
-            self.lang
-                .default_install(&self.path, &self.name, verbose)
-                .await?
+            self.lang.default_install(&self.root_path, verbose).await?;
         };
-        Ok(exec_path)
+        Ok(format!("{}", self.path))
     }
 
     /// upgrade the plugin to a new version.
