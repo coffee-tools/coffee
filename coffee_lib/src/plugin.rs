@@ -1,6 +1,6 @@
 //! Plugin module that abstract the concept of a cln plugin
 //! from a plugin manager point of view.
-use std::fmt;
+use std::fmt::{self, Display};
 
 use log::debug;
 use serde::{Deserialize, Serialize};
@@ -23,6 +23,22 @@ pub enum PluginLang {
     JavaScript,
     TypeScript,
     Unknown,
+}
+
+impl Display for PluginLang {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let lang = match self {
+            PluginLang::PyPip | PluginLang::PyPoetry => "python",
+            PluginLang::JavaScript => "javascript",
+            PluginLang::Rust => "rust",
+            PluginLang::Dart => "dart",
+            PluginLang::Go => "go",
+            PluginLang::JVM => "jvm",
+            PluginLang::TypeScript => "typescrip",
+            PluginLang::Unknown => "unknown",
+        };
+        write!(f, "{lang}")
+    }
 }
 
 impl PluginLang {
@@ -84,7 +100,7 @@ pub struct Plugin {
     pub root_path: String,
     /// path of the main file
     pub exec_path: String,
-    lang: PluginLang,
+    pub lang: PluginLang,
     conf: Option<Conf>,
 }
 

@@ -2,7 +2,10 @@
 use async_trait::async_trait;
 use serde_json::Value;
 
-use crate::errors::CoffeeError;
+use crate::{
+    errors::CoffeeError,
+    types::{CoffeeList, CoffeeRemote},
+};
 
 /// Plugin manager traits that define the API a generic
 /// plugin manager.
@@ -20,7 +23,7 @@ pub trait PluginManager {
     ) -> Result<(), CoffeeError>;
 
     /// return the list of plugins installed by the plugin manager.
-    async fn list(&mut self, remotes: bool) -> Result<Value, CoffeeError>;
+    async fn list(&mut self, remotes: bool) -> Result<CoffeeList, CoffeeError>;
 
     /// upgrade a sequence of plugin managed by the plugin manager.
     async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), CoffeeError>;
@@ -32,7 +35,7 @@ pub trait PluginManager {
     async fn rm_remote(&mut self, name: &str) -> Result<(), CoffeeError>;
 
     /// list the remote repositories for the plugin manager.
-    async fn list_remotes(&mut self) -> Result<Value, CoffeeError>;
+    async fn list_remotes(&mut self) -> Result<CoffeeRemote, CoffeeError>;
 
     /// set up the core lightning configuration target for the
     /// plugin manager.
