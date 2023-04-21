@@ -72,7 +72,7 @@ impl Github {
                         .to_os_string()
                         .to_string_lossy()
                         .to_string();
-                    let mut path_to_plugin = None;
+                    let mut exec_path = None;
                     let mut plugin_name = None;
                     let mut plugin_lang = PluginLang::Unknown;
 
@@ -88,7 +88,6 @@ impl Github {
                             let conf_file = serde_yaml::from_str::<Conf>(&conf_str)
                                 .map_err(|err| error!("Coffee manifest malformed: {err}"))?;
                             plugin_name = Some(conf_file.plugin.name.to_string());
-                            path_to_plugin = Some(root_path.to_owned());
                             let conf_lang = (&conf_file.plugin.lang).to_owned();
                             match conf_lang.as_str() {
                                 "pypip" => plugin_lang = PluginLang::PyPip,
@@ -104,6 +103,7 @@ impl Github {
                                 }
                             };
 
+                            exec_path = Some(format!("{root_path}/{}", conf_file.plugin.name));
                             conf = Some(conf_file);
                             break;
                         }
@@ -116,15 +116,27 @@ impl Github {
                         let files = WalkDir::new(plugin_path.path()).max_depth(1);
                         for file in files {
                             let file_dir = file.unwrap().clone();
-                            let (tmp_path_to_plugin, tmp_plugin_name) =
-                                get_plugin_info_from_path(file_dir.path()).unwrap();
-                            path_to_plugin = Some(tmp_path_to_plugin.to_string());
-                            plugin_name = Some(tmp_plugin_name.to_string());
-                            debug!("looking for {tmp_plugin_name} in {tmp_path_to_plugin}");
+                            let (derived_root_path, derived_name) =
+                                get_plugin_info_from_path(file_dir.path())?;
+
+                            plugin_name = Some(derived_name.to_string());
+                            debug!("looking for {derived_name} in {derived_root_path}");
                             let file_name = file_dir.file_name().to_str().unwrap();
                             plugin_lang = match file_name {
-                                "requirements.txt" => PluginLang::PyPip,
-                                "pyproject.toml" => PluginLang::PyPoetry,
+                                "requirements.txt" => {
+                                    exec_path =
+                                        Some(format!("{derived_root_path}/{derived_name}.py"));
+                                    PluginLang::PyPip
+                                }
+                                "pyproject.toml" => {
+                                    exec_path =
+                                        Some(format!("{derived_root_path}/{derived_name}.py"));
+                                    PluginLang::PyPoetry
+                                }
+                                // We dot have any information on standard pattern on where to find the
+                                // plugin exec path, so for now we skip the indexing!
+                                //
+                                // N.B: The plugin should use the coffee manifest, period.
                                 "go.mod" => PluginLang::Go,
                                 "cargo.toml" => PluginLang::Rust,
                                 "pubspec.yaml" => PluginLang::Dart,
@@ -136,14 +148,26 @@ impl Github {
                                 break;
                             }
                         }
-                        debug!("possible plugin language: {:?}", plugin_lang);
                     }
+                    debug!("possible plugin language: {:?}", plugin_lang);
+                    if exec_path.is_none() {
+                        let name = plugin_name.clone().unwrap();
+                        log::warn!("we are not able to find the exec path for the plugin {name} written in {:?}, so we do not index it", plugin_lang);
+                        log::info!("we are not able to detect the exec path for the plugin {name}");
+                        continue;
+                    }
+
+                    let Some(exec_path) = exec_path else {
+                        return Err(error!("exec path not known, but we should know at this point."));
+                    };
+
+                    debug!("exec path is {exec_path}");
 
                     // The language is already contained inside the configuration file.
                     let plugin = Plugin::new(
-                        plugin_name.unwrap().as_str(),
+                        &plugin_name.unwrap(),
                         &root_path,
-                        path_to_plugin.unwrap().as_str(),
+                        &exec_path,
                         plugin_lang,
                         conf.clone(),
                     );
