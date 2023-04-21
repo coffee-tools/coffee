@@ -81,9 +81,9 @@ impl PluginLang {
 pub struct Plugin {
     name: String,
     /// root path of the plugin
-    root_path: String,
+    pub root_path: String,
     /// path of the main file
-    pub path: String,
+    pub exec_path: String,
     lang: PluginLang,
     conf: Option<Conf>,
 }
@@ -100,7 +100,7 @@ impl Plugin {
         Plugin {
             name: name.to_owned(),
             root_path: root_path.to_owned(),
-            path: path.to_owned(),
+            exec_path: path.to_owned(),
             lang: plugin_lang,
             conf: config,
         }
@@ -113,15 +113,15 @@ impl Plugin {
         let exec_path = if let Some(conf) = &self.conf {
             if let Some(script) = &conf.plugin.install {
                 sh!(self.root_path.clone(), script, verbose);
-                format!("{}/{}", self.path, conf.plugin.main)
+                self.exec_path.clone()
             } else {
                 self.lang
-                    .default_install(&self.path, &self.name, verbose)
+                    .default_install(&self.root_path, &self.name, verbose)
                     .await?
             }
         } else {
             self.lang
-                .default_install(&self.path, &self.name, verbose)
+                .default_install(&self.root_path, &self.name, verbose)
                 .await?
         };
         Ok(exec_path)
@@ -144,6 +144,6 @@ impl Plugin {
 
 impl fmt::Display for Plugin {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "name: {}, path: {}", self.name, self.path)
+        write!(f, "name: {}, path: {}", self.name, self.exec_path)
     }
 }

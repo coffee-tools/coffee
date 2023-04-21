@@ -319,7 +319,7 @@ impl PluginManager for CoffeeManager {
         for repo in &self.repos {
             if let Some(plugin) = repo.get_plugin_by_name(plugin) {
                 // FIXME: there are more README file options?
-                let readme_path = format!("{}/README.md", plugin.path);
+                let readme_path = format!("{}/README.md", plugin.root_path);
                 let contents = fs::read_to_string(readme_path)?;
                 return Ok(json!({ "show": contents }));
             }
