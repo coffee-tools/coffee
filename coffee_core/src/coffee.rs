@@ -1,29 +1,32 @@
 //! Coffee mod implementation
-use crate::config::CoffeeConf;
-use crate::CoffeeArgs;
-use async_trait::async_trait;
-use clightningrpc_common::client::Client;
-use clightningrpc_common::json_utils;
-use clightningrpc_conf::{CLNConf, SyncCLNConf};
-use coffee_github::repository::Github;
-use coffee_lib::errors::CoffeeError;
-use coffee_lib::plugin::Plugin;
-use coffee_lib::plugin_manager::PluginManager;
-use coffee_lib::repository::Repository;
-use coffee_lib::url::URL;
-use coffee_storage::file::FileStorage;
-use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
-use coffee_storage::storage::StorageManager;
-use log::{debug, error, info, trace, warn};
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-use serde_json::json;
-use serde_json::Value;
 use std::fmt::Debug;
 use std::fs;
 use std::vec::Vec;
 
+use async_trait::async_trait;
+use clightningrpc_common::client::Client;
+use clightningrpc_common::json_utils;
+use clightningrpc_conf::{CLNConf, SyncCLNConf};
+use log;
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use serde_json::Value;
+
+use coffee_github::repository::Github;
+use coffee_lib::error;
+use coffee_lib::errors::CoffeeError;
+use coffee_lib::plugin_manager::PluginManager;
+use coffee_lib::repository::Repository;
+use coffee_lib::types::{CoffeeList, CoffeeListRemote, CoffeeRemote};
+use coffee_lib::url::URL;
+use coffee_storage::file::FileStorage;
+use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
+use coffee_storage::storage::StorageManager;
+
 use super::config;
+use crate::config::CoffeeConf;
+use crate::CoffeeArgs;
 
 #[derive(Serialize, Deserialize)]
 /// FIXME: move the list of plugin
@@ -89,7 +92,7 @@ impl CoffeeManager {
         let store = if let Ok(store) = self.storage.load().await {
             store
         } else {
-            info!("storage file do not exist");
+            log::info!("storage file do not exist");
             return Ok(());
         };
         // this is really needed? I think no, because coffee at this point
@@ -102,11 +105,11 @@ impl CoffeeManager {
             }
         });
         if let Err(err) = self.coffe_cln_config.parse() {
-            error!("{}", err.cause);
+            log::error!("{}", err.cause);
         }
         self.load_cln_conf().await?;
-        debug!("cln conf {:?}", self.coffe_cln_config);
-        debug!("finish pligin manager inventory");
+        log::debug!("cln conf {:?}", self.coffe_cln_config);
+        log::debug!("finish pligin manager inventory");
         // FIXME: what are the information missed that
         // needed to be indexed?
         Ok(())
@@ -121,7 +124,7 @@ impl CoffeeManager {
             let response = rpc
                 .send_request(method, payload)
                 .map_err(|err| CoffeeError::new(1, &format!("{err}")))?;
-            trace!("cln answer with {:#?}", response);
+            log::trace!("cln answer with {:#?}", response);
             if let Some(err) = response.error {
                 return Err(CoffeeError::new(1, &format!("cln error: {}", err.message)));
             }
@@ -140,7 +143,7 @@ impl CoffeeManager {
         let response = self
             .cln::<serde_json::Value, serde_json::Value>("plugin", payload)
             .await?;
-        debug!("plugin registered: {response}");
+        log::debug!("plugin registered: {response}");
         Ok(())
     }
 
@@ -150,7 +153,7 @@ impl CoffeeManager {
 
     pub async fn update_conf(&self) -> Result<(), CoffeeError> {
         self.coffe_cln_config.flush()?;
-        debug!("stored all the cln info in {}", self.coffe_cln_config);
+        log::debug!("stored all the cln info in {}", self.coffe_cln_config);
         Ok(())
     }
 
@@ -163,20 +166,20 @@ impl CoffeeManager {
         self.rpc = Some(rpc);
         let path = self.config.cln_config_path.clone().unwrap();
         let mut file = CLNConf::new(path.clone(), true);
-        info!("looking for the cln config: {path}");
+        log::info!("looking for the cln config: {path}");
         file.parse()
             .map_err(|err| CoffeeError::new(err.core, &err.cause))?;
-        debug!("{:#?}", file.fields);
+        log::debug!("{:#?}", file.fields);
         self.cln_config = Some(file);
         Ok(())
     }
 
     pub async fn setup_with_cln(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
         if !self.cln_config.is_none() {
-            warn!("you are ovveriding the previous set up");
+            log::warn!("you are ovveriding the previous set up");
         }
         let path_with_network = format!("{cln_dir}/{}/config", self.config.network);
-        info!("configure coffe in the following cln config {path_with_network}");
+        log::info!("configure coffe in the following cln config {path_with_network}");
         self.config.cln_config_path = Some(path_with_network);
         self.config.cln_root = Some(cln_dir.to_owned());
         self.load_cln_conf().await?;
@@ -191,7 +194,7 @@ impl CoffeeManager {
 #[async_trait]
 impl PluginManager for CoffeeManager {
     async fn configure(&mut self) -> Result<(), CoffeeError> {
-        debug!("plugin configured");
+        log::debug!("plugin configured");
         Ok(())
     }
 
@@ -201,15 +204,15 @@ impl PluginManager for CoffeeManager {
         verbose: bool,
         try_dynamic: bool,
     ) -> Result<(), CoffeeError> {
-        debug!("installing plugin: {plugin}");
+        log::debug!("installing plugin: {plugin}");
         // keep track if the plugin that are installed with success
         for repo in &self.repos {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
-                trace!("{:#?}", plugin);
+                log::trace!("{:#?}", plugin);
                 let result = plugin.configure(verbose).await;
                 match result {
                     Ok(path) => {
-                        debug!("runnable plugin path {path}");
+                        log::debug!("runnable plugin path {path}");
                         if !try_dynamic {
                             self.config.plugins.push(plugin);
                             self.coffe_cln_config
@@ -234,85 +237,77 @@ impl PluginManager for CoffeeManager {
         Err(err)
     }
 
-    async fn list(&mut self, remotes: bool) -> Result<Value, CoffeeError> {
-        let installed_plugins_vec: Vec<Plugin> = self.config.plugins.clone();
-        let plugin_json;
-        if remotes {
-            let mut remote_list: Vec<Value> = Vec::new();
+    async fn list(&mut self, remotes: bool) -> Result<CoffeeList, CoffeeError> {
+        let remotes = if remotes {
+            let mut remote_list = Vec::new();
             for repo in &self.repos {
-                let remote_repo_json = json!(
-                {
-                    "local_name": repo.name(),
-                    "link": repo.url().url_string,
-                    "plugins": repo.list().await.unwrap(),
-                 });
-                remote_list.push(remote_repo_json);
+                remote_list.push(CoffeeListRemote {
+                    local_name: repo.name(),
+                    url: repo.url().url_string,
+                    plugins: repo.list().await?,
+                });
             }
-            plugin_json = json!({
-               "plugins": serde_json::to_value(&installed_plugins_vec).unwrap(),
-               "remotes": remote_list,
-            });
+            Some(remote_list)
         } else {
-            plugin_json = json!({
-               "plugins": serde_json::to_value(&installed_plugins_vec).unwrap(),
-            });
-        }
-        Ok(plugin_json)
+            None
+        };
+        Ok(CoffeeList {
+            plugins: self.config.plugins.clone(),
+            remotes,
+        })
     }
 
     async fn upgrade(&mut self, _: &[&str]) -> Result<(), CoffeeError> {
         // FIXME: Fix debug message with the list of plugins to be upgraded
-        debug!("upgrading plugins");
+        log::debug!("upgrading plugins");
         Ok(())
     }
 
     async fn setup(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
         self.setup_with_cln(cln_dir).await?;
-        info!("cln configured");
+        log::info!("cln configured");
         self.storage.store(&self.storage_info()).await
     }
 
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError> {
         let url = URL::new(&self.config.root_path, url, name);
-        debug!("remote adding: {} {}", name, &url.url_string);
+        log::debug!("remote adding: {} {}", name, &url.url_string);
         let mut repo = Github::new(name, &url);
         repo.init().await?;
         self.repos.push(Box::new(repo));
-        debug!("remote added: {} {}", name, &url.url_string);
+        log::debug!("remote added: {} {}", name, &url.url_string);
         self.storage.store(&self.storage_info()).await?;
         Ok(())
     }
 
     async fn rm_remote(&mut self, name: &str) -> Result<(), CoffeeError> {
-        debug!("remote removing: {}", name);
-        let index = self
+        log::debug!("remote removing: {}", name);
+        let Some(index) = self
             .repos
             .iter()
-            .position(|x| &*x.to_owned().name() == name)
-            .unwrap();
+            .position(|x| &*x.to_owned().name() == name) else {
+                return Err(error!("repository with {name} not found"));
+            };
         let repo_path = &self.repos[index].url().path_string;
         fs::remove_dir_all(repo_path)?;
         self.repos.remove(index);
-        debug!("remote removed: {}", name);
+        log::debug!("remote removed: {}", name);
         self.storage.store(&self.storage_info()).await?;
         Ok(())
     }
 
-    async fn list_remotes(&mut self) -> Result<Value, CoffeeError> {
-        let mut remote_list: Vec<Value> = Vec::new();
+    async fn list_remotes(&mut self) -> Result<CoffeeRemote, CoffeeError> {
+        let mut remote_list = Vec::new();
         for repo in &self.repos {
-            let remote_repo_json = json!(
-            {
-                "name": repo.name(),
-                "link": repo.url().url_string,
+            remote_list.push(CoffeeListRemote {
+                local_name: repo.name(),
+                url: repo.url().url_string,
+                plugins: repo.list().await?,
             });
-            remote_list.push(remote_repo_json);
         }
-
-        let repos_json = json!({
-           "remotes": remote_list,
-        });
-        Ok(repos_json)
+        Ok(CoffeeRemote {
+            remotes: Some(remote_list),
+        })
     }
 
     async fn show(&mut self, plugin: &str) -> Result<Value, CoffeeError> {

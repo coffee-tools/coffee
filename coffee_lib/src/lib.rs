@@ -11,5 +11,6 @@ pub mod plugin;
 pub mod plugin_conf;
 pub mod plugin_manager;
 pub mod repository;
+pub mod types;
 pub mod url;
 pub mod utils;

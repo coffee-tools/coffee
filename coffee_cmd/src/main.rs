@@ -1,14 +1,16 @@
 mod cmd;
+mod coffee_term;
 
-use crate::cmd::CoffeeArgs;
-use crate::cmd::CoffeeCommand;
-use crate::cmd::RemoteAction;
 use clap::Parser;
 use radicle_term as term;
 
 use coffee_core::coffee::CoffeeManager;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
+
+use crate::cmd::CoffeeArgs;
+use crate::cmd::CoffeeCommand;
+use crate::cmd::RemoteAction;
 
 #[tokio::main]
 async fn main() -> Result<(), CoffeeError> {
@@ -39,31 +41,39 @@ async fn main() -> Result<(), CoffeeError> {
             result
         }
         CoffeeCommand::Remove => todo!(),
-        CoffeeCommand::List { remotes } => match coffee.list(remotes).await {
-            Ok(val) => {
-                println!("{}", serde_json::to_string_pretty(&val).unwrap());
+        CoffeeCommand::List { remotes } => {
+            let remotes = coffee.list(remotes).await;
+            coffee_term::show_list(remotes)
+        }
+        CoffeeCommand::Upgrade => coffee.upgrade(&[""]).await,
+        CoffeeCommand::Remote { action } => match action {
+            RemoteAction::Add { name, url } => {
+                let mut spinner = term::spinner(&format!("Fetch remote from {url}"));
+                let result = coffee.add_remote(&name, &url).await;
+                if let Err(err) = &result {
+                    spinner.error(format!("Error while add remote: {err}"));
+                    return result;
+                }
+                spinner.message("Remote added!");
+                spinner.finish();
                 Ok(())
             }
-            Err(err) => Err(err),
-        },
-        CoffeeCommand::Upgrade => coffee.upgrade(&[""]).await,
-        CoffeeCommand::Remote { action } => {
-            if let RemoteAction::Add { name, url } = action {
-                coffee.add_remote(name.as_str(), url.as_str()).await
-            } else if let RemoteAction::Rm { name } = action {
-                coffee.rm_remote(name.as_str()).await
-            } else if let RemoteAction::List {} = action {
-                match coffee.list_remotes().await {
-                    Ok(val) => {
-                        println!("{}", serde_json::to_string_pretty(&val).unwrap());
-                        Ok(())
-                    }
-                    Err(err) => Err(err),
+            RemoteAction::Rm { name } => {
+                let mut spinner = term::spinner(&format!("Removing remote {name}"));
+                let result = coffee.rm_remote(&name).await;
+                if let Err(err) = &result {
+                    spinner.error(&format!("Error while removing the repository: {err}"));
+                    return result;
                 }
-            } else {
-                Err(CoffeeError::new(1, "unsupported command"))
+                spinner.message("Remote removed!");
+                spinner.finish();
+                Ok(())
             }
-        }
+            RemoteAction::List {} => {
+                let remotes = coffee.list_remotes().await;
+                coffee_term::show_remote_list(remotes)
+            }
+        },
         CoffeeCommand::Setup { cln_conf } => {
             // FIXME: read the core lightning config
             // and the coffee script
