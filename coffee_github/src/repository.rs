@@ -103,7 +103,7 @@ impl Github {
                                 }
                             };
 
-                            exec_path = Some(format!("{root_path}/{}", conf_file.plugin.name));
+                            exec_path = Some(format!("{root_path}/{}", conf_file.plugin.main));
                             conf = Some(conf_file);
                             break;
                         }
