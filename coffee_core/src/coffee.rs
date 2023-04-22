@@ -18,7 +18,7 @@ use coffee_lib::error;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
-use coffee_lib::types::{CoffeeList, CoffeeListRemote, CoffeeRemote};
+use coffee_lib::types::{CoffeeList, CoffeeListRemote, CoffeeRemote, CoffeeRemove};
 use coffee_lib::url::URL;
 use coffee_storage::file::FileStorage;
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
@@ -235,6 +235,25 @@ impl PluginManager for CoffeeManager {
             &format!("plugin `{plugin}` are not present inside the repositories"),
         );
         Err(err)
+    }
+
+    async fn remove(&mut self, plugin: &str) -> Result<CoffeeRemove, CoffeeError> {
+        log::debug!("removing plugin: {plugin}");
+        let plugins = &mut self.config.plugins;
+        if let Some(index) = plugins.iter().position(|x| x.name() == plugin) {
+            let plugin = plugins[index].clone();
+            let exec_path = plugin.exec_path.clone();
+            log::debug!("runnable plugin path: {exec_path}");
+            plugins.remove(index);
+            self.coffe_cln_config
+                .rm_conf("plugin", Some(&exec_path.to_owned()))
+                .map_err(|err| CoffeeError::new(1, &err.cause))?;
+            self.storage.store(&self.storage_info()).await?;
+            self.update_conf().await?;
+            Ok(CoffeeRemove { plugin: plugin })
+        } else {
+            return Err(error!("plugin `{plugin}` is already not installed"));
+        }
     }
 
     async fn list(&mut self, remotes: bool) -> Result<CoffeeList, CoffeeError> {

@@ -412,6 +412,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "clightningrpc-conf"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf5d10ad0d481c5a2100d4439dd61ba7af570f3f96ab65bb596b37fc1a711941"
+dependencies = [
+ "albert_stream",
+ "indexmap",
+]
+
+[[package]]
 name = "clightningrpc-plugin"
 version = "0.3.0-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -429,7 +439,7 @@ dependencies = [
  "async-trait",
  "clap",
  "clightningrpc-common",
- "clightningrpc-conf",
+ "clightningrpc-conf 0.0.1",
  "coffee_core",
  "coffee_lib",
  "env_logger",
@@ -447,7 +457,7 @@ version = "0.0.1-alpha.1"
 dependencies = [
  "async-trait",
  "clightningrpc-common",
- "clightningrpc-conf",
+ "clightningrpc-conf 0.0.2",
  "coffee_github",
  "coffee_lib",
  "coffee_storage",

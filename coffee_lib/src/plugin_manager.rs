@@ -4,7 +4,7 @@ use serde_json::Value;
 
 use crate::{
     errors::CoffeeError,
-    types::{CoffeeList, CoffeeRemote},
+    types::{CoffeeList, CoffeeRemote, CoffeeRemove},
 };
 
 /// Plugin manager traits that define the API a generic
@@ -21,6 +21,9 @@ pub trait PluginManager {
         verbose: bool,
         try_dynamic: bool,
     ) -> Result<(), CoffeeError>;
+
+    // remove a plugin by name, return an error if some error happens.
+    async fn remove(&mut self, plugin: &str) -> Result<CoffeeRemove, CoffeeError>;
 
     /// return the list of plugins installed by the plugin manager.
     async fn list(&mut self, remotes: bool) -> Result<CoffeeList, CoffeeError>;
