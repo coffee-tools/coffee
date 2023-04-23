@@ -34,7 +34,7 @@ mod tests {
         let mut repo = Github::new(name, &url);
         let repo = repo.init().await;
         assert!(repo.is_ok());
-        assert_eq!(Path::new(&url.path_string).exists(), true);
+        assert!(Path::new(&url.path_string).exists());
         remove_dir_all(&url.path_string).unwrap();
     }
 }

@@ -52,7 +52,7 @@ mod tests {
         init();
         let dir = ".coffee";
         let path = create_dir_in_home(dir);
-        assert_eq!(Path::new(&path).exists(), true);
+        assert!(Path::new(&path).exists());
         remove_dir_all(path).unwrap();
     }
 }
