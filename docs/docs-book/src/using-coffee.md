@@ -31,10 +31,10 @@ include /home/alice/.coffee/testnet/coffee.conf
 
 In addition there are the following additional option that you can specify:
 
-- `--network`: by default set to `bitcoin`, but if you want specify the network
+- `--network`: by default set to `bitcoin`, but if you want to specify the network
 that Core Lightning is using, you must ensure that the flag is set to
 the correct network.
-- `--data-dir`: by default this `/home/<home>/.coffee`, you may want to set
+- `--data-dir`: by default set to `/home/alice/.coffee`, you may want to set
 this option if you are looking to specify a different directory for the
 Coffee home.
 
@@ -49,7 +49,7 @@ installation of only the desired plugins.
 To add a plugin repository, simply run the following command.
 
 ```bash
-coffee remote add <name repository> <url repository>
+coffee remote add <repository_name> <repository_url>
 ```
 
 To remove a plugin repository, simply run the following command.
@@ -57,7 +57,7 @@ To remove a plugin repository, simply run the following command.
 > ✅ Implemented
 
 ```bash
-coffee remote rm <NAME_OF_THE_REPOSITORY>
+coffee remote rm <repository_name>
 ```
 
 To list plugin repositories, simply run the following command.
@@ -82,7 +82,7 @@ that you can select based on your preferences, such as:
 To install a plugin dynamically, you simply need to run.
 
 ```bash
-coffee install -d <NAME_OF_PLUGIN>
+coffee install -d <plugin_name>
 ```
 
 ### Static installation
@@ -92,7 +92,7 @@ coffee install -d <NAME_OF_PLUGIN>
 To install a plugin statically, you simply need to run.
 
 ```bash
-coffee install <NAME_OF_PLUGIN>
+coffee install <plugin_name>
 ```
 
 ## Removing a Plugin
@@ -102,7 +102,7 @@ coffee install <NAME_OF_PLUGIN>
 To remove an installed plugin, you simply have to run the following command.
 
 ```bash
-coffee remove <NAME_OF_PLUGIN>
+coffee remove <plugin_name>
 ```
 
 ## Upgrade a Plugin
@@ -112,7 +112,7 @@ coffee remove <NAME_OF_PLUGIN>
 Coffee tightly integrates with git, allowing you to easily upgrade your plugins through the command line interface (CLI). This eliminates the need for tedious tasks such as downloading the latest updates and creating new versions of plugins. To upgrade a plugin, all you need to do is run.
 
 ```bash
-coffee upgrade <NAME_OF_PLUGIN>
+coffee upgrade <plugin_name>
 ```
 
 ## Listing all the plugins
@@ -134,5 +134,5 @@ coffee list --remotes
 > ✅ Implemented
 
 ```bash
-coffee show <NAME_OF_PLUGIN>
+coffee show <plugin_name>
 ```
