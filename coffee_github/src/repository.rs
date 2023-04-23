@@ -88,7 +88,7 @@ impl Github {
                             let conf_file = serde_yaml::from_str::<Conf>(&conf_str)
                                 .map_err(|err| error!("Coffee manifest malformed: {err}"))?;
                             plugin_name = Some(conf_file.plugin.name.to_string());
-                            let conf_lang = (&conf_file.plugin.lang).to_owned();
+                            let conf_lang = conf_file.plugin.lang.to_owned();
                             match conf_lang.as_str() {
                                 "pypip" => plugin_lang = PluginLang::PyPip,
                                 "pypoetry" => plugin_lang = PluginLang::PyPoetry,
