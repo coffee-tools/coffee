@@ -97,9 +97,9 @@ coffee install <NAME_OF_PLUGIN>
 
 ## Removing a Plugin
 
-> ⚠️  this feature is under development, see [the tracking issue](https://github.com/coffee-tools/coffee/issues/13)
+> ✅ Implemented
 
-o remove an installed plugin, you simply have to run the following command.
+To remove an installed plugin, you simply have to run the following command.
 
 ```bash
 coffee remove <NAME_OF_PLUGIN>

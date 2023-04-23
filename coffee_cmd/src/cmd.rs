@@ -39,7 +39,7 @@ pub enum CoffeeCommand {
     },
     /// Remove a plugin installed in cln.
     #[clap(arg_required_else_help = true)]
-    Remove,
+    Remove { plugin: String },
     /// Manage Repository subcommand
     #[clap(arg_required_else_help = true)]
     Remote {
@@ -74,7 +74,7 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
             CoffeeCommand::List { remotes } => Self::List(*remotes),
             CoffeeCommand::Setup { cln_conf } => Self::Setup(cln_conf.to_owned()),
             CoffeeCommand::Remote { action } => Self::Remote(action.into()),
-            CoffeeCommand::Remove => Self::Remove,
+            CoffeeCommand::Remove { plugin } => Self::Remove(plugin.to_owned()),
             CoffeeCommand::Show { plugin } => Self::Show(plugin.to_owned()),
         }
     }

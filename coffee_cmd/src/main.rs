@@ -40,7 +40,17 @@ async fn main() -> Result<(), CoffeeError> {
             }
             result
         }
-        CoffeeCommand::Remove => todo!(),
+        CoffeeCommand::Remove { plugin } => {
+            let mut spinner = term::spinner(&format!("Uninstalling plugin {plugin}"));
+            let result = coffee.remove(&plugin).await;
+            if let Err(err) = &result {
+                spinner.error(&format!("Error while uninstalling the plugin: {err}"));
+                return Ok(());
+            }
+            spinner.message("Plugin uninstalled!");
+            spinner.finish();
+            Ok(())
+        }
         CoffeeCommand::List { remotes } => {
             let remotes = coffee.list(remotes).await;
             coffee_term::show_list(remotes)

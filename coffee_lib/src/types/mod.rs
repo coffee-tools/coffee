@@ -4,6 +4,11 @@ use serde::{Deserialize, Serialize};
 use crate::plugin::Plugin;
 
 #[derive(Serialize, Deserialize)]
+pub struct CoffeeRemove {
+    pub plugin: Plugin,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct CoffeeList {
     pub remotes: Option<Vec<CoffeeListRemote>>,
     pub plugins: Vec<Plugin>,

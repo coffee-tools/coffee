@@ -8,7 +8,7 @@ pub enum CoffeeOperation {
     /// List(include remotes)
     List(bool),
     Upgrade,
-    Remove,
+    Remove(String),
     /// Remote(name repository, url of the repositoryu)
     Remote(RemoteAction),
     /// Setup(core lightning root path)
