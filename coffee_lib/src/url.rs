@@ -35,8 +35,8 @@ fn remove_trailing_slash_from_url(url: &str) -> &str {
 
 /// Handle coffee non-compliant URLs
 fn handle_incorrect_url(mut url: &str) -> String {
-    url = remove_trailing_slash_from_url(&url);
-    url = remove_dot_git_from_url(&url);
+    url = remove_trailing_slash_from_url(url);
+    url = remove_dot_git_from_url(url);
     url.to_string()
 }
 
@@ -51,9 +51,9 @@ impl URL {
     pub fn new(local_path: &str, url: &str, remote_name: &str) -> Self {
         URL {
             name: remote_name.to_owned(),
-            url_string: handle_incorrect_url(&url),
+            url_string: handle_incorrect_url(url),
             path_string: format!("{local_path}/repositories/{remote_name}"),
-            repo_name: get_repo_name_from_url(&url),
+            repo_name: get_repo_name_from_url(url),
         }
     }
 }

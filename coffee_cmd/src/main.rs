@@ -41,10 +41,10 @@ async fn main() -> Result<(), CoffeeError> {
             result
         }
         CoffeeCommand::Remove { plugin } => {
-            let mut spinner = term::spinner(&format!("Uninstalling plugin {plugin}"));
+            let mut spinner = term::spinner(format!("Uninstalling plugin {plugin}"));
             let result = coffee.remove(&plugin).await;
             if let Err(err) = &result {
-                spinner.error(&format!("Error while uninstalling the plugin: {err}"));
+                spinner.error(format!("Error while uninstalling the plugin: {err}"));
                 return Ok(());
             }
             spinner.message("Plugin uninstalled!");
@@ -58,7 +58,7 @@ async fn main() -> Result<(), CoffeeError> {
         CoffeeCommand::Upgrade => coffee.upgrade(&[""]).await,
         CoffeeCommand::Remote { action } => match action {
             RemoteAction::Add { name, url } => {
-                let mut spinner = term::spinner(&format!("Fetch remote from {url}"));
+                let mut spinner = term::spinner(format!("Fetch remote from {url}"));
                 let result = coffee.add_remote(&name, &url).await;
                 if let Err(err) = &result {
                     spinner.error(format!("Error while add remote: {err}"));
@@ -69,10 +69,10 @@ async fn main() -> Result<(), CoffeeError> {
                 Ok(())
             }
             RemoteAction::Rm { name } => {
-                let mut spinner = term::spinner(&format!("Removing remote {name}"));
+                let mut spinner = term::spinner(format!("Removing remote {name}"));
                 let result = coffee.rm_remote(&name).await;
                 if let Err(err) = &result {
-                    spinner.error(&format!("Error while removing the repository: {err}"));
+                    spinner.error(format!("Error while removing the repository: {err}"));
                     return result;
                 }
                 spinner.message("Remote removed!");
