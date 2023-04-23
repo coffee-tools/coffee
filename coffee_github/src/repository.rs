@@ -110,7 +110,7 @@ impl Github {
                     }
 
                     // check if there was a coffee configuration file
-                    if conf == None {
+                    if conf.is_none() {
                         debug!("conf file not found, so we try to guess the language");
                         // try to understand the language from the file
                         let files = WalkDir::new(plugin_path.path()).max_depth(1);

@@ -175,7 +175,7 @@ impl CoffeeManager {
     }
 
     pub async fn setup_with_cln(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
-        if !self.cln_config.is_none() {
+        if self.cln_config.is_some() {
             log::warn!("you are ovveriding the previous set up");
         }
         let path_with_network = format!("{cln_dir}/{}/config", self.config.network);
@@ -250,7 +250,7 @@ impl PluginManager for CoffeeManager {
                 .map_err(|err| CoffeeError::new(1, &err.cause))?;
             self.storage.store(&self.storage_info()).await?;
             self.update_conf().await?;
-            Ok(CoffeeRemove { plugin: plugin })
+            Ok(CoffeeRemove { plugin })
         } else {
             return Err(error!("plugin `{plugin}` is already not installed"));
         }
