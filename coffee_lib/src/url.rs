@@ -27,7 +27,7 @@ fn remove_dot_git_from_url(url: &str) -> &str {
 
 /// Handle URLs with a trailing "/"
 fn remove_trailing_slash_from_url(url: &str) -> &str {
-    match url.strip_suffix("/") {
+    match url.strip_suffix('/') {
         Some(s) => s,
         None => url,
     }
@@ -42,7 +42,7 @@ fn handle_incorrect_url(mut url: &str) -> String {
 
 /// Get repo_name field from the URL
 fn get_repo_name_from_url(url: &str) -> String {
-    let repo_name = url.split("/").last().unwrap().to_string();
+    let repo_name = url.split('/').last().unwrap().to_string();
     repo_name
 }
 
