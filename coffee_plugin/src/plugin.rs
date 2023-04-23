@@ -1,5 +1,5 @@
-pub mod plugin;
+pub mod plugin_mod;
 mod state;
 
-pub use plugin::*;
+pub use plugin_mod::*;
 pub use state::State;
