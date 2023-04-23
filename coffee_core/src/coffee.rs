@@ -307,6 +307,20 @@ impl PluginManager for CoffeeManager {
             .position(|x| &*x.to_owned().name() == name) else {
                 return Err(error!("repository with {name} not found"));
             };
+        let remote_repo = self.repos[index].list().await?;
+        let plugins = self.config.plugins.clone();
+        for plugin in &remote_repo {
+            if let Some(ind) = plugins
+                .iter()
+                .position(|elem| elem.name() == *plugin.name())
+            {
+                let plugin_name = &plugins[ind].name()[..];
+                match self.remove(plugin_name).await {
+                    Ok(_) => {}
+                    Err(err) => return Err(err),
+                }
+            }
+        }
         let repo_path = &self.repos[index].url().path_string;
         fs::remove_dir_all(repo_path)?;
         self.repos.remove(index);
