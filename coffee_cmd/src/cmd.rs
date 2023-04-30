@@ -33,10 +33,7 @@ pub enum CoffeeCommand {
     Upgrade,
     /// Print the list of plugins installed in cln.
     #[clap(arg_required_else_help = false)]
-    List {
-        #[arg(short, long, action = clap::ArgAction::SetTrue)]
-        remotes: bool,
-    },
+    List {},
     /// Remove a plugin installed in cln.
     #[clap(arg_required_else_help = true)]
     Remove { plugin: String },
@@ -71,7 +68,7 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
                 dynamic,
             } => Self::Install(plugin.to_owned(), *verbose, *dynamic),
             CoffeeCommand::Upgrade => Self::Upgrade,
-            CoffeeCommand::List { remotes } => Self::List(*remotes),
+            CoffeeCommand::List {} => Self::List,
             CoffeeCommand::Setup { cln_conf } => Self::Setup(cln_conf.to_owned()),
             CoffeeCommand::Remote { action } => Self::Remote(action.into()),
             CoffeeCommand::Remove { plugin } => Self::Remove(plugin.to_owned()),

@@ -256,23 +256,9 @@ impl PluginManager for CoffeeManager {
         }
     }
 
-    async fn list(&mut self, remotes: bool) -> Result<CoffeeList, CoffeeError> {
-        let remotes = if remotes {
-            let mut remote_list = Vec::new();
-            for repo in &self.repos {
-                remote_list.push(CoffeeListRemote {
-                    local_name: repo.name(),
-                    url: repo.url().url_string,
-                    plugins: repo.list().await?,
-                });
-            }
-            Some(remote_list)
-        } else {
-            None
-        };
+    async fn list(&mut self) -> Result<CoffeeList, CoffeeError> {
         Ok(CoffeeList {
             plugins: self.config.plugins.clone(),
-            remotes,
         })
     }
 
