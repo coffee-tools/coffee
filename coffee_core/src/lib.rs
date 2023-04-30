@@ -6,7 +6,7 @@ pub enum CoffeeOperation {
     /// Install(plugin name, verbose run, dynamic installation)
     Install(String, bool, bool),
     /// List(include remotes)
-    List(bool),
+    List,
     Upgrade,
     Remove(String),
     /// Remote(name repository, url of the repositoryu)

@@ -34,15 +34,6 @@ pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), Cof
         ])
     }
     table.print();
-
-    if let Some(repositories) = remotes.remotes {
-        term::blank();
-        let remotes = CoffeeRemote {
-            remotes: Some(repositories),
-        };
-        show_remote_list(Ok(remotes))?;
-    }
-
     Ok(())
 }
 

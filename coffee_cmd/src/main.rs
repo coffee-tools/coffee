@@ -51,8 +51,8 @@ async fn main() -> Result<(), CoffeeError> {
             spinner.finish();
             Ok(())
         }
-        CoffeeCommand::List { remotes } => {
-            let remotes = coffee.list(remotes).await;
+        CoffeeCommand::List {} => {
+            let remotes = coffee.list().await;
             coffee_term::show_list(remotes)
         }
         CoffeeCommand::Upgrade => coffee.upgrade(&[""]).await,

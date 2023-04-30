@@ -26,7 +26,7 @@ pub trait PluginManager {
     async fn remove(&mut self, plugin: &str) -> Result<CoffeeRemove, CoffeeError>;
 
     /// return the list of plugins installed by the plugin manager.
-    async fn list(&mut self, remotes: bool) -> Result<CoffeeList, CoffeeError>;
+    async fn list(&mut self) -> Result<CoffeeList, CoffeeError>;
 
     /// upgrade a sequence of plugin managed by the plugin manager.
     async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), CoffeeError>;

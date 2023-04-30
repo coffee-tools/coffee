@@ -10,7 +10,6 @@ pub struct CoffeeRemove {
 
 #[derive(Serialize, Deserialize)]
 pub struct CoffeeList {
-    pub remotes: Option<Vec<CoffeeListRemote>>,
     pub plugins: Vec<Plugin>,
 }
 
