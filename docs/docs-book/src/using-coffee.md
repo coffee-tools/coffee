@@ -123,12 +123,6 @@ coffee upgrade <plugin_name>
 coffee list
 ```
 
-or to see all the plugins inside the repositories
-
-```bash
-coffee list --remotes
-```
-
 ## Showing the README file of the plugin
 
 > ✅ Implemented
