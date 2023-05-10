@@ -1,7 +1,9 @@
 //! Coffee mod implementation
+use std::collections::HashMap;
 use std::fmt::Debug;
-use std::fs;
+use std::path::{Path, PathBuf};
 use std::vec::Vec;
+use tokio::fs;
 
 use async_trait::async_trait;
 use clightningrpc_common::client::Client;
@@ -18,7 +20,9 @@ use coffee_lib::error;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
-use coffee_lib::types::{CoffeeList, CoffeeListRemote, CoffeeRemote, CoffeeRemove};
+use coffee_lib::types::{
+    CoffeeList, CoffeeListRemote, CoffeeNurse, CoffeeRemote, CoffeeRemove, NurseStatus,
+};
 use coffee_lib::url::URL;
 use coffee_storage::file::FileStorage;
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
@@ -28,27 +32,29 @@ use super::config;
 use crate::config::CoffeeConf;
 use crate::CoffeeArgs;
 
+pub type PluginName = String;
+
 #[derive(Serialize, Deserialize)]
 /// FIXME: move the list of plugin
 /// and the list of repository inside this struct.
 pub struct CoffeStorageInfo {
     pub config: config::CoffeeConf,
-    pub repositories: Vec<RepositoryInfo>,
+    pub repositories: HashMap<PluginName, RepositoryInfo>,
 }
 
 impl From<&CoffeeManager> for CoffeStorageInfo {
     fn from(value: &CoffeeManager) -> Self {
-        let mut repos = vec![];
-        // FIXME: use map instead of for each
+        let mut repos = HashMap::new();
         // FIXME: improve the down cast
-        value.repos.iter().for_each(|repo| {
+        for (name, repo) in value.repos.iter() {
             let repo = if let Some(git) = repo.as_any().downcast_ref::<Github>() {
                 RepositoryInfo::from(git)
             } else {
                 panic!("this should never happens")
             };
-            repos.push(repo);
-        });
+            repos.insert(name.to_string(), repo);
+        }
+
         CoffeStorageInfo {
             config: value.config.to_owned(),
             repositories: repos, // FIXME: found a way to downcast
@@ -58,7 +64,7 @@ impl From<&CoffeeManager> for CoffeStorageInfo {
 
 pub struct CoffeeManager {
     config: config::CoffeeConf,
-    repos: Vec<Box<dyn Repository + Send + Sync>>,
+    repos: HashMap<String, Box<dyn Repository + Send + Sync>>,
     /// Core lightning configuration managed by coffee
     coffe_cln_config: CLNConf,
     /// Core lightning configuration that include the
@@ -77,7 +83,7 @@ impl CoffeeManager {
         let mut coffee = CoffeeManager {
             config: conf.clone(),
             coffe_cln_config: CLNConf::new(conf.config_path, true),
-            repos: vec![],
+            repos: HashMap::new(),
             storage: Box::new(FileStorage::new(&conf.root_path)),
             cln_config: None,
             rpc: None,
@@ -98,12 +104,15 @@ impl CoffeeManager {
         // this is really needed? I think no, because coffee at this point
         // have a new conf loading
         self.config = store.config;
-        store.repositories.iter().for_each(|repo| match repo.kind {
-            Kind::Git => {
-                let repo = Github::from(repo);
-                self.repos.push(Box::new(repo));
-            }
-        });
+        store
+            .repositories
+            .iter()
+            .for_each(|repo| match repo.1.kind {
+                Kind::Git => {
+                    let repo = Github::from(repo.1);
+                    self.repos.insert(repo.name(), Box::new(repo));
+                }
+            });
         if let Err(err) = self.coffe_cln_config.parse() {
             log::error!("{}", err.cause);
         }
@@ -204,9 +213,10 @@ impl PluginManager for CoffeeManager {
         verbose: bool,
         try_dynamic: bool,
     ) -> Result<(), CoffeeError> {
+        self.remote_sync().await?;
         log::debug!("installing plugin: {plugin}");
         // keep track if the plugin that are installed with success
-        for repo in &self.repos {
+        for repo in self.repos.values() {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
                 log::trace!("{:#?}", plugin);
                 let result = plugin.configure(verbose).await;
@@ -263,6 +273,7 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn upgrade(&mut self, _: &[&str]) -> Result<(), CoffeeError> {
+        self.remote_sync().await?;
         // FIXME: Fix debug message with the list of plugins to be upgraded
         log::debug!("upgrading plugins");
         Ok(())
@@ -274,50 +285,86 @@ impl PluginManager for CoffeeManager {
         self.storage.store(&self.storage_info()).await
     }
 
+    async fn remote_sync(&mut self) -> Result<(), CoffeeError> {
+        // check if there are any unrelated files or folders in the `repositories` folder
+        let repos_path = PathBuf::from(format!("{}/repositories/", self.config.root_path));
+        let mut dir_entries = fs::read_dir(repos_path).await?;
+        while let Some(entry) = dir_entries.next_entry().await? {
+            let entry_name = entry.file_name().to_string_lossy().to_string();
+            if !self.repos.contains_key(&entry_name) {
+                log::warn!("An unknown file or folder was detected in coffee local storage. Coffee is corrupted");
+                return Err(error!(
+                    "coffee storage is out of sync. Please run coffee nurse to resolve the issue"
+                ));
+            }
+        }
+
+        // check if a the whole remote repository clone was removed
+        for (repo_name, repo) in self.repos.iter_mut() {
+            let repo_path = repo.url().path_string;
+            let repo_url = repo.url().url_string;
+            if !Path::new(&repo_path).exists() {
+                log::warn!("remote with name {repo_name} and URL {repo_url} is not longer present! Coffee is corrupted");
+                return Err(error!(
+                    "coffee storage is out of sync. Please run coffee nurse to resolve the issue"
+                ));
+            }
+        }
+
+        Ok(())
+    }
+
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError> {
+        self.remote_sync().await?;
+        if self.repos.contains_key(name) {
+            return Err(error!("repository with name: {name} already exists"));
+        }
         let url = URL::new(&self.config.root_path, url, name);
         log::debug!("remote adding: {} {}", name, &url.url_string);
         let mut repo = Github::new(name, &url);
         repo.init().await?;
-        self.repos.push(Box::new(repo));
+        self.repos.insert(repo.name(), Box::new(repo));
         log::debug!("remote added: {} {}", name, &url.url_string);
         self.storage.store(&self.storage_info()).await?;
         Ok(())
     }
 
     async fn rm_remote(&mut self, name: &str) -> Result<(), CoffeeError> {
+        self.remote_sync().await?;
         log::debug!("remote removing: {}", name);
-        let Some(index) = self
-            .repos
-            .iter()
-            .position(|x| &*x.to_owned().name() == name) else {
-                return Err(error!("repository with {name} not found"));
-            };
-        let remote_repo = self.repos[index].list().await?;
-        let plugins = self.config.plugins.clone();
-        for plugin in &remote_repo {
-            if let Some(ind) = plugins
-                .iter()
-                .position(|elem| elem.name() == *plugin.name())
-            {
-                let plugin_name = &plugins[ind].name()[..];
-                match self.remove(plugin_name).await {
-                    Ok(_) => {}
-                    Err(err) => return Err(err),
+        match self.repos.get(name) {
+            Some(repo) => {
+                let remote_repo = repo.list().await?;
+                let repo_path = repo.url().path_string;
+                let plugins = self.config.plugins.clone();
+                for plugin in &remote_repo {
+                    if let Some(ind) = plugins
+                        .iter()
+                        .position(|elem| elem.name() == *plugin.name())
+                    {
+                        let plugin_name = &plugins[ind].name().clone();
+                        match self.remove(plugin_name).await {
+                            Ok(_) => {}
+                            Err(err) => return Err(err),
+                        }
+                    }
                 }
+                fs::remove_dir_all(repo_path).await?;
+                self.repos.remove(name);
+                log::debug!("remote removed: {}", name);
+                self.storage.store(&self.storage_info()).await?;
             }
-        }
-        let repo_path = &self.repos[index].url().path_string;
-        fs::remove_dir_all(repo_path)?;
-        self.repos.remove(index);
-        log::debug!("remote removed: {}", name);
-        self.storage.store(&self.storage_info()).await?;
+            None => {
+                return Err(error!("repository with name: {name} not found"));
+            }
+        };
         Ok(())
     }
 
     async fn list_remotes(&mut self) -> Result<CoffeeRemote, CoffeeError> {
+        self.remote_sync().await?;
         let mut remote_list = Vec::new();
-        for repo in &self.repos {
+        for repo in self.repos.values() {
             remote_list.push(CoffeeListRemote {
                 local_name: repo.name(),
                 url: repo.url().url_string,
@@ -330,11 +377,12 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn show(&mut self, plugin: &str) -> Result<Value, CoffeeError> {
-        for repo in &self.repos {
+        self.remote_sync().await?;
+        for repo in self.repos.values() {
             if let Some(plugin) = repo.get_plugin_by_name(plugin) {
                 // FIXME: there are more README file options?
                 let readme_path = format!("{}/README.md", plugin.root_path);
-                let contents = fs::read_to_string(readme_path)?;
+                let contents = fs::read_to_string(readme_path).await?;
                 return Ok(json!({ "show": contents }));
             }
         }
@@ -343,6 +391,63 @@ impl PluginManager for CoffeeManager {
             &format!("plugin `{plugin}` are not present inside the repositories"),
         );
         Err(err)
+    }
+
+    async fn nurse(&mut self) -> Result<CoffeeNurse, CoffeeError> {
+        let mut status = NurseStatus::Sane;
+
+        // delete any unrelated files or folders in `repositories` folder
+        let repos_path = PathBuf::from(format!("{}/repositories/", self.config.root_path));
+        let mut dir_entries = fs::read_dir(repos_path).await?;
+        while let Some(entry) = dir_entries.next_entry().await? {
+            let entry_name = entry.file_name().to_string_lossy().to_string();
+            if !self.repos.contains_key(&entry_name) {
+                // if there is an unrelated file or directory in repositories,
+                // we consider the folder corrupted
+                status = NurseStatus::Corrupted;
+                if entry.file_type().await?.is_dir() {
+                    fs::remove_dir_all(entry.path()).await?;
+                    log::debug!("folder removed: {}", entry_name);
+                } else if entry.file_type().await?.is_file() {
+                    fs::remove_file(entry.path()).await?;
+                    log::debug!("file removed: {}", entry_name);
+                }
+            }
+        }
+
+        // check if the existing local repositories clones are corrupt.
+        // remove them from configuration if they are and remove the installed plugins
+        let mut keys_to_remove: Vec<String> = Vec::new();
+        for (repo_name, repo) in &self.repos {
+            let repo_path = repo.url().path_string;
+            if !Path::new(&repo_path).exists() {
+                status = NurseStatus::Corrupted;
+                keys_to_remove.push(repo_name.to_string());
+            }
+        }
+        for repo_name in &keys_to_remove {
+            let remote_repo = self.repos[repo_name].list().await?;
+            let plugins = self.config.plugins.clone();
+            for plugin in &remote_repo {
+                if let Some(ind) = plugins
+                    .iter()
+                    .position(|elem| elem.name() == *plugin.name())
+                {
+                    let plugin_name = &plugins[ind].name().clone();
+                    match self.remove(plugin_name).await {
+                        Ok(_) => {}
+                        Err(err) => return Err(err),
+                    }
+                }
+            }
+        }
+        for key in keys_to_remove {
+            self.repos.remove(&key);
+            log::debug!("repository removed: {key}");
+        }
+
+        self.storage.store(&self.storage_info()).await?;
+        Ok(CoffeeNurse { status })
     }
 }
 

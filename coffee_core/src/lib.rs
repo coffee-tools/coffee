@@ -14,6 +14,7 @@ pub enum CoffeeOperation {
     /// Setup(core lightning root path)
     Setup(String),
     Show(String),
+    Nurse,
 }
 
 #[derive(Clone, Debug)]

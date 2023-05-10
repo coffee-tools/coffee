@@ -24,3 +24,14 @@ pub struct CoffeeListRemote {
     pub url: String,
     pub plugins: Vec<Plugin>,
 }
+
+#[derive(Serialize, Deserialize)]
+pub enum NurseStatus {
+    Corrupted,
+    Sane,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CoffeeNurse {
+    pub status: NurseStatus,
+}
