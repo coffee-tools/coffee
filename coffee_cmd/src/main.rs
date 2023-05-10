@@ -7,6 +7,7 @@ use radicle_term as term;
 use coffee_core::coffee::CoffeeManager;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
+use coffee_lib::types::NurseStatus;
 
 use crate::cmd::CoffeeArgs;
 use crate::cmd::CoffeeCommand;
@@ -98,6 +99,22 @@ async fn main() -> Result<(), CoffeeError> {
             }
             Err(err) => Err(err),
         },
+        CoffeeCommand::Nurse {} => {
+            let mut spinner =
+                term::spinner("Trying restoring from a corrupted status!".to_string());
+            match coffee.nurse().await {
+                Ok(val) => {
+                    match val.status {
+                        NurseStatus::Corrupted => spinner.message("Storage refreshed"),
+                        NurseStatus::Sane => spinner
+                            .message("Storage files are not corrupt. No need to run coffee nurse"),
+                    }
+                    spinner.finish();
+                }
+                Err(err) => spinner.error(format!("Error while refreshing storage: {err}")),
+            };
+            Ok(())
+        }
     };
 
     if let Err(err) = result {

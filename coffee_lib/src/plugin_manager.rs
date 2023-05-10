@@ -4,7 +4,7 @@ use serde_json::Value;
 
 use crate::{
     errors::CoffeeError,
-    types::{CoffeeList, CoffeeRemote, CoffeeRemove},
+    types::{CoffeeList, CoffeeNurse, CoffeeRemote, CoffeeRemove},
 };
 
 /// Plugin manager traits that define the API a generic
@@ -31,6 +31,9 @@ pub trait PluginManager {
     /// upgrade a sequence of plugin managed by the plugin manager.
     async fn upgrade(&mut self, plugins: &[&str]) -> Result<(), CoffeeError>;
 
+    /// refresh the storage information about the remote repositories of the plugin manager.
+    async fn remote_sync(&mut self) -> Result<(), CoffeeError>;
+
     /// add the remote repository to the plugin manager.
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError>;
 
@@ -46,4 +49,7 @@ pub trait PluginManager {
 
     /// show the README file of the pulgin
     async fn show(&mut self, plugin: &str) -> Result<Value, CoffeeError>;
+
+    /// clean up storage information about the remote repositories of the plugin manager.
+    async fn nurse(&mut self) -> Result<CoffeeNurse, CoffeeError>;
 }
