@@ -7,7 +7,7 @@ use radicle_term as term;
 use coffee_core::coffee::CoffeeManager;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
-use coffee_lib::types::NurseStatus;
+use coffee_lib::types::{NurseStatus, UpgradeStatus};
 
 use crate::cmd::CoffeeArgs;
 use crate::cmd::CoffeeCommand;
@@ -56,7 +56,29 @@ async fn main() -> Result<(), CoffeeError> {
             let remotes = coffee.list().await;
             coffee_term::show_list(remotes)
         }
-        CoffeeCommand::Upgrade => coffee.upgrade(&[""]).await,
+        CoffeeCommand::Upgrade { repo, all } => {
+            let result = match repo {
+                Some(repo) => coffee.upgrade(&repo, all).await,
+                None => coffee.upgrade("", all).await,
+            };
+            match result {
+                Ok(val) => {
+                    for res in val.total_status {
+                        match res.status {
+                            UpgradeStatus::UpToDate => {
+                                term::info!("Remote repository {} is already up to date!", res.repo)
+                            }
+                            UpgradeStatus::Updated => term::success!(
+                                "Remote repository {} was successfully upgraded!",
+                                res.repo
+                            ),
+                        }
+                    }
+                }
+                Err(err) => term::error(format!("{err}")),
+            }
+            Ok(())
+        }
         CoffeeCommand::Remote { action } => match action {
             RemoteAction::Add { name, url } => {
                 let mut spinner = term::spinner(format!("Fetch remote from {url}"));

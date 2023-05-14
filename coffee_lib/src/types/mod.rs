@@ -35,3 +35,20 @@ pub enum NurseStatus {
 pub struct CoffeeNurse {
     pub status: NurseStatus,
 }
+
+#[derive(Serialize, Deserialize)]
+pub enum UpgradeStatus {
+    UpToDate,
+    Updated,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CoffeeUpgradeOne {
+    pub repo: String,
+    pub status: UpgradeStatus,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CoffeeUpgrade {
+    pub total_status: Vec<CoffeeUpgradeOne>,
+}

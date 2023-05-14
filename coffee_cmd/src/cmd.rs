@@ -28,9 +28,13 @@ pub enum CoffeeCommand {
         #[arg(short, long, action = clap::ArgAction::SetTrue)]
         dynamic: bool,
     },
-    /// upgrade a single or a list of plugins.
+    /// upgrade a single repository or a all repositories.
     #[clap(arg_required_else_help = true)]
-    Upgrade,
+    Upgrade {
+        repo: Option<String>,
+        #[arg(short, long, conflicts_with = "repo", required_unless_present = "repo", action = clap::ArgAction::SetTrue)]
+        all: bool,
+    },
     /// Print the list of plugins installed in cln.
     #[clap(arg_required_else_help = false)]
     List {},
@@ -70,7 +74,13 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
                 verbose,
                 dynamic,
             } => Self::Install(plugin.to_owned(), *verbose, *dynamic),
-            CoffeeCommand::Upgrade => Self::Upgrade,
+            CoffeeCommand::Upgrade { repo, all } => {
+                if let Some(repo) = repo {
+                    Self::Upgrade(Some(repo.to_owned()), *all)
+                } else {
+                    Self::Upgrade(None, *all)
+                }
+            }
             CoffeeCommand::List {} => Self::List,
             CoffeeCommand::Setup { cln_conf } => Self::Setup(cln_conf.to_owned()),
             CoffeeCommand::Remote { action } => Self::Remote(action.into()),

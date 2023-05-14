@@ -107,13 +107,17 @@ coffee remove <plugin_name>
 
 ## Upgrade a Plugin
 
-> ⚠️  this feature is under development, see [the tracking issue](https://github.com/coffee-tools/coffee/issues/13)
-
 Coffee tightly integrates with git, allowing you to easily upgrade your plugins through the command line interface (CLI). This eliminates the need for tedious tasks such as downloading the latest updates and creating new versions of plugins. To upgrade a plugin, all you need to do is run.
-
+> ✅ Implemented
 ```bash
-coffee upgrade <plugin_name>
+coffee upgrade <repo_name>
 ```
+To upgrade all remote repositories with one command, run:
+> ✅ Implemented
+```bash
+coffee upgrade --all
+```
+
 
 ## Listing all the plugins
 

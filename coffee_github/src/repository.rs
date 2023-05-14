@@ -14,12 +14,14 @@ use coffee_lib::plugin::Plugin;
 use coffee_lib::plugin::PluginLang;
 use coffee_lib::plugin_conf::Conf;
 use coffee_lib::repository::Repository;
+use coffee_lib::types::UpgradeStatus;
 use coffee_lib::url::URL;
 use coffee_lib::utils::get_plugin_info_from_path;
 use coffee_storage::model::repository::Kind;
 use coffee_storage::model::repository::Repository as StorageRepository;
 
 use crate::utils::clone_recursive_fix;
+use crate::utils::fast_forward;
 
 pub struct Github {
     /// the url of the repository to be able
@@ -31,6 +33,9 @@ pub struct Github {
     /// all the plugin that are listed inside the
     /// repository
     plugins: Vec<Plugin>,
+    /// the name of the branch to be able to
+    /// pull the changes from the correct branch
+    branch: String,
 }
 
 // FIXME: move this inside a utils dir craters
@@ -51,6 +56,7 @@ impl Github {
             name: name.to_owned(),
             url: url.clone(),
             plugins: vec![],
+            branch: "".to_owned(),
         }
     }
 
@@ -197,12 +203,25 @@ impl Repository for Github {
         let res = git2::Repository::clone(&self.url.url_string, &self.url.path_string);
         match res {
             Ok(repo) => {
+                self.branch = if repo.find_branch("main", git2::BranchType::Local).is_ok() {
+                    "main".to_owned()
+                } else {
+                    "master".to_owned()
+                };
                 let clone = clone_recursive_fix(repo, &self.url).await;
                 self.index_repository().await?;
                 clone
             }
             Err(err) => Err(CoffeeError::new(1, err.message())),
         }
+    }
+
+    async fn pull(&self) -> Result<UpgradeStatus, CoffeeError> {
+        debug!(
+            "pulling the latest changes from repository: {} {} > {}",
+            self.name, &self.url.url_string, &self.url.path_string,
+        );
+        return fast_forward(&self.url.path_string, &self.branch);
     }
 
     /// list of the plugin installed inside the repository.
@@ -241,6 +260,7 @@ impl From<StorageRepository> for Github {
             url: value.url,
             name: value.name,
             plugins: value.plugins,
+            branch: value.branch,
         }
     }
 }
@@ -251,6 +271,7 @@ impl From<&StorageRepository> for Github {
             url: value.url.to_owned(),
             name: value.name.to_owned(),
             plugins: value.plugins.to_owned(),
+            branch: value.branch.to_owned(),
         }
     }
 }
@@ -262,6 +283,7 @@ impl From<Github> for StorageRepository {
             name: value.name,
             url: value.url,
             plugins: value.plugins,
+            branch: value.branch,
         }
     }
 }
@@ -273,6 +295,7 @@ impl From<&Github> for StorageRepository {
             name: value.name.to_owned(),
             url: value.url.to_owned(),
             plugins: value.plugins.to_owned(),
+            branch: value.branch.to_owned(),
         }
     }
 }

@@ -21,7 +21,8 @@ use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
 use coffee_lib::types::{
-    CoffeeList, CoffeeListRemote, CoffeeNurse, CoffeeRemote, CoffeeRemove, NurseStatus,
+    CoffeeList, CoffeeListRemote, CoffeeNurse, CoffeeRemote, CoffeeRemove, CoffeeUpgrade,
+    CoffeeUpgradeOne, NurseStatus, UpgradeStatus,
 };
 use coffee_lib::url::URL;
 use coffee_storage::file::FileStorage;
@@ -272,11 +273,77 @@ impl PluginManager for CoffeeManager {
         })
     }
 
-    async fn upgrade(&mut self, _: &[&str]) -> Result<(), CoffeeError> {
+    async fn upgrade_single(&mut self, repo: &str) -> Result<CoffeeUpgradeOne, CoffeeError> {
+        let status;
+        match self.repos.get(repo) {
+            Some(repo) => {
+                // get the list of the plugins installed from this repository
+                // TODO: add a field of installed plugins in the repository struct instead
+                let mut installed_plugins: Vec<String> = vec![];
+                let remote_repo = repo.list().await?;
+                let plugins = self.config.plugins.clone();
+                for plugin in &remote_repo {
+                    if let Some(ind) = plugins
+                        .iter()
+                        .position(|elem| elem.name() == *plugin.name())
+                    {
+                        let plugin_name = &plugins[ind].name().clone();
+                        installed_plugins.push(plugin_name.to_owned());
+                    }
+                }
+                // pull the changes from the repository
+                status = repo.pull().await?;
+                match status {
+                    UpgradeStatus::UpToDate => {
+                        log::debug!("repository up to date: {}", repo.name());
+                    }
+                    UpgradeStatus::Updated => {
+                        // uninstall the plugins
+                        // for plugin in &installed_plugins {
+                        //     self.remove(&plugin).await?;
+                        // }
+                        // reinstall the plugins
+                        // for plugin in &installed_plugins {
+                        //     self.install(&plugin, false, false).await?;
+                        // }
+                        log::debug!("repository upgraded: {}", repo.name());
+                    }
+                }
+                self.storage.store(&self.storage_info()).await?;
+            }
+            None => {
+                return Err(error!("repository with name: {repo} not found"));
+            }
+        };
+
+        Ok(CoffeeUpgradeOne {
+            repo: repo.to_owned(),
+            status,
+        })
+    }
+
+    async fn upgrade(&mut self, repo: &str, all: bool) -> Result<CoffeeUpgrade, CoffeeError> {
         self.remote_sync().await?;
-        // FIXME: Fix debug message with the list of plugins to be upgraded
-        log::debug!("upgrading plugins");
-        Ok(())
+        let mut total_status: Vec<CoffeeUpgradeOne> = vec![];
+        if all {
+            // for repository in self.repos.keys() {
+            //     match self.upgrade_single(repository).await {
+            //         Ok(val) => total_status.push(val),
+            //         Err(err) => return Err(err),
+            //     }
+            // }
+        } else {
+            match self.repos.get(repo) {
+                Some(repository_val) => match self.upgrade_single(&repository_val.name()).await {
+                    Ok(val) => total_status.push(val),
+                    Err(err) => return Err(err),
+                },
+                None => {
+                    return Err(error!("repository with name: {repo} not found"));
+                }
+            };
+        }
+        Ok(CoffeeUpgrade { total_status })
     }
 
     async fn setup(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
