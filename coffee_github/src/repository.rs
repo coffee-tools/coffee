@@ -1,6 +1,7 @@
 use std::any::Any;
 
 use async_trait::async_trait;
+use coffee_lib::types::CoffeeRepositoryUpgrade;
 use git2;
 use log::debug;
 use tokio::fs::File;
@@ -14,7 +15,6 @@ use coffee_lib::plugin::Plugin;
 use coffee_lib::plugin::PluginLang;
 use coffee_lib::plugin_conf::Conf;
 use coffee_lib::repository::Repository;
-use coffee_lib::types::UpgradeStatus;
 use coffee_lib::url::URL;
 use coffee_lib::utils::get_plugin_info_from_path;
 use coffee_storage::model::repository::Kind;
@@ -216,12 +216,33 @@ impl Repository for Github {
         }
     }
 
-    async fn pull(&self) -> Result<UpgradeStatus, CoffeeError> {
-        debug!(
-            "pulling the latest changes from repository: {} {} > {}",
-            self.name, &self.url.url_string, &self.url.path_string,
-        );
-        return fast_forward(&self.url.path_string, &self.branch);
+    async fn upgrade(&self, plugins: &Vec<Plugin>) -> Result<CoffeeRepositoryUpgrade, CoffeeError> {
+        let status;
+        // get the list of the plugins installed from this repository
+        // TODO: add a field of installed plugins in the repository struct instead
+        let mut plugins_effected: Vec<String> = vec![];
+        let remote_repo = self.list().await?;
+
+        let plugins = plugins.clone();
+
+        // FIXME: mark inside a repository what plugin is installed, and remove
+        // this information from the configuration.
+        for plugin in &remote_repo {
+            if let Some(ind) = plugins
+                .iter()
+                .position(|elem| elem.name() == *plugin.name())
+            {
+                let plugin_name = &plugins[ind].name().clone();
+                plugins_effected.push(plugin_name.to_owned());
+            }
+        }
+        // pull the changes from the repository
+        status = fast_forward(&self.url.path_string, &self.branch)?;
+        Ok(CoffeeRepositoryUpgrade {
+            repo: self.name(),
+            status,
+            plugins_effected,
+        })
     }
 
     /// list of the plugin installed inside the repository.

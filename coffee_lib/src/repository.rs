@@ -6,7 +6,7 @@ use crate::errors::CoffeeError;
 use crate::plugin::Plugin;
 use crate::url::URL;
 
-use crate::types::UpgradeStatus;
+use crate::types::CoffeeRepositoryUpgrade;
 
 use async_trait::async_trait;
 
@@ -18,14 +18,14 @@ pub trait Repository: Any {
     /// This should work like a `git fetch`.
     async fn init(&mut self) -> Result<(), CoffeeError>;
 
-    /// pull the latest changes from the remote repository.
-    async fn pull(&self) -> Result<UpgradeStatus, CoffeeError>;
-
     /// search inside the repository a plugin by name.
     fn get_plugin_by_name(&self, name: &str) -> Option<Plugin>;
 
     /// return the list of plugin that are register contained inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, CoffeeError>;
+
+    /// upgrade the repository
+    async fn upgrade(&self, plugins: &Vec<Plugin>) -> Result<CoffeeRepositoryUpgrade, CoffeeError>;
 
     /// return the name of the repository.
     fn name(&self) -> String;
