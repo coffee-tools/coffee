@@ -315,7 +315,11 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError> {
-        self.remote_sync().await?;
+        // FIXME: we should allow some error here like
+        // for the add remote command the no found error for the `repository`
+        // directory is fine.
+        // self.remote_sync().await?;
+
         if self.repos.contains_key(name) {
             return Err(error!("repository with name: {name} already exists"));
         }
