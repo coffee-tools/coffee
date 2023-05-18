@@ -14,4 +14,5 @@ pub struct Repository {
     pub name: String,
     pub url: URL,
     pub plugins: Vec<Plugin>,
+    pub branch: String,
 }
