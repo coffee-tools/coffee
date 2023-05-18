@@ -6,6 +6,8 @@ use crate::errors::CoffeeError;
 use crate::plugin::Plugin;
 use crate::url::URL;
 
+use crate::types::CoffeeUpgrade;
+
 use async_trait::async_trait;
 
 #[async_trait]
@@ -21,6 +23,9 @@ pub trait Repository: Any {
 
     /// return the list of plugin that are register contained inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, CoffeeError>;
+
+    /// upgrade the repository
+    async fn upgrade(&self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError>;
 
     /// return the name of the repository.
     fn name(&self) -> String;

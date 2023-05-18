@@ -21,7 +21,8 @@ use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
 use coffee_lib::types::{
-    CoffeeList, CoffeeListRemote, CoffeeNurse, CoffeeRemote, CoffeeRemove, NurseStatus,
+    CoffeeList, CoffeeListRemote, CoffeeNurse, CoffeeRemote, CoffeeRemove, CoffeeUpgrade,
+    NurseStatus,
 };
 use coffee_lib::url::URL;
 use coffee_storage::file::FileStorage;
@@ -272,11 +273,22 @@ impl PluginManager for CoffeeManager {
         })
     }
 
-    async fn upgrade(&mut self, _: &[&str]) -> Result<(), CoffeeError> {
+    async fn upgrade(&mut self, repo: &str) -> Result<CoffeeUpgrade, CoffeeError> {
         self.remote_sync().await?;
-        // FIXME: Fix debug message with the list of plugins to be upgraded
-        log::debug!("upgrading plugins");
-        Ok(())
+
+        let repository = self
+            .repos
+            .get(repo)
+            .ok_or_else(|| error!("Repository with name: `{}` not found", repo))?;
+
+        let status = repository.upgrade(&self.config.plugins).await?;
+        for plugins in status.plugins_effected.iter() {
+            self.remove(plugins).await?;
+            // FIXME: pass the verbose flag to the upgrade command
+            self.install(plugins, false, false).await?;
+        }
+        self.storage.store(&self.storage_info()).await?;
+        Ok(status)
     }
 
     async fn setup(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {

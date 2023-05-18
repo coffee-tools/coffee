@@ -1,6 +1,7 @@
 use std::any::Any;
 
 use async_trait::async_trait;
+use coffee_lib::types::CoffeeUpgrade;
 use git2;
 use log::debug;
 use tokio::fs::File;
@@ -20,6 +21,7 @@ use coffee_storage::model::repository::Kind;
 use coffee_storage::model::repository::Repository as StorageRepository;
 
 use crate::utils::clone_recursive_fix;
+use crate::utils::fast_forward;
 
 pub struct Github {
     /// the url of the repository to be able
@@ -31,6 +33,9 @@ pub struct Github {
     /// all the plugin that are listed inside the
     /// repository
     plugins: Vec<Plugin>,
+    /// the name of the branch to be able to
+    /// pull the changes from the correct branch
+    branch: String,
 }
 
 // FIXME: move this inside a utils dir craters
@@ -51,6 +56,7 @@ impl Github {
             name: name.to_owned(),
             url: url.clone(),
             plugins: vec![],
+            branch: "".to_owned(),
         }
     }
 
@@ -197,12 +203,45 @@ impl Repository for Github {
         let res = git2::Repository::clone(&self.url.url_string, &self.url.path_string);
         match res {
             Ok(repo) => {
+                self.branch = if repo.find_branch("master", git2::BranchType::Local).is_ok() {
+                    "master".to_owned()
+                } else {
+                    "main".to_owned()
+                };
                 let clone = clone_recursive_fix(repo, &self.url).await;
                 self.index_repository().await?;
                 clone
             }
             Err(err) => Err(CoffeeError::new(1, err.message())),
         }
+    }
+
+    async fn upgrade(&self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError> {
+        // get the list of the plugins installed from this repository
+        // TODO: add a field of installed plugins in the repository struct instead
+        let mut plugins_effected: Vec<String> = vec![];
+        let remote_repo = self.list().await?;
+
+        let plugins = plugins.clone();
+
+        // FIXME: mark inside a repository what plugin is installed, and remove
+        // this information from the configuration.
+        for plugin in &remote_repo {
+            if let Some(ind) = plugins
+                .iter()
+                .position(|elem| elem.name() == *plugin.name())
+            {
+                let plugin_name = &plugins[ind].name().clone();
+                plugins_effected.push(plugin_name.to_owned());
+            }
+        }
+        // pull the changes from the repository
+        let status = fast_forward(&self.url.path_string, &self.branch)?;
+        Ok(CoffeeUpgrade {
+            repo: self.name(),
+            status,
+            plugins_effected,
+        })
     }
 
     /// list of the plugin installed inside the repository.
@@ -241,6 +280,7 @@ impl From<StorageRepository> for Github {
             url: value.url,
             name: value.name,
             plugins: value.plugins,
+            branch: value.branch,
         }
     }
 }
@@ -251,6 +291,7 @@ impl From<&StorageRepository> for Github {
             url: value.url.to_owned(),
             name: value.name.to_owned(),
             plugins: value.plugins.to_owned(),
+            branch: value.branch.to_owned(),
         }
     }
 }
@@ -262,6 +303,7 @@ impl From<Github> for StorageRepository {
             name: value.name,
             url: value.url,
             plugins: value.plugins,
+            branch: value.branch,
         }
     }
 }
@@ -273,6 +315,7 @@ impl From<&Github> for StorageRepository {
             name: value.name.to_owned(),
             url: value.url.to_owned(),
             plugins: value.plugins.to_owned(),
+            branch: value.branch.to_owned(),
         }
     }
 }

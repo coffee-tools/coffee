@@ -35,3 +35,19 @@ pub enum NurseStatus {
 pub struct CoffeeNurse {
     pub status: NurseStatus,
 }
+
+#[derive(Serialize, Deserialize)]
+pub enum UpgradeStatus {
+    UpToDate,
+    Updated,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CoffeeUpgrade {
+    pub repo: String,
+    pub status: UpgradeStatus,
+    /// If the status of the repository is
+    /// alterate we return the list of plugin
+    /// that are effected and need to be recompiled.
+    pub plugins_effected: Vec<String>,
+}

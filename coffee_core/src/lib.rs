@@ -7,7 +7,8 @@ pub enum CoffeeOperation {
     Install(String, bool, bool),
     /// List(include remotes)
     List,
-    Upgrade,
+    // Upgrade(name of the repository)
+    Upgrade(String),
     Remove(String),
     /// Remote(name repository, url of the repositoryu)
     Remote(RemoteAction),
