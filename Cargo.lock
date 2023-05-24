@@ -403,19 +403,9 @@ dependencies = [
 
 [[package]]
 name = "clightningrpc-conf"
-version = "0.0.1"
+version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05ae2939b521bad1373cab778c552deac98872ca59895104767cea1005cdbd5d"
-dependencies = [
- "albert_stream",
- "indexmap",
-]
-
-[[package]]
-name = "clightningrpc-conf"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf5d10ad0d481c5a2100d4439dd61ba7af570f3f96ab65bb596b37fc1a711941"
+checksum = "927b56218e7b1a8544cf59960830c5b50c43d312ab1993a75e816969e373ff31"
 dependencies = [
  "albert_stream",
  "indexmap",
@@ -439,7 +429,7 @@ dependencies = [
  "async-trait",
  "clap",
  "clightningrpc-common",
- "clightningrpc-conf 0.0.1",
+ "clightningrpc-conf",
  "coffee_core",
  "coffee_lib",
  "env_logger",
@@ -457,7 +447,7 @@ version = "0.0.1-alpha.1"
 dependencies = [
  "async-trait",
  "clightningrpc-common",
- "clightningrpc-conf 0.0.2",
+ "clightningrpc-conf",
  "coffee_github",
  "coffee_lib",
  "coffee_storage",
@@ -599,9 +589,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-channel"
-version = "0.5.7"
+version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf2b3e8478797446514c91ef04bafcb59faba183e621ad488df88983cc14128c"
+checksum = "a33c2bf77f2df06183c3aa30d1e96c0695a313d4f9c453cc3762a6db39f99200"
 dependencies = [
  "cfg-if",
  "crossbeam-utils",

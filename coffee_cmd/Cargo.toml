@@ -14,7 +14,7 @@ log = "0.4.17"
 env_logger = "0.9.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
-clightningrpc-conf = "0.0.1"
+clightningrpc-conf = "0.0.3"
 clightningrpc-common = "0.3.0-beta.3"
 termimad = "0.23"
 radicle-term = { git = "https://github.com/radicle-dev/heartwood.git" }
