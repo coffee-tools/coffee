@@ -9,8 +9,12 @@
 use std::collections::HashMap;
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
+use tokio::sync::Mutex;
+
+use serde_json::Value;
 
 use coffee_core::coffee::CoffeeManager;
+use coffee_lib::plugin_manager::PluginManager;
 
 use actix_web::{App, HttpResponse};
 use actix_web::{Error, HttpServer};
@@ -29,7 +33,7 @@ use paperclip::actix::{
 // This struct represents state
 struct AppState {
     #[allow(dead_code)]
-    coffee: Arc<CoffeeManager>,
+    coffee: Arc<Mutex<CoffeeManager>>,
 }
 
 /// entry point of the httd to allow
@@ -38,7 +42,7 @@ pub async fn run_httpd<T: ToSocketAddrs>(
     coffee: CoffeeManager,
     host: T,
 ) -> Result<(), std::io::Error> {
-    let rc = Arc::new(coffee);
+    let rc = Arc::new(Mutex::new(coffee));
     HttpServer::new(move || {
         let state = AppState { coffee: rc.clone() };
         App::new()
@@ -46,6 +50,7 @@ pub async fn run_httpd<T: ToSocketAddrs>(
             .wrap_api()
             .service(swagger_api)
             .service(coffee_help)
+            .service(coffee_list)
             .with_json_spec_at("/api/v1")
             .build()
     })
@@ -62,6 +67,24 @@ async fn coffee_help(
 ) -> Result<Json<HashMap<String, String>>, Error> {
     // FIXME: the json need to be a struct
     Ok(body)
+}
+
+#[api_v2_operation]
+#[get("/list")]
+async fn coffee_list(data: web::Data<AppState>) -> Result<Json<Value>, Error> {
+    let mut coffee = data.coffee.lock().await;
+    let result = coffee.list().await;
+    match result {
+        Ok(coffee_list) => {
+            let val = serde_json::to_value(coffee_list).map_err(|err| {
+                actix_web::error::ErrorInternalServerError(format!("coffee list error: {err}"))
+            })?;
+            Ok(Json(val))
+        }
+        Err(err) => Err(actix_web::error::ErrorInternalServerError(format!(
+            "coffee list error: {err}"
+        ))),
+    }
 }
 
 // this is just an hack to support swagger UI with https://paperclip-rs.github.io/paperclip/
