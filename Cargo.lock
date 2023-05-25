@@ -480,9 +480,12 @@ dependencies = [
  "actix-web",
  "clap",
  "coffee_core",
+ "coffee_lib",
  "env_logger",
  "log",
  "paperclip",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
