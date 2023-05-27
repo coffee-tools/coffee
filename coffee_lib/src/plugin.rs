@@ -58,9 +58,9 @@ impl PluginLang {
                 Ok(main_file)
             }
             PluginLang::PyPoetry => {
-                let script = "pip3 install poetry \
-                              poetry export -f requirements.txt --output requirements.txt \
-                              pip3 install -r requirements.txt";
+                let mut script = "pip3 install poetry\n".to_string();
+                script += "poetry export -f requirements.txt --output requirements.txt\n";
+                script += "pip3 install -r requirements.txt";
                 sh!(path, script, verbose);
                 Ok(format!("{path}/{name}.py"))
             }
