@@ -25,6 +25,7 @@ use paperclip::actix::{
     // get, post, put, delete
     // use this instead of actix_web::web
     get,
+    post,
     web::{self, Json},
     // extension trait for actix_web::App and proc-macro attributes
     OpenApiExt,
@@ -51,6 +52,9 @@ pub async fn run_httpd<T: ToSocketAddrs>(
             .service(swagger_api)
             .service(coffee_help)
             .service(coffee_list)
+            .service(coffee_remote_add)
+            .service(coffee_remote_rm)
+            .service(coffee_remote_list)
             .with_json_spec_at("/api/v1")
             .build()
     })
@@ -83,6 +87,72 @@ async fn coffee_list(data: web::Data<AppState>) -> Result<Json<Value>, Error> {
         }
         Err(err) => Err(actix_web::error::ErrorInternalServerError(format!(
             "coffee list error: {err}"
+        ))),
+    }
+}
+
+#[api_v2_operation]
+#[post("/remote/add")]
+async fn coffee_remote_add(
+    data: web::Data<AppState>,
+    body: Json<HashMap<String, String>>,
+) -> Result<HttpResponse, Error> {
+    let repository_name = body.get("repository_name").unwrap();
+    let repository_url = body.get("repository_url").unwrap();
+
+    let mut coffee = data.coffee.lock().await;
+    let result = coffee.add_remote(repository_name, repository_url).await;
+
+    match result {
+        Ok(_) => Ok(HttpResponse::Ok().body(format!(
+            "Repository '{}' added successfully",
+            repository_name
+        ))),
+        Err(err) => Err(actix_web::error::ErrorInternalServerError(format!(
+            "Failed to add repository: {err}"
+        ))),
+    }
+}
+
+#[api_v2_operation]
+#[post("/remote/rm")]
+async fn coffee_remote_rm(
+    data: web::Data<AppState>,
+    body: Json<HashMap<String, String>>,
+) -> Result<HttpResponse, Error> {
+    let repository_name = body.get("repository_name").unwrap();
+
+    let mut coffee = data.coffee.lock().await;
+    let result = coffee.rm_remote(repository_name).await;
+
+    match result {
+        Ok(_) => Ok(HttpResponse::Ok().body(format!(
+            "Repository '{}' removed successfully",
+            repository_name
+        ))),
+        Err(err) => Err(actix_web::error::ErrorInternalServerError(format!(
+            "Failed to remove repository: {err}"
+        ))),
+    }
+}
+
+#[api_v2_operation]
+#[get("/remote/list")]
+async fn coffee_remote_list(data: web::Data<AppState>) -> Result<Json<Value>, Error> {
+    let mut coffee = data.coffee.lock().await;
+    let result = coffee.list_remotes().await;
+
+    match result {
+        Ok(coffee_remotes) => {
+            let val = serde_json::to_value(coffee_remotes).map_err(|err| {
+                actix_web::error::ErrorInternalServerError(format!(
+                    "Failed to list remote repositories: {err}"
+                ))
+            })?;
+            Ok(Json(val))
+        }
+        Err(err) => Err(actix_web::error::ErrorInternalServerError(format!(
+            "Failed to list remote repositories: {err}"
         ))),
     }
 }
