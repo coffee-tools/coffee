@@ -46,8 +46,8 @@ impl CoffeeConf {
             def_path = data_dir.to_owned();
         }
 
-        // FIXME: check for double slash
-        def_path += "/.coffee";
+        def_path = def_path.strip_suffix('/').unwrap_or(&def_path).to_string();
+        def_path += ".coffee";
         check_dir_or_make_if_missing(def_path.to_string()).await?;
         info!("creating coffee home at {def_path}");
         check_dir_or_make_if_missing(format!("{def_path}/bitcoin")).await?;
