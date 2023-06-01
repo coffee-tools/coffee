@@ -97,8 +97,12 @@ async fn coffee_remote_add(
     data: web::Data<AppState>,
     body: Json<HashMap<String, String>>,
 ) -> Result<HttpResponse, Error> {
-    let repository_name = body.get("repository_name").unwrap();
-    let repository_url = body.get("repository_url").unwrap();
+    let repository_name = body.get("repository_name").ok_or_else(|| {
+        actix_web::error::ErrorBadRequest("Missing 'repository_name' field in the request body")
+    })?;
+    let repository_url = body.get("repository_url").ok_or_else(|| {
+        actix_web::error::ErrorBadRequest("Missing 'repository_url' field in the request body")
+    })?;
 
     let mut coffee = data.coffee.lock().await;
     let result = coffee.add_remote(repository_name, repository_url).await;
@@ -120,7 +124,9 @@ async fn coffee_remote_rm(
     data: web::Data<AppState>,
     body: Json<HashMap<String, String>>,
 ) -> Result<HttpResponse, Error> {
-    let repository_name = body.get("repository_name").unwrap();
+    let repository_name = body.get("repository_name").ok_or_else(|| {
+        actix_web::error::ErrorBadRequest("Missing 'repository_name' field in the request body")
+    })?;
 
     let mut coffee = data.coffee.lock().await;
     let result = coffee.rm_remote(repository_name).await;
