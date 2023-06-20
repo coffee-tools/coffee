@@ -218,6 +218,7 @@ impl PluginManager for CoffeeManager {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
                 log::trace!("{:#?}", plugin);
                 let result = plugin.configure(verbose).await;
+                log::debug!("result from plugin configure: {:?}", result);
                 match result {
                     Ok(path) => {
                         log::debug!("runnable plugin path {path}");
@@ -238,11 +239,9 @@ impl PluginManager for CoffeeManager {
                 }
             }
         }
-        let err = CoffeeError::new(
-            1,
-            &format!("plugin `{plugin}` are not present inside the repositories"),
-        );
-        Err(err)
+        Err(error!(
+            "plugin `{plugin}` are not present inside the repositories"
+        ))
     }
 
     async fn remove(&mut self, plugin: &str) -> Result<CoffeeRemove, CoffeeError> {

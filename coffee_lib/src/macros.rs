@@ -34,10 +34,11 @@ macro_rules! sh {
             };
 
             if !command.status.success() {
-                return Err(CoffeeError::new(
-                    2,
-                    &String::from_utf8(command.stderr).unwrap(),
-                ));
+                let mut content = String::from_utf8(command.stderr).unwrap();
+                if content.trim().is_empty() {
+                    content = String::from_utf8(command.stdout).unwrap();
+                }
+                return Err(CoffeeError::new(2, &content));
             }
         }
     };

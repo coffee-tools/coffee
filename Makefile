@@ -1,7 +1,7 @@
 CC=cargo
 FMT=fmt
 
-OPTIONS=
+ARGS="--all"
 
 default: fmt
 	$(CC) build
@@ -14,7 +14,7 @@ fmt:
 	$(CC) fmt --all
 
 check:
-	$(CC) test --all
+	$(CC) test $(ARGS)
 
 example:
 	@echo "No example for the moment"
@@ -30,3 +30,6 @@ dev-book:
 
 install:
 	$(CC) install --locked --path ./coffee_cmd
+
+integration:
+	cd tests; $(CC) test $(ARGS)
