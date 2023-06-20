@@ -24,14 +24,20 @@ macro_rules! sh {
             let mut cmd = Command::new(command);
             cmd.args(&cmd_tok[1..cmd_tok.len()]);
             cmd.current_dir($root);
-            if $verbose {
-                let _ = cmd
-                    .spawn()
+            let command = if $verbose {
+                cmd.spawn()
                     .expect("Unable to run the command")
-                    .wait()
-                    .await?;
+                    .wait_with_output()
+                    .await?
             } else {
-                let _ = cmd.output().await?;
+                cmd.output().await?
+            };
+
+            if !command.status.success() {
+                return Err(CoffeeError::new(
+                    2,
+                    &String::from_utf8(command.stderr).unwrap(),
+                ));
             }
         }
     };
