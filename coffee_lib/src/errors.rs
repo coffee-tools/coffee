@@ -20,6 +20,20 @@ impl CoffeeError {
     }
 }
 
+impl std::error::Error for CoffeeError {
+    fn cause(&self) -> Option<&dyn std::error::Error> {
+        Some(self)
+    }
+
+    fn description(&self) -> &str {
+        &self.msg
+    }
+
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self)
+    }
+}
+
 impl fmt::Display for CoffeeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "code: {}, msg: {}", self.code, self.msg)
