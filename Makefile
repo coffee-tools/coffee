@@ -1,7 +1,7 @@
 CC=cargo
 FMT=fmt
 
-ARGS="--all"
+ARGS=""
 
 default: fmt
 	$(CC) build
@@ -32,4 +32,4 @@ install:
 	$(CC) install --locked --path ./coffee_cmd
 
 integration:
-	cd tests; $(CC) test $(ARGS)
+	$(CC) test -p tests $(ARGS)

@@ -8,5 +8,17 @@ members = [
         "coffee_httpd",
         "coffee_plugin",
         "coffee_testing",
+        "tests"
+]
+
+default-members = [
+        "coffee_lib",
+        "coffee_github",
+        "coffee_storage",
+        "coffee_core",
+        "coffee_cmd",
+        "coffee_httpd",
+        "coffee_plugin",
+        "coffee_testing",
 ]
 resolver = "2"

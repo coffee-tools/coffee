@@ -1,0 +1,7 @@
+version: "3.8"
+
+services:
+  coffee:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
