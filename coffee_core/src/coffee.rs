@@ -300,7 +300,9 @@ impl PluginManager for CoffeeManager {
     async fn remote_sync(&mut self) -> Result<(), CoffeeError> {
         // check if there are any unrelated files or folders in the `repositories` folder
         let repos_path = PathBuf::from(format!("{}/repositories/", self.config.root_path));
-        let mut dir_entries = fs::read_dir(repos_path).await?;
+        let mut dir_entries = fs::read_dir(repos_path)
+            .await
+            .map_err(|_| CoffeeError::new(1, "`repositories` folder wasn't found"))?;
         while let Some(entry) = dir_entries.next_entry().await? {
             let entry_name = entry.file_name().to_string_lossy().to_string();
             if !self.repos.contains_key(&entry_name) {
