@@ -20,7 +20,7 @@ RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
 # Install bitcoin core and lightningd (last version)
 RUN add-apt-repository ppa:luke-jr/bitcoincore
 RUN apt-get update && apt-get install -y \
-  bitcoind jq libsodium-dev libpq-dev
+  bitcoind jq libsodium-dev libpq-dev \
   autoconf automake build-essential git libtool libgmp-dev libsqlite3-dev \
   python3 python3-pip net-tools zlib1g-dev libsodium-dev gettext \
   pkg-config libssl-dev cmake
