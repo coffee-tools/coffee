@@ -52,6 +52,7 @@ impl CoffeeConf {
         info!("creating coffee home at {def_path}");
         check_dir_or_make_if_missing(format!("{def_path}/bitcoin")).await?;
         check_dir_or_make_if_missing(format!("{def_path}/testnet")).await?;
+        check_dir_or_make_if_missing(format!("{def_path}/repositories")).await?;
         let mut coffee = CoffeeConf {
             network: "bitcoin".to_owned(),
             root_path: def_path.to_string(),
