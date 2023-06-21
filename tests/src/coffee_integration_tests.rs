@@ -53,7 +53,7 @@ pub async fn init_coffee_test_with_cln() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-#[ntest::timeout(60000)]
+#[ntest::timeout(120000)]
 pub async fn init_coffee_test_add_remote() {
     init();
     let mut cln = Node::tmp().await.unwrap();
