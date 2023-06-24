@@ -127,7 +127,7 @@ impl CoffeeManager {
             let response = rpc
                 .send_request(method, payload)
                 .map_err(|err| CoffeeError::new(1, &format!("{err}")))?;
-            log::trace!("cln answer with {:#?}", response);
+            log::debug!("cln answer with {:#?}", response);
             if let Some(err) = response.error {
                 return Err(CoffeeError::new(1, &format!("cln error: {}", err.message)));
             }

@@ -49,14 +49,19 @@ pub struct BtcNode {
 impl Drop for BtcNode {
     fn drop(&mut self) {
         for process in self.process.iter() {
-            let child = process.id().unwrap();
-            let mut kill = std::process::Command::new("kill")
+            let Some(child) = process.id() else {
+               continue;
+            };
+            let Ok(mut kill) = std::process::Command::new("kill")
                 .args(["-s", "SIGKILL", &child.to_string()])
-                .spawn()
-                .unwrap();
-            kill.wait().unwrap();
+                .spawn() else {
+                    continue;
+                };
+            let _ = kill.wait();
         }
-        std::fs::remove_dir_all(self.root_path.path()).unwrap();
+
+        let result = std::fs::remove_dir_all(self.root_path.path());
+        log::debug!(target: "btc", "clean up function {:?}", result);
     }
 }
 
