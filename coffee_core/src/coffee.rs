@@ -96,10 +96,8 @@ impl CoffeeManager {
     /// when coffee is configure run an inventory to collect all the necessary information
     /// about the coffee ecosystem.
     async fn inventory(&mut self) -> Result<(), CoffeeError> {
-        let store = if let Ok(store) = self.storage.load().await {
-            store
-        } else {
-            log::info!("storage file do not exist");
+        let Ok(store) = self.storage.load().await else {
+            log::debug!("storage file do not exist");
             return Ok(());
         };
         // this is really needed? I think no, because coffee at this point
@@ -119,9 +117,7 @@ impl CoffeeManager {
         }
         self.load_cln_conf().await?;
         log::debug!("cln conf {:?}", self.coffe_cln_config);
-        log::debug!("finish pligin manager inventory");
-        // FIXME: what are the information missed that
-        // needed to be indexed?
+        log::debug!("finish plugin manager inventory");
         Ok(())
     }
 
@@ -140,13 +136,10 @@ impl CoffeeManager {
             }
             return Ok(response.result.unwrap());
         }
-        Err(CoffeeError::new(
-            1,
-            "rpc connection to core lightning not available",
-        ))
+        Err(error!("rpc connection to core lightning not available"))
     }
 
-    pub async fn start_pluing(&self, path: &str) -> Result<(), CoffeeError> {
+    pub async fn start_plugin(&self, path: &str) -> Result<(), CoffeeError> {
         let mut payload = json_utils::init_payload();
         json_utils::add_str(&mut payload, "subcommand", "start");
         json_utils::add_str(&mut payload, "plugin", path);
@@ -234,7 +227,7 @@ impl PluginManager for CoffeeManager {
                             self.storage.store(&self.storage_info()).await?;
                             self.update_conf().await?;
                         } else {
-                            self.start_pluing(&path).await?;
+                            self.start_plugin(&path).await?;
                         }
                         return Ok(());
                     }
