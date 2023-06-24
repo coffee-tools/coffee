@@ -4,6 +4,7 @@ use std::sync::Once;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_testing::cln::Node;
 use coffee_testing::CoffeeTesting;
+use serde_json::json;
 
 #[cfg(test)]
 static INIT: Once = Once::new();
@@ -83,7 +84,7 @@ pub async fn init_coffee_test_add_remote() {
         .unwrap();
 
     cln.rpc()
-        .call::<_, HashMap<String, String>>("summary", HashMap::<String, String>::new())
+        .call::<serde_json::Value, serde_json::Value>("summary", json!({}))
         .unwrap();
 
     cln.stop().await.unwrap();

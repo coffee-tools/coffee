@@ -2554,6 +2554,7 @@ dependencies = [
  "colored",
  "log",
  "ntest",
+ "serde_json",
  "tokio",
 ]
 
