@@ -102,6 +102,9 @@ impl CoffeeManager {
             log::info!("storage file do not exist");
             return Ok(());
         };
+        // this is really needed? I think no, because coffee at this point
+        // have a new conf loading
+        self.config = store.config;
         store
             .repositories
             .iter()
