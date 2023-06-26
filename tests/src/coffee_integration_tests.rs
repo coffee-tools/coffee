@@ -89,3 +89,94 @@ pub async fn init_coffee_test_add_remote() {
 
     cln.stop().await.unwrap();
 }
+
+#[tokio::test]
+#[ntest::timeout(120000)]
+pub async fn test_add_remove_plugins() {
+    init();
+    let mut cln = Node::tmp().await.unwrap();
+    let mut manager = CoffeeTesting::tmp().await.unwrap();
+    let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
+    let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
+    log::info!("lightning path: {lightning_dir}");
+    manager.coffee().setup(&lightning_dir).await.unwrap();
+
+    // Add lightningd remote repository
+    manager
+        .coffee()
+        .add_remote("lightningd", "https://github.com/lightningd/plugins.git")
+        .await
+        .unwrap();
+
+    // Install summary plugin
+    manager
+        .coffee()
+        .install("summary", true, true)
+        .await
+        .unwrap();
+
+    // Install helpme plugin
+    manager
+        .coffee()
+        .install("helpme", true, true)
+        .await
+        .unwrap();
+
+    // Ensure that the list of remotes is correct
+    let result = manager.coffee().list_remotes().await.unwrap();
+    let remotes = result.remotes.expect("remotes field not found");
+    assert_eq!(remotes.len(), 1, "Unexpected number of remote repositories");
+    assert!(
+        remotes
+            .iter()
+            .any(|remote| remote.local_name == "lightningd"),
+        "Remote repository 'lightningd' not found"
+    );
+
+    // Ensure that the list of plugins is correct
+    let result = manager.coffee().list().await.unwrap();
+    assert_eq!(result.plugins.len(), 2, "Unexpected number of plugins");
+    assert!(
+        result
+            .plugins
+            .iter()
+            .any(|plugin| plugin.name() == "summary"),
+        "Plugin 'summary' not found"
+    );
+    assert!(
+        result
+            .plugins
+            .iter()
+            .any(|plugin| plugin.name() == "helpme"),
+        "Plugin 'helpme' not found"
+    );
+
+    // Remove summary plugin
+    manager.coffee().remove("summary").await.unwrap();
+
+    // Ensure that the list of plugins is correct
+    let result = manager.coffee().list().await.unwrap();
+    assert_eq!(result.plugins.len(), 1, "Unexpected number of plugins");
+    assert!(
+        result
+            .plugins
+            .iter()
+            .any(|plugin| plugin.name() == "helpme"),
+        "Plugin 'helpme' not found"
+    );
+
+    // Remove lightningd remote repository
+    // This should also remove the helpme plugin
+    manager.coffee().rm_remote("lightningd").await.unwrap();
+
+    // Ensure that the list of remotes is correct
+    let result = manager.coffee().list_remotes().await.unwrap();
+    let remotes = result.remotes.expect("remotes not found");
+    assert_eq!(remotes.len(), 0, "Unexpected number of remote repositories");
+
+    // Ensure that the list of plugins is correct
+    let result = manager.coffee().list().await.unwrap();
+    assert_eq!(result.plugins.len(), 0, "Unexpected number of plugins");
+
+    cln.stop().await.unwrap();
+}
