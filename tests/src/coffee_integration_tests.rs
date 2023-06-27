@@ -1,9 +1,8 @@
-use std::collections::HashMap;
 use std::sync::Once;
 
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_testing::cln::Node;
-use coffee_testing::CoffeeTesting;
+use coffee_testing::{CoffeeTesting, CoffeeTestingArgs};
 use serde_json::json;
 
 #[cfg(test)]
@@ -28,6 +27,46 @@ pub async fn init_coffee_test() -> anyhow::Result<()> {
         result.plugins.is_empty(),
         "list of plugin not empty: {:?}",
         result
+    );
+    Ok(())
+}
+
+#[tokio::test]
+pub async fn init_coffee_test_cmd() -> anyhow::Result<()> {
+    init();
+
+    let dir = tempfile::tempdir()?;
+    let dir_path = dir.path().to_str().unwrap().to_owned();
+    let args = CoffeeTestingArgs {
+        conf: None,
+        data_dir: dir_path.clone(),
+        network: "bitcoin".to_string(),
+    };
+    let mut manager = CoffeeTesting::tmp_with_args(&args, &dir).await?;
+    let root_path = manager.root_path().to_owned();
+    manager
+        .coffee()
+        .add_remote("folgore", "https://github.com/coffee-tools/folgore.git")
+        .await
+        .unwrap();
+
+    let new_args = CoffeeTestingArgs {
+        conf: None,
+        data_dir: dir_path.clone(),
+        network: "testnet".to_string(),
+    };
+    let mut manager = CoffeeTesting::tmp_with_args(&new_args, &dir).await?;
+    let new_root_path = manager.root_path().to_owned();
+    assert_eq!(root_path, new_root_path,
+        "Coffee isn't running in the same directory. Old root path: '{root_path}', New root path: '{new_root_path}'"
+    );
+
+    let actual_network = manager.coffee().storage_info().config.network;
+    let expected_network = "testnet".to_string();
+
+    assert_eq!(
+        actual_network, expected_network,
+        "Network is wrong. Actual: '{actual_network}', Expected: '{expected_network}'"
     );
     Ok(())
 }
