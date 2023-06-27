@@ -71,14 +71,14 @@ impl coffee_core::CoffeeArgs for CoffeeTestingArgs {
 /// we need to perform integration testing for coffee.
 pub struct CoffeeTesting {
     inner: CoffeeManager,
-    root_path: TempDir,
+    root_path: String,
 }
 
 impl Drop for CoffeeTesting {
     fn drop(&mut self) {
         use std::fs;
 
-        fs::remove_dir_all(self.root_path.path()).unwrap();
+        fs::remove_dir_all(&self.root_path).unwrap();
     }
 }
 
@@ -96,11 +96,32 @@ impl CoffeeTesting {
             .map_err(|err| anyhow::anyhow!("{err}"))?;
         Ok(Self {
             inner: coffee,
-            root_path: dir,
+            root_path: dir.path().to_str().unwrap().to_owned(),
+        })
+    }
+
+    // init coffee in a tmp directory with arguments.
+    pub async fn tmp_with_args(
+        args: &CoffeeTestingArgs,
+        tempdir: &TempDir,
+    ) -> anyhow::Result<Self> {
+        log::info!("Temporary directory: {:?}", tempdir);
+
+        let coffee = CoffeeManager::new(args)
+            .await
+            .map_err(|err| anyhow::anyhow!("{err}"))?;
+
+        Ok(Self {
+            inner: coffee,
+            root_path: tempdir.path().to_str().unwrap().to_owned(),
         })
     }
 
     pub fn coffee(&mut self) -> &mut CoffeeManager {
         &mut self.inner
+    }
+
+    pub fn root_path(&self) -> &str {
+        &self.root_path
     }
 }
