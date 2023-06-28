@@ -139,9 +139,11 @@ pub async fn test_add_remove_plugins() {
     manager.coffee().setup(&lightning_dir).await.unwrap();
 
     // Add lightningd remote repository
+    let repo_name = "lightningd";
+    let repo_url = "https://github.com/lightningd/plugins.git";
     manager
         .coffee()
-        .add_remote("lightningd", "https://github.com/lightningd/plugins.git")
+        .add_remote(repo_name, repo_url)
         .await
         .unwrap();
 
@@ -161,17 +163,17 @@ pub async fn test_add_remove_plugins() {
 
     // Ensure that the list of remotes is correct
     let result = manager.coffee().list_remotes().await.unwrap();
-    let remotes = result.remotes.expect("remotes field not found");
+    let remotes = result.remotes.unwrap();
+    log::debug!("remotes: {:?}", remotes);
     assert_eq!(remotes.len(), 1, "Unexpected number of remote repositories");
     assert!(
-        remotes
-            .iter()
-            .any(|remote| remote.local_name == "lightningd"),
+        remotes.iter().any(|remote| remote.local_name == repo_name),
         "Remote repository 'lightningd' not found"
     );
 
     // Ensure that the list of plugins is correct
     let result = manager.coffee().list().await.unwrap();
+    log::debug!("plugins: {:?}", result.plugins);
     assert_eq!(result.plugins.len(), 2, "Unexpected number of plugins");
     assert!(
         result
@@ -193,6 +195,7 @@ pub async fn test_add_remove_plugins() {
 
     // Ensure that the list of plugins is correct
     let result = manager.coffee().list().await.unwrap();
+    log::debug!("plugins: {:?}", result.plugins);
     assert_eq!(result.plugins.len(), 1, "Unexpected number of plugins");
     assert!(
         result
@@ -204,15 +207,17 @@ pub async fn test_add_remove_plugins() {
 
     // Remove lightningd remote repository
     // This should also remove the helpme plugin
-    manager.coffee().rm_remote("lightningd").await.unwrap();
+    manager.coffee().rm_remote(repo_name).await.unwrap();
 
     // Ensure that the list of remotes is correct
     let result = manager.coffee().list_remotes().await.unwrap();
-    let remotes = result.remotes.expect("remotes not found");
+    let remotes = result.remotes.unwrap();
+    log::debug!("remotes: {:?}", remotes);
     assert_eq!(remotes.len(), 0, "Unexpected number of remote repositories");
 
     // Ensure that the list of plugins is correct
     let result = manager.coffee().list().await.unwrap();
+    log::debug!("plugins: {:?}", result.plugins);
     assert_eq!(result.plugins.len(), 0, "Unexpected number of plugins");
 
     cln.stop().await.unwrap();
