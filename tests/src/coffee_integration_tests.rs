@@ -125,8 +125,9 @@ pub async fn test_add_remove_plugins() {
         .unwrap();
 
     // Ensure that the list of remotes is correct
-    let result = manager.coffee().list_remotes().await.unwrap();
-    let remotes = result.remotes.unwrap();
+    let result = manager.coffee().list_remotes().await;
+    assert!(result.is_ok(), "list_remotes failed. result: {:?}", result);
+    let remotes = result.unwrap().remotes.unwrap();
     log::debug!("remotes: {:?}", remotes);
     assert_eq!(remotes.len(), 1, "Unexpected number of remote repositories");
     assert!(
@@ -135,21 +136,17 @@ pub async fn test_add_remove_plugins() {
     );
 
     // Ensure that the list of plugins is correct
-    let result = manager.coffee().list().await.unwrap();
-    log::debug!("plugins: {:?}", result.plugins);
-    assert_eq!(result.plugins.len(), 2, "Unexpected number of plugins");
+    let result = manager.coffee().list().await;
+    assert!(result.is_ok(), "list failed. result: {:?}", result);
+    let plugins = result.unwrap().plugins;
+    log::debug!("plugins: {:?}", plugins);
+    assert_eq!(plugins.len(), 2, "Unexpected number of plugins");
     assert!(
-        result
-            .plugins
-            .iter()
-            .any(|plugin| plugin.name() == "summary"),
+        plugins.iter().any(|plugin| plugin.name() == "summary"),
         "Plugin 'summary' not found"
     );
     assert!(
-        result
-            .plugins
-            .iter()
-            .any(|plugin| plugin.name() == "helpme"),
+        plugins.iter().any(|plugin| plugin.name() == "helpme"),
         "Plugin 'helpme' not found"
     );
 
@@ -157,14 +154,13 @@ pub async fn test_add_remove_plugins() {
     manager.coffee().remove("summary").await.unwrap();
 
     // Ensure that the list of plugins is correct
-    let result = manager.coffee().list().await.unwrap();
-    log::debug!("plugins: {:?}", result.plugins);
-    assert_eq!(result.plugins.len(), 1, "Unexpected number of plugins");
+    let result = manager.coffee().list().await;
+    assert!(result.is_ok(), "list failed. result: {:?}", result);
+    let plugins = result.unwrap().plugins;
+    log::debug!("plugins: {:?}", plugins);
+    assert_eq!(plugins.len(), 1, "Unexpected number of plugins");
     assert!(
-        result
-            .plugins
-            .iter()
-            .any(|plugin| plugin.name() == "helpme"),
+        plugins.iter().any(|plugin| plugin.name() == "helpme"),
         "Plugin 'helpme' not found"
     );
 
@@ -173,15 +169,18 @@ pub async fn test_add_remove_plugins() {
     manager.coffee().rm_remote(repo_name).await.unwrap();
 
     // Ensure that the list of remotes is correct
-    let result = manager.coffee().list_remotes().await.unwrap();
-    let remotes = result.remotes.unwrap();
+    let result = manager.coffee().list_remotes().await;
+    assert!(result.is_ok(), "list_remotes failed. result: {:?}", result);
+    let remotes = result.unwrap().remotes.unwrap();
     log::debug!("remotes: {:?}", remotes);
     assert_eq!(remotes.len(), 0, "Unexpected number of remote repositories");
 
     // Ensure that the list of plugins is correct
-    let result = manager.coffee().list().await.unwrap();
-    log::debug!("plugins: {:?}", result.plugins);
-    assert_eq!(result.plugins.len(), 0, "Unexpected number of plugins");
+    let result = manager.coffee().list().await;
+    assert!(result.is_ok(), "list failed. result: {:?}", result);
+    let plugins = result.unwrap().plugins;
+    log::debug!("plugins: {:?}", plugins);
+    assert_eq!(plugins.len(), 0, "Unexpected number of plugins");
 
     cln.stop().await.unwrap();
 }
