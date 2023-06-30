@@ -105,12 +105,17 @@ To remove an installed plugin, you simply have to run the following command.
 coffee remove <plugin_name>
 ```
 
-## Upgrade a Plugin
+## Upgrade a repository 
 
 Coffee tightly integrates with git, allowing you to easily upgrade your plugins through the command line interface (CLI). This eliminates the need for tedious tasks such as downloading the latest updates and creating new versions of plugins. To upgrade a plugin, all you need to do is run.
 > ✅ Implemented
 ```bash
 coffee upgrade <repo_name>
+```
+
+To specify a branch from the git repository. run:
+```bash
+coffee upgrade <repo_name> --branch <branch_name>
 ```
 
 

@@ -265,15 +265,19 @@ impl PluginManager for CoffeeManager {
         })
     }
 
-    async fn upgrade(&mut self, repo: &str) -> Result<CoffeeUpgrade, CoffeeError> {
+    async fn upgrade(
+        &mut self,
+        repo: &str,
+        branch: Option<String>,
+    ) -> Result<CoffeeUpgrade, CoffeeError> {
         self.remote_sync().await?;
 
         let repository = self
             .repos
-            .get(repo)
+            .get_mut(repo)
             .ok_or_else(|| error!("Repository with name: `{}` not found", repo))?;
 
-        let status = repository.upgrade(&self.config.plugins).await?;
+        let status = repository.upgrade(&self.config.plugins, branch).await?;
         for plugins in status.plugins_effected.iter() {
             self.remove(plugins).await?;
             // FIXME: pass the verbose flag to the upgrade command

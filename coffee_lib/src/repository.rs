@@ -24,8 +24,12 @@ pub trait Repository: Any {
     /// return the list of plugin that are register contained inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, CoffeeError>;
 
-    /// upgrade the repository
-    async fn upgrade(&self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError>;
+    /// upgrade the repository (with a specific branch).
+    async fn upgrade(
+        &mut self,
+        plugins: &Vec<Plugin>,
+        branch: Option<String>,
+    ) -> Result<CoffeeUpgrade, CoffeeError>;
 
     /// return the name of the repository.
     fn name(&self) -> String;

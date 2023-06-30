@@ -28,8 +28,12 @@ pub trait PluginManager {
     /// return the list of plugins installed by the plugin manager.
     async fn list(&mut self) -> Result<CoffeeList, CoffeeError>;
 
-    /// upgrade a single or multiple repositories.
-    async fn upgrade(&mut self, repo: &str) -> Result<CoffeeUpgrade, CoffeeError>;
+    /// upgrade a repository.
+    async fn upgrade(
+        &mut self,
+        repo: &str,
+        branch: Option<String>,
+    ) -> Result<CoffeeUpgrade, CoffeeError>;
 
     /// refresh the storage information about the remote repositories of the plugin manager.
     async fn remote_sync(&mut self) -> Result<(), CoffeeError>;
