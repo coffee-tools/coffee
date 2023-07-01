@@ -5,12 +5,12 @@ pub mod config;
 pub enum CoffeeOperation {
     /// Install(plugin name, verbose run, dynamic installation)
     Install(String, bool, bool),
-    /// List(include remotes)
+    /// List
     List,
     // Upgrade(name of the repository)
     Upgrade(String),
     Remove(String),
-    /// Remote(name repository, url of the repositoryu)
+    /// Remote(name repository, url of the repository)
     Remote(RemoteAction),
     /// Setup(core lightning root path)
     Setup(String),
@@ -26,7 +26,7 @@ pub enum RemoteAction {
 }
 
 pub trait CoffeeArgs {
-    /// returnt the command that coffee need to execute
+    /// return the command that coffee needs to execute
     fn command(&self) -> CoffeeOperation;
     /// return the conf
     fn conf(&self) -> Option<String>;

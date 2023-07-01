@@ -1,5 +1,5 @@
-//! Minimal information to make persistent
-//! a repository.
+//! Minimal information to make
+//! a repository persistent.
 use coffee_lib::{plugin::Plugin, url::URL};
 use serde::{Deserialize, Serialize};
 

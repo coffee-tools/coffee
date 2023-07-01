@@ -16,7 +16,7 @@ pub async fn build_plugin() -> Result<Plugin<State>, PluginError> {
     Ok(plugin)
 }
 
-/// on init function called by the plugin workflow when the
+/// on init function is called by the plugin workflow when the
 /// init method is sent from core lightning
 ///
 /// This is an interceptor, at this point the plugin configuration and

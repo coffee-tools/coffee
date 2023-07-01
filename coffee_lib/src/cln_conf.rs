@@ -23,7 +23,7 @@ impl CLNConf {
 
 impl Display for CLNConf {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut conf_str = "# reckless configuration\n".to_owned();
+        let mut conf_str = "# coffee configuration\n".to_owned();
         for plugin in &self.plugins {
             conf_str += format!("plugin={}\n", plugin.exec_path).as_str();
         }

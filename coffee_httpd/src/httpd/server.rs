@@ -1,4 +1,4 @@
-//! Coffee Server Deamon implementation,
+//! Coffee Server Daemon implementation,
 //!
 //! you should start from here is you want understand
 //! the code!
@@ -37,7 +37,7 @@ struct AppState {
     coffee: Arc<Mutex<CoffeeManager>>,
 }
 
-/// entry point of the httd to allow
+/// entry point of the httpd to allow
 /// run the server
 pub async fn run_httpd<T: ToSocketAddrs>(
     coffee: CoffeeManager,
@@ -163,7 +163,7 @@ async fn coffee_remote_list(data: web::Data<AppState>) -> Result<Json<Value>, Er
     }
 }
 
-// this is just an hack to support swagger UI with https://paperclip-rs.github.io/paperclip/
+// this is just a hack to support swagger UI with https://paperclip-rs.github.io/paperclip/
 // and the raw html is taken from https://github.com/swagger-api/swagger-ui/blob/master/docs/usage/installation.md#unpkg
 #[get("/")]
 async fn swagger_api() -> HttpResponseWrapper {
