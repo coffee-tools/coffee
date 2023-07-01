@@ -16,7 +16,7 @@ pub struct CoffeeConf {
     /// path of core lightning configuration file
     /// managed by coffee
     pub config_path: String,
-    /// path of the core lightnign configuration file
+    /// path of the core lightning configuration file
     /// not managed by core lightning
     /// (this file included the file managed by coffee)
     pub cln_config_path: Option<String>,

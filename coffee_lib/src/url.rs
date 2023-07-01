@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-/// This struct will make sure our URL's are of the
+/// This struct will make sure our URLs are of the
 /// correct format and will also check correctness
 /// of associated fields
 #[derive(Clone, Serialize, Deserialize)]

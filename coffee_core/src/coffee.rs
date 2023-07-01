@@ -38,12 +38,12 @@ pub type PluginName = String;
 #[derive(Serialize, Deserialize)]
 /// FIXME: move the list of plugin
 /// and the list of repository inside this struct.
-pub struct CoffeStorageInfo {
+pub struct CoffeeStorageInfo {
     pub config: config::CoffeeConf,
     pub repositories: HashMap<PluginName, RepositoryInfo>,
 }
 
-impl From<&CoffeeManager> for CoffeStorageInfo {
+impl From<&CoffeeManager> for CoffeeStorageInfo {
     fn from(value: &CoffeeManager) -> Self {
         let mut repos = HashMap::new();
         // FIXME: improve the down cast
@@ -56,9 +56,9 @@ impl From<&CoffeeManager> for CoffeStorageInfo {
             repos.insert(name.to_string(), repo);
         }
 
-        CoffeStorageInfo {
+        CoffeeStorageInfo {
             config: value.config.to_owned(),
-            repositories: repos, // FIXME: found a way to downcast
+            repositories: repos, // FIXME: find a way to downcast
         }
     }
 }
@@ -67,13 +67,13 @@ pub struct CoffeeManager {
     config: config::CoffeeConf,
     repos: HashMap<String, Box<dyn Repository + Send + Sync>>,
     /// Core lightning configuration managed by coffee
-    coffe_cln_config: CLNConf,
+    coffee_cln_config: CLNConf,
     /// Core lightning configuration that include the
     /// configuration managed by coffee
     cln_config: Option<CLNConf>,
-    /// storage instance to make persistent all the
-    /// plugin manager information on disk
-    storage: Box<dyn StorageManager<CoffeStorageInfo, Err = CoffeeError> + Send + Sync>,
+    /// storage instance to make all the plugin manager
+    /// information persistent on disk
+    storage: Box<dyn StorageManager<CoffeeStorageInfo, Err = CoffeeError> + Send + Sync>,
     /// core lightning rpc connection
     rpc: Option<Client>,
 }
@@ -83,7 +83,7 @@ impl CoffeeManager {
         let conf = CoffeeConf::new(conf).await?;
         let mut coffee = CoffeeManager {
             config: conf.clone(),
-            coffe_cln_config: CLNConf::new(conf.config_path, true),
+            coffee_cln_config: CLNConf::new(conf.config_path, true),
             repos: HashMap::new(),
             storage: Box::new(FileStorage::new(&conf.root_path)),
             cln_config: None,
@@ -93,7 +93,7 @@ impl CoffeeManager {
         Ok(coffee)
     }
 
-    /// when coffee is configure run an inventory to collect all the necessary information
+    /// when coffee is configured, run an inventory to collect all the necessary information
     /// about the coffee ecosystem.
     async fn inventory(&mut self) -> Result<(), CoffeeError> {
         let Ok(store) = self.storage.load().await else {
@@ -112,11 +112,11 @@ impl CoffeeManager {
                     self.repos.insert(repo.name(), Box::new(repo));
                 }
             });
-        if let Err(err) = self.coffe_cln_config.parse() {
+        if let Err(err) = self.coffee_cln_config.parse() {
             log::error!("{}", err.cause);
         }
         self.load_cln_conf().await?;
-        log::debug!("cln conf {:?}", self.coffe_cln_config);
+        log::debug!("cln conf {:?}", self.coffee_cln_config);
         log::debug!("finish plugin manager inventory");
         Ok(())
     }
@@ -150,13 +150,13 @@ impl CoffeeManager {
         Ok(())
     }
 
-    pub fn storage_info(&self) -> CoffeStorageInfo {
-        CoffeStorageInfo::from(self)
+    pub fn storage_info(&self) -> CoffeeStorageInfo {
+        CoffeeStorageInfo::from(self)
     }
 
     pub async fn update_conf(&self) -> Result<(), CoffeeError> {
-        self.coffe_cln_config.flush()?;
-        log::debug!("stored all the cln info in {}", self.coffe_cln_config);
+        self.coffee_cln_config.flush()?;
+        log::debug!("stored all the cln info in {}", self.coffee_cln_config);
         Ok(())
     }
 
@@ -179,15 +179,15 @@ impl CoffeeManager {
 
     pub async fn setup_with_cln(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
         if self.cln_config.is_some() {
-            log::warn!("you are ovveriding the previous set up");
+            log::warn!("you are overriding the previous set up");
         }
         let path_with_network = format!("{cln_dir}/{}/config", self.config.network);
-        log::info!("configure coffe in the following cln config {path_with_network}");
+        log::info!("configure coffee in the following cln config {path_with_network}");
         self.config.cln_config_path = Some(path_with_network);
         self.config.cln_root = Some(cln_dir.to_owned());
         self.load_cln_conf().await?;
         let mut conf = self.cln_config.clone().unwrap();
-        conf.add_subconf(self.coffe_cln_config.clone())
+        conf.add_subconf(self.coffee_cln_config.clone())
             .map_err(|err| CoffeeError::new(1, &err.cause))?;
         conf.flush()?;
         Ok(())
@@ -209,7 +209,7 @@ impl PluginManager for CoffeeManager {
     ) -> Result<(), CoffeeError> {
         self.remote_sync().await?;
         log::debug!("installing plugin: {plugin}");
-        // keep track if the plugin that are installed with success
+        // keep track if the plugin is successfully installed
         for repo in self.repos.values() {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
                 log::trace!("{:#?}", plugin);
@@ -220,7 +220,7 @@ impl PluginManager for CoffeeManager {
                         log::debug!("runnable plugin path {path}");
                         if !try_dynamic {
                             self.config.plugins.push(plugin);
-                            self.coffe_cln_config
+                            self.coffee_cln_config
                                 .add_conf("plugin", &path.to_owned())
                                 .map_err(|err| CoffeeError::new(1, &err.cause))?;
 
@@ -248,7 +248,7 @@ impl PluginManager for CoffeeManager {
             let exec_path = plugin.exec_path.clone();
             log::debug!("runnable plugin path: {exec_path}");
             plugins.remove(index);
-            self.coffe_cln_config
+            self.coffee_cln_config
                 .rm_conf("plugin", Some(&exec_path.to_owned()))
                 .map_err(|err| CoffeeError::new(1, &err.cause))?;
             self.storage.store(&self.storage_info()).await?;
@@ -305,7 +305,7 @@ impl PluginManager for CoffeeManager {
             }
         }
 
-        // check if a the whole remote repository clone was removed
+        // check if the whole remote repository clone was removed
         for (repo_name, repo) in self.repos.iter_mut() {
             let repo_path = repo.url().path_string;
             let repo_url = repo.url().url_string;
@@ -465,5 +465,5 @@ impl PluginManager for CoffeeManager {
 // implementation is not true!
 unsafe impl Send for CoffeeManager {}
 unsafe impl Sync for CoffeeManager {}
-unsafe impl Send for CoffeStorageInfo {}
-unsafe impl Sync for CoffeStorageInfo {}
+unsafe impl Send for CoffeeStorageInfo {}
+unsafe impl Sync for CoffeeStorageInfo {}

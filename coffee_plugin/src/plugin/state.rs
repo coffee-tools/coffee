@@ -1,4 +1,4 @@
-//! Coffe State stuct implemenation
+//! Coffee State struct implementation
 use std::sync::Arc;
 
 use clightningrpc_plugin::commands::types::CLNConf;
@@ -23,7 +23,7 @@ impl State {
     }
 
     #[allow(dead_code)]
-    pub fn coffe(&self) -> Arc<CoffeeManager> {
+    pub fn coffee(&self) -> Arc<CoffeeManager> {
         self.coffee.clone().unwrap()
     }
 

@@ -1,10 +1,10 @@
-//! Coffee http deamon arguments definition.
+//! Coffee http daemon arguments definition.
 use clap::Parser;
 
 /// Coffee main command line definition for the command line tools.
 #[derive(Debug, Parser)]
 #[clap(name = "coffee_httpd")]
-#[clap(about = "Coffee HTTP deamon")]
+#[clap(about = "Coffee HTTP daemon")]
 pub struct HttpdArgs {
     #[clap(long, value_parser)]
     pub conf: Option<String>,
