@@ -1,4 +1,3 @@
-use log::error;
 use std::fmt;
 
 /// Specific repository error.
@@ -12,7 +11,6 @@ impl CoffeeError {
     /// Build a new error message with a specific code
     /// and a specific message.
     pub fn new(code: u64, msg: &str) -> Self {
-        error!("ERROR #{}: {}", code, msg);
         CoffeeError {
             code,
             msg: msg.to_string(),
