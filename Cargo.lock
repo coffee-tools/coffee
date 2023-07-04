@@ -856,7 +856,7 @@ dependencies = [
  "coffee_core",
  "log",
  "port-selector",
- "tempfile",
+ "tempfile 3.6.0 (git+https://github.com/vincenzopalazzo/tempfile.git?branch=macros/clone-tmpdir)",
  "tokio",
 ]
 
@@ -1176,6 +1176,12 @@ checksum = "e51093e27b0797c359783294ca4f0a911c270184cb10f85783b118614a1501be"
 dependencies = [
  "instant",
 ]
+
+[[package]]
+name = "fastrand"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6999dc1837253364c2ebb0704ba97994bd874e8f195d665c50b7548f6ea92764"
 
 [[package]]
 name = "ff"
@@ -1515,7 +1521,7 @@ dependencies = [
  "dyn-clone",
  "lazy_static",
  "newline-converter",
- "tempfile",
+ "tempfile 3.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "termion 1.5.6",
  "thiserror",
  "unicode-segmentation",
@@ -2655,7 +2661,20 @@ checksum = "31c0432476357e58790aaa47a8efb0c5138f137343f3b5f23bd36a27e3b0a6d6"
 dependencies = [
  "autocfg",
  "cfg-if",
- "fastrand",
+ "fastrand 1.9.0",
+ "redox_syscall 0.3.5",
+ "rustix 0.37.22",
+ "windows-sys",
+]
+
+[[package]]
+name = "tempfile"
+version = "3.6.0"
+source = "git+https://github.com/vincenzopalazzo/tempfile.git?branch=macros/clone-tmpdir#b8582d9052e1af11ecfb2339d08d5874ef25f79b"
+dependencies = [
+ "autocfg",
+ "cfg-if",
+ "fastrand 2.0.0",
  "redox_syscall 0.3.5",
  "rustix 0.37.22",
  "windows-sys",
@@ -2720,7 +2739,6 @@ dependencies = [
  "log",
  "ntest",
  "serde_json",
- "tempfile",
  "tokio",
 ]
 
