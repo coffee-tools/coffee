@@ -1,5 +1,8 @@
-use crate::errors::CoffeeError;
 use std::path::Path;
+
+use tokio::fs::create_dir;
+
+use crate::errors::CoffeeError;
 
 pub fn get_plugin_info_from_path(path: &Path) -> Result<(String, String), CoffeeError> {
     match path.parent() {
@@ -14,6 +17,14 @@ pub fn get_plugin_info_from_path(path: &Path) -> Result<(String, String), Coffee
         }
         None => Err(CoffeeError::new(1, "Incorrect path")),
     }
+}
+
+pub async fn check_dir_or_make_if_missing(path: String) -> Result<(), CoffeeError> {
+    if !Path::exists(Path::new(&path.to_owned())) {
+        create_dir(path.clone()).await?;
+        log::debug!("created dir {path}");
+    }
+    Ok(())
 }
 
 #[cfg(test)]

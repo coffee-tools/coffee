@@ -9,3 +9,5 @@ serde_json = "1.0"
 async-trait = "^0.1.57"
 coffee_lib = { path = "../coffee_lib" }
 tokio = { version = "1", features = ["fs"] }
+nosql_db = { git = "https://github.com/vincenzopalazzo/nosql-db.git" }
+nosql_sled = { git = "https://github.com/vincenzopalazzo/nosql-db.git" }

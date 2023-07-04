@@ -37,7 +37,7 @@ impl FileStorage {
 impl<T> StorageManager<T> for FileStorage {
     type Err = CoffeeError;
 
-    async fn load<'c>(&self) -> Result<T, Self::Err>
+    async fn load<'c>(&self, _: &str) -> Result<T, Self::Err>
     where
         T: DeserializeOwned + Send + Sync,
     {
@@ -50,7 +50,7 @@ impl<T> StorageManager<T> for FileStorage {
         Ok(val)
     }
 
-    async fn store(&self, to_store: &T) -> Result<(), Self::Err>
+    async fn store(&self, _: &str, to_store: &T) -> Result<(), Self::Err>
     where
         T: Serialize + Send + Sync,
     {

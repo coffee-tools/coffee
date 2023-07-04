@@ -11,13 +11,13 @@ pub trait StorageManager<T> {
 
     /// async call to persist the information
     /// on disk.
-    async fn store(&self, to_store: &T) -> Result<(), Self::Err>
+    async fn store(&self, key: &str, to_store: &T) -> Result<(), Self::Err>
     where
         T: Serialize + Send + Sync;
 
     /// async call to load the data that was made persistent
     /// from the previous `store` call.
-    async fn load<'c>(&self) -> Result<T, Self::Err>
+    async fn load<'c>(&self, key: &str) -> Result<T, Self::Err>
     where
         T: DeserializeOwned + Send + Sync;
 }

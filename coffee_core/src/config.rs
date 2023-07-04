@@ -1,11 +1,12 @@
 //! Coffee configuration utils.
-use crate::CoffeeArgs;
-use coffee_lib::{errors::CoffeeError, plugin::Plugin};
-use log::{debug, info};
+use log::info;
 use serde::{Deserialize, Serialize};
-use std::{env, path::Path};
-use tokio::fs::create_dir;
+use std::env;
 
+use coffee_lib::utils::check_dir_or_make_if_missing;
+use coffee_lib::{errors::CoffeeError, plugin::Plugin};
+
+use crate::CoffeeArgs;
 /// Custom coffee configuration, given by a command line list of arguments
 /// or a coffee configuration file.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -27,14 +28,6 @@ pub struct CoffeeConf {
     /// all plugins that are installed
     /// with the plugin manager.
     pub plugins: Vec<Plugin>,
-}
-
-async fn check_dir_or_make_if_missing(path: String) -> Result<(), CoffeeError> {
-    if !Path::exists(Path::new(&path.to_owned())) {
-        create_dir(path.clone()).await?;
-        debug!("created dir {path}");
-    }
-    Ok(())
 }
 
 impl CoffeeConf {

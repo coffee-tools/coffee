@@ -4,4 +4,5 @@
 //! information to store on disk.
 pub mod file;
 pub mod model;
+pub mod nosql_db;
 pub mod storage;
