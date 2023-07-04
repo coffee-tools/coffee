@@ -1,4 +1,5 @@
 //! Coffee mod implementation
+use coffee_storage::nosql_db::NoSQlStorage;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
@@ -25,7 +26,6 @@ use coffee_lib::types::{
     NurseStatus,
 };
 use coffee_lib::url::URL;
-use coffee_storage::file::FileStorage;
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::storage::StorageManager;
 
@@ -96,8 +96,8 @@ impl CoffeeManager {
     /// when coffee is configured, run an inventory to collect all the necessary information
     /// about the coffee ecosystem.
     async fn inventory(&mut self) -> Result<(), CoffeeError> {
-        let Ok(store) = self.storage.load().await else {
-            log::debug!("storage file do not exist");
+        let Ok(store) = self.storage.load(&self.config.network).await else {
+            log::debug!("storage do not exist");
             return Ok(());
         };
         // this is really needed? I think no, because coffee at this point
@@ -152,6 +152,13 @@ impl CoffeeManager {
 
     pub fn storage_info(&self) -> CoffeeStorageInfo {
         CoffeeStorageInfo::from(self)
+    }
+
+    pub async fn flush(&self) -> Result<(), CoffeeError> {
+        self.storage
+            .store(&self.config.network, &self.storage_info())
+            .await?;
+        Ok(())
     }
 
     pub async fn update_conf(&self) -> Result<(), CoffeeError> {
@@ -224,7 +231,7 @@ impl PluginManager for CoffeeManager {
                                 .add_conf("plugin", &path.to_owned())
                                 .map_err(|err| CoffeeError::new(1, &err.cause))?;
 
-                            self.storage.store(&self.storage_info()).await?;
+                            self.flush().await?;
                             self.update_conf().await?;
                         } else {
                             self.start_plugin(&path).await?;
@@ -251,7 +258,7 @@ impl PluginManager for CoffeeManager {
             self.coffee_cln_config
                 .rm_conf("plugin", Some(&exec_path.to_owned()))
                 .map_err(|err| CoffeeError::new(1, &err.cause))?;
-            self.storage.store(&self.storage_info()).await?;
+            self.flush().await?;
             self.update_conf().await?;
             Ok(CoffeeRemove { plugin })
         } else {
@@ -279,14 +286,15 @@ impl PluginManager for CoffeeManager {
             // FIXME: pass the verbose flag to the upgrade command
             self.install(plugins, false, false).await?;
         }
-        self.storage.store(&self.storage_info()).await?;
+        self.flush().await?;
         Ok(status)
     }
 
     async fn setup(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
         self.setup_with_cln(cln_dir).await?;
         log::info!("cln configured");
-        self.storage.store(&self.storage_info()).await
+        self.flush().await?;
+        Ok(())
     }
 
     async fn remote_sync(&mut self) -> Result<(), CoffeeError> {
@@ -335,7 +343,7 @@ impl PluginManager for CoffeeManager {
         repo.init().await?;
         self.repos.insert(repo.name(), Box::new(repo));
         log::debug!("remote added: {} {}", name, &url.url_string);
-        self.storage.store(&self.storage_info()).await?;
+        self.flush().await?;
         Ok(())
     }
 
@@ -362,7 +370,7 @@ impl PluginManager for CoffeeManager {
                 fs::remove_dir_all(repo_path).await?;
                 self.repos.remove(name);
                 log::debug!("remote removed: {}", name);
-                self.storage.store(&self.storage_info()).await?;
+                self.flush().await?;
             }
             None => {
                 return Err(error!("repository with name: {name} not found"));
@@ -455,8 +463,7 @@ impl PluginManager for CoffeeManager {
             self.repos.remove(&key);
             log::debug!("repository removed: {key}");
         }
-
-        self.storage.store(&self.storage_info()).await?;
+        self.flush().await?;
         Ok(CoffeeNurse { status })
     }
 }
