@@ -85,7 +85,7 @@ impl CoffeeManager {
             config: conf.clone(),
             coffee_cln_config: CLNConf::new(conf.config_path, true),
             repos: HashMap::new(),
-            storage: Box::new(FileStorage::new(&conf.root_path)),
+            storage: Box::new(NoSQlStorage::new(&conf.root_path).await?),
             cln_config: None,
             rpc: None,
         };
