@@ -6,7 +6,7 @@ templates for all the official languages.
 
 Coffee is a command line utility that provides access to a wide range of tasks.
 
-## First Configuration
+### First Configuration
 
 > ✅ Implemented
 
@@ -38,7 +38,7 @@ the correct network.
 this option if you are looking to specify a different directory for the
 Coffee home.
 
-## Add a Plugin Repository
+### Add a Plugin Repository
 
 > ✅ Implemented
 
@@ -68,7 +68,7 @@ To list plugin repositories, simply run the following command.
 coffee remote list 
 ```
 
-## Install a Plugin
+### Install a Plugin
 
 > ✅ Implemented
 
@@ -77,7 +77,7 @@ allowing you to explore all the plugins that can be
 installed via the CLI. Coffee offers multiple installation strategies
 that you can select based on your preferences, such as:
 
-### Dynamic installation
+#### Dynamic installation
 
 To install a plugin dynamically, you simply need to run.
 
@@ -85,7 +85,7 @@ To install a plugin dynamically, you simply need to run.
 coffee install -d <plugin_name>
 ```
 
-### Static installation
+#### Static installation
 
 > ✅ Implemented
 
@@ -95,7 +95,7 @@ To install a plugin statically, you simply need to run.
 coffee install <plugin_name>
 ```
 
-## Removing a Plugin
+### Removing a Plugin
 
 > ✅ Implemented
 
@@ -105,7 +105,7 @@ To remove an installed plugin, you simply have to run the following command.
 coffee remove <plugin_name>
 ```
 
-## Upgrade a Plugin
+### Upgrade a Plugin
 
 Coffee tightly integrates with git, allowing you to easily upgrade your plugins through the command line interface (CLI). This eliminates the need for tedious tasks such as downloading the latest updates and creating new versions of plugins. To upgrade a plugin, all you need to do is run.
 > ✅ Implemented
@@ -115,7 +115,7 @@ coffee upgrade <repo_name>
 
 
 
-## Listing all the plugins
+### Listing all the plugins
 
 > ✅ Implemented
 
@@ -123,7 +123,7 @@ coffee upgrade <repo_name>
 coffee list
 ```
 
-## Showing the README file of the plugin
+### Showing the README file of the plugin
 
 > ✅ Implemented
 
@@ -131,10 +131,26 @@ coffee list
 coffee show <plugin_name>
 ```
 
-## To fix corrupt remote repositories local clones
+### To fix corrupt remote repositories local clones
 
 > ✅ Implemented
 
 ```bash
 coffee nurse
 ```
+_________
+## Running coffee as a server
+
+To run Coffee as a server, you can use the `coffee_httpd` binary.
+
+Please note that the server runs on `localhost` with port `8080` where you can find a Swagger API documentation with all the available endpoints.
+
+### Starting the Coffee Server
+
+To start the Coffee server, run the following command:
+
+ ```shell
+ coffee_httpd --network <network>
+ ```
+
+Make sure the `coffee_httpd` binary is in your system PATH or in the current working directory.
