@@ -7,6 +7,7 @@ pub mod prelude {
     pub use cln_test;
 
     pub use crate::macros::*;
+    pub use tempfile;
 }
 
 use tempfile::TempDir;
@@ -71,15 +72,7 @@ impl coffee_core::CoffeeArgs for CoffeeTestingArgs {
 /// we need to perform integration testing for coffee.
 pub struct CoffeeTesting {
     inner: CoffeeManager,
-    root_path: String,
-}
-
-impl Drop for CoffeeTesting {
-    fn drop(&mut self) {
-        use std::fs;
-
-        fs::remove_dir_all(&self.root_path).unwrap();
-    }
+    root_path: TempDir,
 }
 
 impl CoffeeTesting {
@@ -96,15 +89,12 @@ impl CoffeeTesting {
             .map_err(|err| anyhow::anyhow!("{err}"))?;
         Ok(Self {
             inner: coffee,
-            root_path: dir.path().to_str().unwrap().to_owned(),
+            root_path: dir,
         })
     }
 
     // init coffee in a tmp directory with arguments.
-    pub async fn tmp_with_args(
-        args: &CoffeeTestingArgs,
-        tempdir: &TempDir,
-    ) -> anyhow::Result<Self> {
+    pub async fn tmp_with_args(args: &CoffeeTestingArgs, tempdir: TempDir) -> anyhow::Result<Self> {
         log::info!("Temporary directory: {:?}", tempdir);
 
         let coffee = CoffeeManager::new(args)
@@ -113,7 +103,7 @@ impl CoffeeTesting {
 
         Ok(Self {
             inner: coffee,
-            root_path: tempdir.path().to_str().unwrap().to_owned(),
+            root_path: tempdir,
         })
     }
 
@@ -121,7 +111,7 @@ impl CoffeeTesting {
         &mut self.inner
     }
 
-    pub fn root_path(&self) -> &str {
-        &self.root_path
+    pub fn root_path(&self) -> TempDir {
+        self.root_path.clone()
     }
 }
