@@ -7,8 +7,7 @@ use tokio::runtime::Runtime;
 
 use clightningrpc_common::json_utils;
 use clightningrpc_plugin::commands::RPCCommand;
-use clightningrpc_plugin::plugin::debug;
-use clightningrpc_plugin::types::LogLevel;
+use clightningrpc_plugin::plugin::{debug, info};
 use clightningrpc_plugin::{add_rpc, error};
 use clightningrpc_plugin::{errors::PluginError, plugin::Plugin};
 
@@ -38,6 +37,7 @@ fn on_init(plugin: &mut Plugin<State>) -> Value {
     let response = json_utils::init_payload();
     let cln_conf = plugin.configuration.clone().unwrap();
     let args = PluginArgs::from(cln_conf);
+    info!("{:?}", args);
     plugin.state.set_args(args.to_owned());
 
     debug!("{:?}", plugin.configuration);
@@ -48,7 +48,7 @@ fn on_init(plugin: &mut Plugin<State>) -> Value {
     let result = runtime.block_on(async move {
         let coffee = CoffeeManager::new(&plugin.state.args()).await;
         if let Err(err) = &coffee {
-            plugin.log(LogLevel::Debug, &format!("{err}"));
+            debug!("{err}");
             return Err(coffee_err!("{err}"));
         }
         let coffee = coffee.unwrap();

@@ -84,11 +84,13 @@ impl From<CLNConf> for PluginArgs {
             root = value.lightning_dir.strip_suffix("/testnet").unwrap();
         } else if value.lightning_dir.ends_with("/bitcoin") {
             root = value.lightning_dir.strip_suffix("/bitcoin").unwrap();
+        } else if value.lightning_dir.ends_with("/regtest") {
+            root = value.lightning_dir.strip_suffix("/regtest").unwrap();
         }
         PluginArgs {
             conf: root.to_owned(),
             network: value.network,
-            data_dir: None,
+            data_dir: Some(root.to_owned()),
         }
     }
 }

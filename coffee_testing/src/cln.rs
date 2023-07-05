@@ -80,7 +80,7 @@ impl Node {
         let process = macros::lightningd!(
             dir,
             port::random_free_port().unwrap(),
-            "--network=regtest --bitcoin-rpcuser={} --bitcoin-rpcpassword={} --bitcoin-rpcport={}",
+            "--network=regtest --log-level=debug --bitcoin-rpcuser={} --bitcoin-rpcpassword={} --bitcoin-rpcport={}",
             btc.user,
             btc.pass,
             btc.port,
