@@ -16,16 +16,21 @@ pub mod macros {
 
                 use tokio::process::Command;
 
+                use coffee_core::lib::utils::check_dir_or_make_if_missing;
+
                 let opt_args = format!($($opt_args)*);
                 let args = opt_args.trim();
                 let args_tok: Vec<&str> = args.split(" ").collect();
 
+                let path = format!("{}/.lightning", $dir.path().to_str().unwrap());
+                log::info!("core lightning home {path}");
+                check_dir_or_make_if_missing(path.clone()).await.unwrap();
                 let mut command = Command::new("lightningd");
                 command
                     .args(&args_tok)
                     .arg(format!("--addr=127.0.0.1:{}", $port))
                     .arg(format!("--bind-addr=127.0.0.1:{}", $port))
-                    .arg(format!("--lightning-dir={}", $dir.path().to_str().unwrap()))
+                    .arg(format!("--lightning-dir={path}"))
                     .arg("--dev-fast-gossip")
                     .arg("--funding-confirms=1")
                     .stdout(Stdio::null())
@@ -71,6 +76,7 @@ impl Node {
         let btc = BtcNode::tmp().await?;
 
         let dir = tempfile::tempdir()?;
+
         let process = macros::lightningd!(
             dir,
             port::random_free_port().unwrap(),
@@ -80,7 +86,7 @@ impl Node {
             btc.port,
         )?;
 
-        let rpc = LightningRPC::new(dir.path().join("regtest").join("lightning-rpc"));
+        let rpc = LightningRPC::new(dir.path().join(".lightning/regtest").join("lightning-rpc"));
 
         wait_for!(async { rpc.getinfo() });
 

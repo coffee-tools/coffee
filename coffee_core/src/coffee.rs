@@ -130,7 +130,7 @@ impl CoffeeManager {
             let response = rpc
                 .send_request(method, payload)
                 .map_err(|err| CoffeeError::new(1, &format!("{err}")))?;
-            log::debug!("cln answer with {:#?}", response);
+            log::debug!("cln answer with {:?}", response);
             if let Some(err) = response.error {
                 return Err(CoffeeError::new(1, &format!("cln error: {}", err.message)));
             }
@@ -227,10 +227,11 @@ impl PluginManager for CoffeeManager {
                         log::debug!("runnable plugin path {path}");
                         if !try_dynamic {
                             self.config.plugins.push(plugin);
+                            log::debug!("path coffee conf: {}", self.coffee_cln_config.path);
                             self.coffee_cln_config
                                 .add_conf("plugin", &path.to_owned())
                                 .map_err(|err| CoffeeError::new(1, &err.cause))?;
-
+                            log::debug!("coffee conf updated: {}", self.coffee_cln_config);
                             self.flush().await?;
                             self.update_conf().await?;
                         } else {
@@ -255,6 +256,7 @@ impl PluginManager for CoffeeManager {
             let exec_path = plugin.exec_path.clone();
             log::debug!("runnable plugin path: {exec_path}");
             plugins.remove(index);
+            log::debug!("coffee cln config: {}", self.coffee_cln_config);
             self.coffee_cln_config
                 .rm_conf("plugin", Some(&exec_path.to_owned()))
                 .map_err(|err| CoffeeError::new(1, &err.cause))?;
