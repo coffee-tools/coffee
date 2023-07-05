@@ -13,12 +13,12 @@ pub struct CoffeeList {
     pub plugins: Vec<Plugin>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CoffeeRemote {
     pub remotes: Option<Vec<CoffeeListRemote>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CoffeeListRemote {
     pub local_name: String,
     pub url: String,

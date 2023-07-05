@@ -190,14 +190,15 @@ pub async fn test_add_remove_plugins() {
     );
 
     // Remove summary plugin
-    manager.coffee().remove("summary").await.unwrap();
+    let result = manager.coffee().remove("summary").await;
+    assert!(result.is_ok(), "{:?}", result);
 
     // Ensure that the list of plugins is correct
     let result = manager.coffee().list().await;
-    assert!(result.is_ok(), "list failed. result: {:?}", result);
+    assert!(result.is_ok(), "{:?}", result);
+
     let plugins = result.unwrap().plugins;
-    log::debug!("plugins: {:?}", plugins);
-    assert_eq!(plugins.len(), 1, "Unexpected number of plugins");
+    assert_eq!(plugins.len(), 1, "{:?}", plugins);
     assert!(
         plugins.iter().any(|plugin| plugin.name() == "helpme"),
         "Plugin 'helpme' not found"
@@ -205,21 +206,24 @@ pub async fn test_add_remove_plugins() {
 
     // Remove lightningd remote repository
     // This should also remove the helpme plugin
-    manager.coffee().rm_remote(repo_name).await.unwrap();
+    let result = manager.coffee().rm_remote(repo_name).await;
+    assert!(result.is_ok(), "{:?}", result);
 
     // Ensure that the list of remotes is correct
     let result = manager.coffee().list_remotes().await;
-    assert!(result.is_ok(), "list_remotes failed. result: {:?}", result);
-    let remotes = result.unwrap().remotes.unwrap();
-    log::debug!("remotes: {:?}", remotes);
-    assert_eq!(remotes.len(), 0, "Unexpected number of remote repositories");
+    assert!(result.is_ok(), "{:?}", result);
+
+    let remotes = result.unwrap().remotes.clone();
+    assert!(remotes.is_some(), "{:?}", remotes);
+    let remotes = remotes.unwrap();
+    assert_eq!(remotes.len(), 0, "{:?}", remotes);
 
     // Ensure that the list of plugins is correct
     let result = manager.coffee().list().await;
-    assert!(result.is_ok(), "list failed. result: {:?}", result);
+    assert!(result.is_ok(), "{:?}", result);
     let plugins = result.unwrap().plugins;
     log::debug!("plugins: {:?}", plugins);
-    assert_eq!(plugins.len(), 0, "Unexpected number of plugins");
+    assert_eq!(plugins.len(), 0, "{:?}", plugins);
 
     cln.stop().await.unwrap();
 }
