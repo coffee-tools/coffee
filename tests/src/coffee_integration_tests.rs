@@ -131,13 +131,15 @@ pub async fn init_coffee_test_add_remote() {
 #[ntest::timeout(120000)]
 pub async fn test_add_remove_plugins() {
     init();
+
     let mut cln = Node::tmp().await.unwrap();
     let mut manager = CoffeeTesting::tmp().await.unwrap();
+
     let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
     let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
     log::info!("lightning path: {lightning_dir}");
-    manager.coffee().setup(&lightning_dir).await.unwrap();
 
+    manager.coffee().setup(&lightning_dir).await.unwrap();
     // Add lightningd remote repository
     let repo_name = "lightningd";
     let repo_url = "https://github.com/lightningd/plugins.git";
@@ -150,14 +152,14 @@ pub async fn test_add_remove_plugins() {
     // Install summary plugin
     manager
         .coffee()
-        .install("summary", true, true)
+        .install("summary", true, false)
         .await
         .unwrap();
 
     // Install helpme plugin
     manager
         .coffee()
-        .install("helpme", true, true)
+        .install("helpme", true, false)
         .await
         .unwrap();
 
@@ -174,10 +176,10 @@ pub async fn test_add_remove_plugins() {
 
     // Ensure that the list of plugins is correct
     let result = manager.coffee().list().await;
-    assert!(result.is_ok(), "list failed. result: {:?}", result);
+    assert!(result.is_ok(), "{:?}", result);
     let plugins = result.unwrap().plugins;
     log::debug!("plugins: {:?}", plugins);
-    assert_eq!(plugins.len(), 2, "Unexpected number of plugins");
+    assert_eq!(plugins.len(), 2, "{:?}", plugins);
     assert!(
         plugins.iter().any(|plugin| plugin.name() == "summary"),
         "Plugin 'summary' not found"
