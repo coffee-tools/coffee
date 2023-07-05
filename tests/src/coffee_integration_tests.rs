@@ -1,22 +1,13 @@
 use std::sync::{Arc, Once};
 
+use serde_json::json;
+
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_testing::cln::Node;
 use coffee_testing::prelude::tempfile;
 use coffee_testing::{CoffeeTesting, CoffeeTestingArgs};
-use serde_json::json;
 
-#[cfg(test)]
-static INIT: Once = Once::new();
-
-#[cfg(test)]
-fn init() {
-    use crate::logger;
-    // ignore error
-    INIT.call_once(|| {
-        logger::init(log::Level::Debug).expect("initializing logger for the first time");
-    });
-}
+use crate::init;
 
 #[tokio::test]
 pub async fn init_coffee_test() -> anyhow::Result<()> {

@@ -31,5 +31,5 @@ dev-book:
 install:
 	$(CC) install --locked --path ./coffee_cmd
 
-integration:
+integration: default
 	$(CC) test -p tests $(ARGS)
