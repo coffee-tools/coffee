@@ -113,11 +113,8 @@ pub async fn test_add_remove_plugins() {
         .unwrap();
 
     // Install summary plugin
-    manager
-        .coffee()
-        .install("summary", true, false)
-        .await
-        .unwrap();
+    let result = manager.coffee().install("summary", true, false).await;
+    assert!(result.is_ok(), "{:?}", result);
 
     // Install helpme plugin
     manager

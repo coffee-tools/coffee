@@ -16,9 +16,9 @@ macro_rules! sh {
     ($root: expr, $script:expr, $verbose:expr) => {
         let script = $script.trim();
         let cmds = script.split("\n"); // Check if the script contains `\`
-        debug!("cmds: {:#?}", cmds);
+        debug!("cmds: {:?}", cmds);
         for cmd in cmds {
-            debug!("cmd {:#?}", cmd);
+            debug!("cmd {:?}", cmd);
             let cmd_tok: Vec<&str> = cmd.split(" ").collect();
             let command = cmd_tok.first().unwrap().to_string();
             let mut cmd = Command::new(command);

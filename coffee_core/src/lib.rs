@@ -1,6 +1,8 @@
 pub mod coffee;
 pub mod config;
 
+pub use coffee_lib as lib;
+
 #[derive(Clone, Debug)]
 pub enum CoffeeOperation {
     /// Install(plugin name, verbose run, dynamic installation)

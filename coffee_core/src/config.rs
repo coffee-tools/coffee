@@ -43,9 +43,7 @@ impl CoffeeConf {
         def_path += "/.coffee";
         check_dir_or_make_if_missing(def_path.to_string()).await?;
         info!("creating coffee home at {def_path}");
-        check_dir_or_make_if_missing(format!("{def_path}/bitcoin")).await?;
-        check_dir_or_make_if_missing(format!("{def_path}/testnet")).await?;
-        check_dir_or_make_if_missing(format!("{def_path}/repositories")).await?;
+
         let mut coffee = CoffeeConf {
             network: "bitcoin".to_owned(),
             root_path: def_path.to_string(),
@@ -59,6 +57,8 @@ impl CoffeeConf {
         // inside the coffee conf
         coffee.bind_cmd_line_params(conf)?;
 
+        check_dir_or_make_if_missing(format!("{def_path}/{}", coffee.network)).await?;
+        check_dir_or_make_if_missing(format!("{def_path}/repositories")).await?;
         // after we know all the information regarding
         // the configuration we try to see if there is
         // something stored already to the disk.
