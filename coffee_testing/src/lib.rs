@@ -9,6 +9,7 @@ pub mod prelude {
     pub use crate::macros::*;
     pub use tempfile;
 }
+use std::sync::Arc;
 
 use tempfile::TempDir;
 
@@ -72,7 +73,7 @@ impl coffee_core::CoffeeArgs for CoffeeTestingArgs {
 /// we need to perform integration testing for coffee.
 pub struct CoffeeTesting {
     inner: CoffeeManager,
-    root_path: TempDir,
+    root_path: Arc<TempDir>,
 }
 
 impl CoffeeTesting {
@@ -89,12 +90,15 @@ impl CoffeeTesting {
             .map_err(|err| anyhow::anyhow!("{err}"))?;
         Ok(Self {
             inner: coffee,
-            root_path: dir,
+            root_path: Arc::new(dir),
         })
     }
 
     // init coffee in a tmp directory with arguments.
-    pub async fn tmp_with_args(args: &CoffeeTestingArgs, tempdir: TempDir) -> anyhow::Result<Self> {
+    pub async fn tmp_with_args(
+        args: &CoffeeTestingArgs,
+        tempdir: Arc<TempDir>,
+    ) -> anyhow::Result<Self> {
         log::info!("Temporary directory: {:?}", tempdir);
 
         let coffee = CoffeeManager::new(args)
@@ -111,7 +115,7 @@ impl CoffeeTesting {
         &mut self.inner
     }
 
-    pub fn root_path(&self) -> TempDir {
+    pub fn root_path(&self) -> Arc<TempDir> {
         self.root_path.clone()
     }
 }
