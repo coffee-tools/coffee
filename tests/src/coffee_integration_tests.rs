@@ -1,4 +1,4 @@
-use std::sync::Once;
+use std::sync::{Arc, Once};
 
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_testing::cln::Node;
@@ -36,7 +36,7 @@ pub async fn init_coffee_test() -> anyhow::Result<()> {
 pub async fn init_coffee_test_cmd() -> anyhow::Result<()> {
     init();
 
-    let dir = tempfile::tempdir()?;
+    let dir = Arc::new(tempfile::tempdir()?);
     let args = CoffeeTestingArgs {
         conf: None,
         data_dir: dir.path().clone().to_str().unwrap().to_owned(),
@@ -50,6 +50,8 @@ pub async fn init_coffee_test_cmd() -> anyhow::Result<()> {
         .await
         .unwrap();
 
+    // dropping the first coffee instance, but without delete the dir
+    drop(manager);
     let new_args = CoffeeTestingArgs {
         conf: None,
         data_dir: dir.path().clone().to_string_lossy().to_string(),
