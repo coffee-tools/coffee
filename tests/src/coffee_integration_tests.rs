@@ -217,3 +217,75 @@ pub async fn test_add_remove_plugins() {
 
     cln.stop().await.unwrap();
 }
+
+#[tokio::test]
+#[ntest::timeout(120000)]
+pub async fn test_errors_and_show() {
+    init();
+
+    let mut cln = Node::tmp().await.unwrap();
+    let mut manager = CoffeeTesting::tmp().await.unwrap();
+
+    let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
+    let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
+    log::info!("lightning path: {lightning_dir}");
+
+    manager.coffee().setup(&lightning_dir).await.unwrap();
+    // Add lightningd remote repository
+    let repo_name = "lightningd";
+    let repo_url = "https://github.com/lightningd/plugins.git";
+    manager
+        .coffee()
+        .add_remote(repo_name, repo_url)
+        .await
+        .unwrap();
+
+    // Install summary plugin
+    let result = manager.coffee().install("summary", true, false).await;
+    assert!(result.is_ok(), "{:?}", result);
+
+    // Get the README file for a plugin that is not installed
+    let result = manager.coffee().show("helpme").await.unwrap();
+    let val = result.readme["show"].as_str().unwrap();
+    assert!(val.starts_with("# Helpme plugin"));
+
+    // Install a plugin that is not in the repository
+    let result = manager.coffee().install("x", true, false).await;
+    assert!(result.is_err(), "{:?}", result);
+
+    // Remove helpme plugin
+    // This should fail because it is not installed
+    let result = manager.coffee().remove("helpme").await;
+    assert!(result.is_err(), "{:?}", result);
+
+    // Remove folgore remote repository
+    // This should also fail
+    let result = manager.coffee().rm_remote("folgore").await;
+    assert!(result.is_err(), "{:?}", result);
+
+    // Ensure that the list of remotes is correct
+    let result = manager.coffee().list_remotes().await;
+    assert!(result.is_ok(), "list_remotes failed. result: {:?}", result);
+    let remotes = result.unwrap().remotes.unwrap();
+    log::debug!("remotes: {:?}", remotes);
+    assert_eq!(remotes.len(), 1, "{:?}", remotes);
+    assert!(
+        remotes.iter().any(|remote| remote.local_name == repo_name),
+        "{:?}",
+        remotes
+    );
+
+    // Ensure that the list of plugins is correct
+    let result = manager.coffee().list().await;
+    assert!(result.is_ok(), "{:?}", result);
+    let plugins = result.unwrap().plugins;
+    log::debug!("plugins: {:?}", plugins);
+    assert_eq!(plugins.len(), 1, "{:?}", plugins);
+    assert!(
+        plugins.iter().any(|plugin| plugin.name() == "summary"),
+        "{:?}",
+        plugins
+    );
+
+    cln.stop().await.unwrap();
+}
