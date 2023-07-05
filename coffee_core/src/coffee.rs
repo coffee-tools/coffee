@@ -14,7 +14,6 @@ use log;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use serde_json::Value;
 
 use coffee_github::repository::Github;
 use coffee_lib::error;
@@ -22,8 +21,8 @@ use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
 use coffee_lib::types::{
-    CoffeeList, CoffeeListRemote, CoffeeNurse, CoffeeRemote, CoffeeRemove, CoffeeUpgrade,
-    NurseStatus,
+    CoffeeList, CoffeeListRemote, CoffeeNurse, CoffeeRemote, CoffeeRemove, CoffeeShow,
+    CoffeeUpgrade, NurseStatus,
 };
 use coffee_lib::url::URL;
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
@@ -396,14 +395,17 @@ impl PluginManager for CoffeeManager {
         })
     }
 
-    async fn show(&mut self, plugin: &str) -> Result<Value, CoffeeError> {
+    async fn show(&mut self, plugin: &str) -> Result<CoffeeShow, CoffeeError> {
         self.remote_sync().await?;
         for repo in self.repos.values() {
             if let Some(plugin) = repo.get_plugin_by_name(plugin) {
                 // FIXME: there are more README file options?
                 let readme_path = format!("{}/README.md", plugin.root_path);
                 let contents = fs::read_to_string(readme_path).await?;
-                return Ok(json!({ "show": contents }));
+                let json_contents = json!({ "show": contents });
+                return Ok(CoffeeShow {
+                    readme: json_contents,
+                });
             }
         }
         let err = CoffeeError::new(
