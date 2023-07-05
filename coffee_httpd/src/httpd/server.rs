@@ -9,9 +9,9 @@
 use std::collections::HashMap;
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 use serde_json::Value;
+use tokio::sync::Mutex;
 
 use coffee_core::coffee::CoffeeManager;
 use coffee_lib::plugin_manager::PluginManager;
@@ -60,7 +60,8 @@ pub async fn run_httpd<T: ToSocketAddrs>(
     })
     .bind(host)?
     .run()
-    .await
+    .await?;
+    Ok(())
 }
 
 #[api_v2_operation]
