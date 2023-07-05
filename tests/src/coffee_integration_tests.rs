@@ -1,10 +1,10 @@
-use std::collections::HashMap;
 use std::sync::Once;
+
+use serde_json::json;
 
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_testing::cln::Node;
 use coffee_testing::CoffeeTesting;
-use serde_json::json;
 
 #[cfg(test)]
 static INIT: Once = Once::new();
