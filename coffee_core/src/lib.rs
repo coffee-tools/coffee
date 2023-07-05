@@ -25,7 +25,7 @@ pub enum RemoteAction {
     List,
 }
 
-pub trait CoffeeArgs {
+pub trait CoffeeArgs: Send + Sync {
     /// return the command that coffee needs to execute
     fn command(&self) -> CoffeeOperation;
     /// return the conf

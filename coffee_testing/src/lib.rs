@@ -3,13 +3,12 @@ pub mod btc;
 pub mod cln;
 
 pub mod prelude {
-    pub use cln_btc_test;
-    pub use cln_test;
-
     pub use crate::macros::*;
+    pub use port_selector as port;
     pub use tempfile;
 }
 
+use port_selector as port;
 use tempfile::TempDir;
 
 use coffee_core::coffee::CoffeeManager;
@@ -40,6 +39,36 @@ pub mod macros {
         };
     }
 
+    #[macro_export]
+    macro_rules! httpd {
+        ($dir:expr, $port:expr, $($opt_args:tt)*) => {
+            async {
+                use std::process::Stdio;
+
+                use tokio::process::Command;
+
+                let opt_args = format!($($opt_args)*);
+                let args = opt_args.trim();
+                let args_tok: Vec<&str> = args.split(" ").collect();
+
+                let cargo_target = std::env::var("CARGO_TARGET_DIR").unwrap();
+                let httpd_path = format!("{cargo_target}/debug/coffee_httpd");
+                let mut command = Command::new(httpd_path);
+                command
+                    .args(&args_tok)
+                    .arg("--host=127.0.0.1")
+                    .arg(format!("--port={}", $port))
+                    .arg(format!("--data-dir={}", $dir.path().to_str().unwrap()))
+                    .stdout(Stdio::null())
+                    .spawn()
+            }.await
+        };
+        ($dir:expr, $port:expr) => {
+            $crate::lightningd!($dir, $port, "")
+        };
+    }
+
+    pub use httpd;
     pub use wait_for;
 }
 
@@ -48,6 +77,9 @@ pub struct CoffeeTestingArgs {
     pub network: String,
     pub data_dir: String,
 }
+
+unsafe impl Send for CoffeeTestingArgs {}
+unsafe impl Sync for CoffeeTestingArgs {}
 
 impl coffee_core::CoffeeArgs for CoffeeTestingArgs {
     fn command(&self) -> coffee_core::CoffeeOperation {
@@ -73,10 +105,28 @@ impl coffee_core::CoffeeArgs for CoffeeTestingArgs {
 pub struct CoffeeTesting {
     inner: CoffeeManager,
     root_path: TempDir,
+    httpd_pid: Option<tokio::process::Child>,
+    httpd_port: Option<u64>,
+}
+
+impl Drop for CoffeeTesting {
+    fn drop(&mut self) {
+        if let Some(ref process) = self.httpd_pid {
+            let Some(child) = process.id() else {
+               return;
+            };
+            let Ok(mut kill) = std::process::Command::new("kill")
+                .args(["-s", "SIGKILL", &child.to_string()])
+                .spawn() else {
+                    return;
+                };
+            let _ = kill.wait();
+        }
+    }
 }
 
 impl CoffeeTesting {
-    // init coffee in a tmp directory.
+    /// init coffee in a tmp directory.
     pub async fn tmp() -> anyhow::Result<Self> {
         let dir = tempfile::tempdir()?;
         let args = CoffeeTestingArgs {
@@ -90,10 +140,12 @@ impl CoffeeTesting {
         Ok(Self {
             inner: coffee,
             root_path: dir,
+            httpd_pid: None,
+            httpd_port: None,
         })
     }
 
-    // init coffee in a tmp directory with arguments.
+    /// init coffee in a tmp directory with arguments.
     pub async fn tmp_with_args(args: &CoffeeTestingArgs, tempdir: TempDir) -> anyhow::Result<Self> {
         log::info!("Temporary directory: {:?}", tempdir);
 
@@ -104,6 +156,8 @@ impl CoffeeTesting {
         Ok(Self {
             inner: coffee,
             root_path: tempdir,
+            httpd_pid: None,
+            httpd_port: None,
         })
     }
 
@@ -113,5 +167,15 @@ impl CoffeeTesting {
 
     pub fn root_path(&self) -> TempDir {
         self.root_path.clone()
+    }
+
+    /// run the httpd deamon as process and return the URL
+    /// this should allow to make integration testing to the httpd.
+    pub async fn httpd(&mut self) -> anyhow::Result<String> {
+        let port = port::random_free_port().unwrap();
+        let child = httpd!(self.root_path, port, "--network=regtest")?;
+        self.httpd_port = Some(port.into());
+        self.httpd_pid = Some(child);
+        Ok(format!("127.0.0.1:{port}"))
     }
 }
