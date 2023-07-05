@@ -109,7 +109,7 @@ async fn main() -> Result<(), CoffeeError> {
         CoffeeCommand::Show { plugin } => match coffee.show(&plugin).await {
             Ok(val) => {
                 // FIXME: modify the radicle_term markdown
-                let val = val["show"].as_str().unwrap();
+                let val = val.readme["show"].as_str().unwrap();
                 term::markdown(val);
                 Ok(())
             }

@@ -1,10 +1,9 @@
 //! Plugin manager module definition.
 use async_trait::async_trait;
-use serde_json::Value;
 
 use crate::{
     errors::CoffeeError,
-    types::{CoffeeList, CoffeeNurse, CoffeeRemote, CoffeeRemove, CoffeeUpgrade},
+    types::{CoffeeList, CoffeeNurse, CoffeeRemote, CoffeeRemove, CoffeeShow, CoffeeUpgrade},
 };
 
 /// Plugin manager traits that define the API a generic
@@ -47,8 +46,8 @@ pub trait PluginManager {
     /// plugin manager.
     async fn setup(&mut self, cln_conf_path: &str) -> Result<(), CoffeeError>;
 
-    /// show the README file of the pulgin
-    async fn show(&mut self, plugin: &str) -> Result<Value, CoffeeError>;
+    /// show the README file of the plugin
+    async fn show(&mut self, plugin: &str) -> Result<CoffeeShow, CoffeeError>;
 
     /// clean up storage information about the remote repositories of the plugin manager.
     async fn nurse(&mut self) -> Result<CoffeeNurse, CoffeeError>;
