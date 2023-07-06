@@ -35,7 +35,7 @@ pub mod macros {
             }
         };
         ($callback:expr) => {
-            use crate::DEFAULT_TIMEOUT;
+            use $crate::DEFAULT_TIMEOUT;
 
             $crate::wait_for!($callback, DEFAULT_TIMEOUT);
         };
