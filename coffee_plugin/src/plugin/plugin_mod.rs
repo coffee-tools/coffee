@@ -38,7 +38,7 @@ fn on_init(plugin: &mut Plugin<State>) -> Value {
     let cln_conf = plugin.configuration.clone().unwrap();
     let args = PluginArgs::from(cln_conf);
     info!("{:?}", args);
-    plugin.state.set_args(args.to_owned());
+    plugin.state.set_args(args);
 
     debug!("{:?}", plugin.configuration);
     debug!("{:?}", plugin.state.args);
