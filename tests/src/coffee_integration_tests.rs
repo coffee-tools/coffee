@@ -1,4 +1,4 @@
-use std::sync::{Arc, Once};
+use std::sync::Arc;
 
 use serde_json::json;
 
@@ -246,7 +246,7 @@ pub async fn test_errors_and_show() {
 
     // Get the README file for a plugin that is not installed
     let result = manager.coffee().show("helpme").await.unwrap();
-    let val = result.readme["show"].as_str().unwrap();
+    let val = result.readme.as_str();
     assert!(val.starts_with("# Helpme plugin"));
 
     // Install a plugin that is not in the repository

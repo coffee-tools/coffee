@@ -1,6 +1,5 @@
 //! Coffee Model Definition
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::plugin::Plugin;
 
@@ -53,7 +52,7 @@ pub struct CoffeeUpgrade {
     pub plugins_effected: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CoffeeShow {
-    pub readme: Value,
+    pub readme: String,
 }
