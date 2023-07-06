@@ -1,10 +1,7 @@
 //! Plugin manager module definition.
 use async_trait::async_trait;
 
-use crate::{
-    errors::CoffeeError,
-    types::{CoffeeList, CoffeeNurse, CoffeeRemote, CoffeeRemove, CoffeeShow, CoffeeUpgrade},
-};
+use crate::{errors::CoffeeError, types::*};
 
 /// Plugin manager traits that define the API a generic
 /// plugin manager.

@@ -13,17 +13,13 @@ use clightningrpc_conf::{CLNConf, SyncCLNConf};
 use log;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 use coffee_github::repository::Github;
 use coffee_lib::error;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
-use coffee_lib::types::{
-    CoffeeList, CoffeeListRemote, CoffeeNurse, CoffeeRemote, CoffeeRemove, CoffeeShow,
-    CoffeeUpgrade, NurseStatus,
-};
+use coffee_lib::types::*;
 use coffee_lib::url::URL;
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::storage::StorageManager;
@@ -402,10 +398,7 @@ impl PluginManager for CoffeeManager {
                 // FIXME: there are more README file options?
                 let readme_path = format!("{}/README.md", plugin.root_path);
                 let contents = fs::read_to_string(readme_path).await?;
-                let json_contents = json!({ "show": contents });
-                return Ok(CoffeeShow {
-                    readme: json_contents,
-                });
+                return Ok(CoffeeShow { readme: contents });
             }
         }
         let err = CoffeeError::new(
