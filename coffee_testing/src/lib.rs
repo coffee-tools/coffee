@@ -44,8 +44,6 @@ pub mod macros {
     macro_rules! httpd {
         ($dir:expr, $port:expr, $($opt_args:tt)*) => {
             async {
-                use std::process::Stdio;
-
                 use tokio::process::Command;
 
                 let opt_args = format!($($opt_args)*);
@@ -60,7 +58,6 @@ pub mod macros {
                     .arg("--host=127.0.0.1")
                     .arg(format!("--port={}", $port))
                     .arg(format!("--data-dir={}", $dir.path().to_str().unwrap()))
-                    .stdout(Stdio::null())
                     .spawn()
             }.await
         };
@@ -131,7 +128,7 @@ impl CoffeeTesting {
         args: &CoffeeTestingArgs,
         tempdir: Arc<TempDir>,
     ) -> anyhow::Result<Self> {
-       log::info!("Temporary directory: {:?}", tempdir);
+        log::info!("Temporary directory: {:?}", tempdir);
 
         let coffee = CoffeeManager::new(args)
             .await
@@ -154,7 +151,7 @@ impl CoffeeTesting {
 
 /// Coffee HTTPD testing manager.
 pub struct CoffeeHTTPDTesting {
-    root_path: TempDir,
+    root_path: Arc<TempDir>,
     httpd_pid: tokio::process::Child,
     httpd_port: u64,
 }
@@ -177,29 +174,23 @@ impl CoffeeHTTPDTesting {
     /// init coffee httpd in a tmp directory.
     pub async fn tmp() -> anyhow::Result<Self> {
         let dir = tempfile::tempdir()?;
-        let dir_str = dir.path().to_str().unwrap().to_owned();
         let port = port::random_free_port().unwrap();
-        let child = httpd!(
-            dir,
-            port,
-            "{}",
-            format!("--network=regtest --data-dir={dir_str}")
-        )?;
+        let child = httpd!(dir, port, "{}", format!("--network=regtest"))?;
+        wait_for!(async { reqwest::get(format!("http://127.0.0.1:{}/list", port)).await });
         Ok(Self {
-            root_path: dir,
+            root_path: Arc::new(dir),
             httpd_pid: child,
             httpd_port: port.into(),
         })
     }
 
-    pub fn root_path(&self) -> TempDir {
+    pub fn root_path(&self) -> Arc<TempDir> {
         self.root_path.clone()
     }
 
     /// run the httpd daemon as process and return the URL
     /// this should allow to make integration testing to the httpd.
-    pub async fn url(&self) -> anyhow::Result<String> {
-        let port = self.httpd_port;
-        Ok(format!("127.0.0.1:{port}"))
+    pub fn url(&self) -> String {
+        format!("http://127.0.0.1:{}", self.httpd_port)
     }
 }

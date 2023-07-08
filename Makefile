@@ -32,4 +32,4 @@ install:
 	$(CC) install --locked --path ./coffee_cmd
 
 integration: default
-	$(CC) test -p tests $(ARGS)
+	$(CC) test -j 4 -p tests $(ARGS)
