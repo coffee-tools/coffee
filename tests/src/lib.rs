@@ -1,4 +1,6 @@
 #[cfg(test)]
+mod coffee_httpd_integration_tests;
+#[cfg(test)]
 mod coffee_integration_tests;
 #[cfg(test)]
 mod coffee_plugin_integration_tests;

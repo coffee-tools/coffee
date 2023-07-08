@@ -52,8 +52,8 @@ pub mod macros {
                 let args = opt_args.trim();
                 let args_tok: Vec<&str> = args.split(" ").collect();
 
-                let cargo_target = std::env::var("CARGO_TARGET_DIR").unwrap();
-                let httpd_path = format!("{cargo_target}/debug/coffee_httpd");
+                let cargo_target = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+                let httpd_path = std::path::Path::new(cargo_target).to_str().unwrap();
                 let mut command = Command::new(httpd_path);
                 command
                     .args(&args_tok)
