@@ -140,8 +140,6 @@ impl CoffeeTesting {
         Ok(Self {
             inner: coffee,
             root_path: tempdir,
-            httpd_pid: None,
-            httpd_port: None,
         })
     }
 
@@ -152,14 +150,56 @@ impl CoffeeTesting {
     pub fn root_path(&self) -> Arc<TempDir> {
         self.root_path.clone()
     }
+}
 
-    /// run the httpd deamon as process and return the URL
-    /// this should allow to make integration testing to the httpd.
-    pub async fn httpd(&mut self) -> anyhow::Result<String> {
+/// Coffee HTTPD testing manager.
+pub struct CoffeeHTTPDTesting {
+    root_path: TempDir,
+    httpd_pid: tokio::process::Child,
+    httpd_port: u64,
+}
+
+impl Drop for CoffeeHTTPDTesting {
+    fn drop(&mut self) {
+        let Some(child) = self.httpd_pid.id() else {
+               return;
+            };
+        let Ok(mut kill) = std::process::Command::new("kill")
+                .args(["-s", "SIGKILL", &child.to_string()])
+                .spawn() else {
+                    return;
+                };
+        let _ = kill.wait();
+    }
+}
+
+impl CoffeeHTTPDTesting {
+    /// init coffee httpd in a tmp directory.
+    pub async fn tmp() -> anyhow::Result<Self> {
+        let dir = tempfile::tempdir()?;
+        let dir_str = dir.path().to_str().unwrap().to_owned();
         let port = port::random_free_port().unwrap();
-        let child = httpd!(self.root_path, port, "--network=regtest")?;
-        self.httpd_port = Some(port.into());
-        self.httpd_pid = Some(child);
+        let child = httpd!(
+            dir,
+            port,
+            "{}",
+            format!("--network=regtest --data-dir={dir_str}")
+        )?;
+        Ok(Self {
+            root_path: dir,
+            httpd_pid: child,
+            httpd_port: port.into(),
+        })
+    }
+
+    pub fn root_path(&self) -> TempDir {
+        self.root_path.clone()
+    }
+
+    /// run the httpd daemon as process and return the URL
+    /// this should allow to make integration testing to the httpd.
+    pub async fn url(&self) -> anyhow::Result<String> {
+        let port = self.httpd_port;
         Ok(format!("127.0.0.1:{port}"))
     }
 }
