@@ -1,4 +1,6 @@
 use clap::Parser;
+use log;
+
 use coffee_core::coffee::CoffeeManager;
 
 mod cmd;
@@ -13,7 +15,10 @@ async fn main() {
         println!("{err}");
     }
     let coffee = coffee.unwrap();
-    if let Err(err) = httpd::run_httpd(coffee, ("127.0.0.1", 8080)).await {
+
+    let port = cmd.port.unwrap_or(8080) as u16;
+    log::info!("Running on port 127.0.0.1:{port}");
+    if let Err(err) = httpd::run_httpd(coffee, ("127.0.0.1", port)).await {
         println!("{err}");
     }
 }
