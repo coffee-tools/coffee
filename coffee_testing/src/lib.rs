@@ -54,7 +54,7 @@ pub mod macros {
 
                 let cargo_target = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
                 let httpd_path = std::path::Path::new(cargo_target).to_str().unwrap();
-                let mut command = Command::new(httpd_path);
+                let mut command = Command::new(format!("{httpd_path}//target/debug/coffee_httpd"));
                 command
                     .args(&args_tok)
                     .arg("--host=127.0.0.1")

@@ -27,9 +27,10 @@ pub async fn init_httpd_add_remote() {
     let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
     log::info!("lightning path: {lightning_dir}");
 
-    let url = CoffeeHTTPDTesting::url(&manager).await.unwrap();
+    let url = manager.url().await.unwrap();
+    log::info!("base url: {url}");
 
-    let body = reqwest::get(format!("{url}/list"))
+    let body = reqwest::get(format!("http://{url}/list"))
         .await
         .unwrap()
         .text()
