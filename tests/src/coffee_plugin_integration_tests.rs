@@ -3,7 +3,7 @@ use coffee_testing::cln::Node;
 
 use crate::init;
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 #[ntest::timeout(560000)]
 pub async fn init_cln_with_coffee_plugin_test() {
     init();
@@ -28,7 +28,7 @@ pub async fn init_cln_with_coffee_plugin_test() {
     cln.stop().await.unwrap();
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 #[ntest::timeout(560000)]
 pub async fn init_cln_with_coffee_add_remore_test() {
     init();
@@ -66,7 +66,7 @@ pub async fn init_cln_with_coffee_add_remore_test() {
     cln.stop().await.unwrap();
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 #[ntest::timeout(1000000)]
 pub async fn init_cln_with_coffee_install_plugin_test() {
     init();
