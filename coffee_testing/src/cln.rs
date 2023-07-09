@@ -73,6 +73,10 @@ impl Drop for Node {
 
 impl Node {
     pub async fn tmp() -> anyhow::Result<Self> {
+        Self::with_params("").await
+    }
+
+    pub async fn with_params(params: &str) -> anyhow::Result<Self> {
         let btc = BtcNode::tmp().await?;
 
         let dir = tempfile::tempdir()?;
@@ -80,10 +84,11 @@ impl Node {
         let process = macros::lightningd!(
             dir,
             port::random_free_port().unwrap(),
-            "--network=regtest --log-level=debug --bitcoin-rpcuser={} --bitcoin-rpcpassword={} --bitcoin-rpcport={}",
+            "--network=regtest --log-level=debug --bitcoin-rpcuser={} --bitcoin-rpcpassword={} --bitcoin-rpcport={} {}",
             btc.user,
             btc.pass,
             btc.port,
+            params,
         )?;
 
         let rpc = LightningRPC::new(dir.path().join(".lightning/regtest").join("lightning-rpc"));
