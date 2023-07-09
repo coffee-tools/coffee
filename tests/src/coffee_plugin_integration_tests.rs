@@ -8,23 +8,13 @@ use crate::init;
 pub async fn init_cln_with_coffee_plugin_test() {
     init();
 
-    let mut cln = Node::tmp().await.unwrap();
-
     let cargo_target = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
     let path = std::path::Path::new(cargo_target).to_str().unwrap();
     let plugin_path = format!("{path}/target/debug/coffee_plugin");
     log::info!("plugin path {plugin_path}");
-    let result: serde_json::Value = cln
-        .rpc()
-        .call(
-            "plugin",
-            serde_json::json!({
-                "subcommand": "start",
-                "plugin": plugin_path,
-            }),
-        )
+    let mut cln = Node::with_params(&format!("--plugin={plugin_path}"))
+        .await
         .unwrap();
-    log::info!("cln response {result}");
     cln.stop().await.unwrap();
 }
 
@@ -33,22 +23,13 @@ pub async fn init_cln_with_coffee_plugin_test() {
 pub async fn init_cln_with_coffee_add_remore_test() {
     init();
 
-    let mut cln = Node::tmp().await.unwrap();
-
     let cargo_target = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
     let path = std::path::Path::new(cargo_target).to_str().unwrap();
     let plugin_path = format!("{path}/target/debug/coffee_plugin");
     log::info!("plugin path {plugin_path}");
 
-    let _: serde_json::Value = cln
-        .rpc()
-        .call(
-            "plugin",
-            serde_json::json!({
-                "subcommand": "start",
-                "plugin": plugin_path,
-            }),
-        )
+    let mut cln = Node::with_params(&format!("--plugin={plugin_path}"))
+        .await
         .unwrap();
 
     let result: serde_json::Value = cln
@@ -71,22 +52,13 @@ pub async fn init_cln_with_coffee_add_remore_test() {
 pub async fn init_cln_with_coffee_install_plugin_test() {
     init();
 
-    let mut cln = Node::tmp().await.unwrap();
-
     let cargo_target = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
     let path = std::path::Path::new(cargo_target).to_str().unwrap();
     let plugin_path = format!("{path}/target/debug/coffee_plugin");
     log::info!("plugin path {plugin_path}");
 
-    let _: serde_json::Value = cln
-        .rpc()
-        .call(
-            "plugin",
-            serde_json::json!({
-                "subcommand": "start",
-                "plugin": plugin_path,
-            }),
-        )
+    let mut cln = Node::with_params(&format!("--plugin={plugin_path}"))
+        .await
         .unwrap();
 
     let result: serde_json::Value = cln
