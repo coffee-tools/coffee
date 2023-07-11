@@ -13,8 +13,10 @@ use std::sync::Arc;
 use serde_json::Value;
 use tokio::sync::Mutex;
 
+use super::macros::handle_httpd_response;
 use coffee_core::coffee::CoffeeManager;
 use coffee_lib::plugin_manager::PluginManager;
+use coffee_lib::types::request::*;
 
 use actix_web::{App, HttpResponse};
 use actix_web::{Error, HttpServer};
@@ -51,6 +53,8 @@ pub async fn run_httpd<T: ToSocketAddrs>(
             .wrap_api()
             .service(swagger_api)
             .service(coffee_help)
+            .service(coffee_install)
+            .service(coffee_remove)
             .service(coffee_list)
             .service(coffee_remote_add)
             .service(coffee_remote_rm)
@@ -75,6 +79,35 @@ async fn coffee_help(
 }
 
 #[api_v2_operation]
+#[post("/install")]
+async fn coffee_install(
+    data: web::Data<AppState>,
+    body: Json<Install>,
+) -> Result<HttpResponse, Error> {
+    let plugin = &body.plugin;
+    let try_dynamic = body.try_dynamic;
+
+    let mut coffee = data.coffee.lock().await;
+    let result = coffee.install(plugin, false, try_dynamic).await;
+
+    handle_httpd_response!(result, "Plugin '{plugin}' installed successfully")
+}
+
+#[api_v2_operation]
+#[post("/remove")]
+async fn coffee_remove(
+    data: web::Data<AppState>,
+    body: Json<Remove>,
+) -> Result<HttpResponse, Error> {
+    let plugin = &body.plugin;
+
+    let mut coffee = data.coffee.lock().await;
+    let result = coffee.remove(plugin).await;
+
+    handle_httpd_response!(result, "Plugin '{plugin}' removed successfully")
+}
+
+#[api_v2_operation]
 #[get("/list")]
 async fn coffee_list(data: web::Data<AppState>) -> Result<Json<Value>, Error> {
     let mut coffee = data.coffee.lock().await;
@@ -96,51 +129,32 @@ async fn coffee_list(data: web::Data<AppState>) -> Result<Json<Value>, Error> {
 #[post("/remote/add")]
 async fn coffee_remote_add(
     data: web::Data<AppState>,
-    body: Json<HashMap<String, String>>,
+    body: Json<RemoteAdd>,
 ) -> Result<HttpResponse, Error> {
-    let repository_name = body.get("repository_name").ok_or_else(|| {
-        actix_web::error::ErrorBadRequest("Missing 'repository_name' field in the request body")
-    })?;
-    let repository_url = body.get("repository_url").ok_or_else(|| {
-        actix_web::error::ErrorBadRequest("Missing 'repository_url' field in the request body")
-    })?;
+    let repository_name = &body.repository_name;
+    let repository_url = &body.repository_url;
 
     let mut coffee = data.coffee.lock().await;
     let result = coffee.add_remote(repository_name, repository_url).await;
 
-    match result {
-        Ok(_) => Ok(HttpResponse::Ok().body(format!(
-            "Repository '{}' added successfully",
-            repository_name
-        ))),
-        Err(err) => Err(actix_web::error::ErrorInternalServerError(format!(
-            "Failed to add repository: {err}"
-        ))),
-    }
+    handle_httpd_response!(result, "Repository '{repository_name}' added successfully")
 }
 
 #[api_v2_operation]
 #[post("/remote/rm")]
 async fn coffee_remote_rm(
     data: web::Data<AppState>,
-    body: Json<HashMap<String, String>>,
+    body: Json<RemoteRm>,
 ) -> Result<HttpResponse, Error> {
-    let repository_name = body.get("repository_name").ok_or_else(|| {
-        actix_web::error::ErrorBadRequest("Missing 'repository_name' field in the request body")
-    })?;
+    let repository_name = &body.repository_name;
 
     let mut coffee = data.coffee.lock().await;
     let result = coffee.rm_remote(repository_name).await;
 
-    match result {
-        Ok(_) => Ok(HttpResponse::Ok().body(format!(
-            "Repository '{}' removed successfully",
-            repository_name
-        ))),
-        Err(err) => Err(actix_web::error::ErrorInternalServerError(format!(
-            "Failed to remove repository: {err}"
-        ))),
-    }
+    handle_httpd_response!(
+        result,
+        "Repository '{repository_name}' removed successfully"
+    )
 }
 
 #[api_v2_operation]
