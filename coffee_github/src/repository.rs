@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use async_trait::async_trait;
-use coffee_lib::types::CoffeeUpgrade;
+use coffee_lib::types::response::CoffeeUpgrade;
 use git2;
 use log::debug;
 use tokio::fs::File;

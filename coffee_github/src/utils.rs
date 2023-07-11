@@ -2,7 +2,7 @@ use coffee_lib::errors::CoffeeError;
 use coffee_lib::url::URL;
 use log::debug;
 
-use coffee_lib::types::UpgradeStatus;
+use coffee_lib::types::response::UpgradeStatus;
 
 pub async fn clone_recursive_fix(repo: git2::Repository, url: &URL) -> Result<(), CoffeeError> {
     let repository = repo.submodules().unwrap_or_default();

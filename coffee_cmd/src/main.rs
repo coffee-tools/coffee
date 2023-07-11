@@ -7,7 +7,7 @@ use radicle_term as term;
 use coffee_core::coffee::CoffeeManager;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
-use coffee_lib::types::{NurseStatus, UpgradeStatus};
+use coffee_lib::types::response::{NurseStatus, UpgradeStatus};
 
 use crate::cmd::CoffeeArgs;
 use crate::cmd::CoffeeCommand;

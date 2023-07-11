@@ -19,7 +19,7 @@ use coffee_lib::error;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
-use coffee_lib::types::*;
+use coffee_lib::types::response::*;
 use coffee_lib::url::URL;
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::storage::StorageManager;

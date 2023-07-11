@@ -1,7 +1,7 @@
 //! Plugin manager module definition.
 use async_trait::async_trait;
 
-use crate::{errors::CoffeeError, types::*};
+use crate::{errors::CoffeeError, types::response::*};
 
 /// Plugin manager traits that define the API a generic
 /// plugin manager.

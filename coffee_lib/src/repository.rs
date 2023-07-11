@@ -6,7 +6,7 @@ use crate::errors::CoffeeError;
 use crate::plugin::Plugin;
 use crate::url::URL;
 
-use crate::types::CoffeeUpgrade;
+use crate::types::response::CoffeeUpgrade;
 
 use async_trait::async_trait;
 
