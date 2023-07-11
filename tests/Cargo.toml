@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-coffee_lib = { path = "../coffee_lib" }
+coffee_lib = { path = "../coffee_lib", features = ["open-api"] }
 coffee_testing = { path = "../coffee_testing" }
 anyhow = "1.0.71"
 log = { version = "0.4", features = ["std"] }

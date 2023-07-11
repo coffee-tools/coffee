@@ -11,6 +11,8 @@ pub struct HttpdArgs {
     #[clap(long, value_parser)]
     pub network: Option<String>,
     #[clap(long, value_parser)]
+    pub cln_path: String,
+    #[clap(long, value_parser)]
     pub data_dir: Option<String>,
     #[clap(long, value_parser)]
     pub host: Option<String>,
