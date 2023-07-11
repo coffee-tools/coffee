@@ -48,5 +48,4 @@ macro_rules! sh {
     };
 }
 
-pub use error;
-pub use sh;
+pub use {error, sh};
