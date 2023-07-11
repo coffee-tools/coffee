@@ -6,7 +6,7 @@ use radicle_term::table::TableOptions;
 
 use coffee_lib::error;
 use coffee_lib::errors::CoffeeError;
-use coffee_lib::types::{CoffeeList, CoffeeRemote};
+use coffee_lib::types::response::{CoffeeList, CoffeeRemote};
 use term::Element;
 
 pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), CoffeeError> {
