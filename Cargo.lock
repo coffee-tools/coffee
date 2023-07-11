@@ -669,6 +669,7 @@ dependencies = [
  "env_logger",
  "log",
  "paperclip",
+ "serde",
  "serde_json",
  "tokio",
 ]
@@ -681,6 +682,7 @@ dependencies = [
  "env_logger",
  "git2",
  "log",
+ "paperclip",
  "serde",
  "serde_json",
  "tokio",

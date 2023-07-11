@@ -150,7 +150,7 @@ Please note that the server runs on `localhost` with port `8080` where you can f
 To start the Coffee server, run the following command:
 
  ```shell
- coffee_httpd --network <network>
+ coffee_httpd --cln-path <core_lightning_path> --network <network>  
  ```
 
 Make sure the `coffee_httpd` binary is in your system PATH or in the current working directory.
