@@ -154,6 +154,7 @@ pub struct CoffeeHTTPDTesting {
     root_path: Arc<TempDir>,
     httpd_pid: tokio::process::Child,
     httpd_port: u64,
+    cln_path: String,
 }
 
 impl Drop for CoffeeHTTPDTesting {
@@ -172,20 +173,32 @@ impl Drop for CoffeeHTTPDTesting {
 
 impl CoffeeHTTPDTesting {
     /// init coffee httpd in a tmp directory.
-    pub async fn tmp() -> anyhow::Result<Self> {
+    pub async fn tmp(cln_path: String) -> anyhow::Result<Self> {
         let dir = tempfile::tempdir()?;
         let port = port::random_free_port().unwrap();
-        let child = httpd!(dir, port, "{}", format!("--network=regtest"))?;
+        let child = httpd!(
+            dir,
+            port,
+            "{}",
+            format!("--network=regtest --cln-path={cln_path}")
+        )?;
         wait_for!(async { reqwest::get(format!("http://127.0.0.1:{}/list", port)).await });
         Ok(Self {
             root_path: Arc::new(dir),
             httpd_pid: child,
             httpd_port: port.into(),
+            cln_path,
         })
     }
 
+    // get the root path of coffee.
     pub fn root_path(&self) -> Arc<TempDir> {
         self.root_path.clone()
+    }
+
+    // get the path of core lightning.
+    pub fn cln_path(&self) -> String {
+        self.cln_path.clone()
     }
 
     /// run the httpd daemon as process and return the URL
