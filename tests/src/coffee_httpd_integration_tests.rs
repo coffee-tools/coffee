@@ -11,7 +11,7 @@ use crate::init;
 pub async fn httpd_init_add_remote() {
     init();
 
-    let mut cln = Node::tmp().await.unwrap();
+    let mut cln = Node::tmp("regtest").await.unwrap();
     let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
     let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
     let manager = CoffeeHTTPDTesting::tmp(lightning_dir.to_string())
