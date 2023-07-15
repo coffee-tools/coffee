@@ -2,7 +2,6 @@
 use coffee_storage::nosql_db::NoSQlStorage;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::path::{Path, PathBuf};
 use std::vec::Vec;
 use tokio::fs;
 
@@ -209,7 +208,6 @@ impl PluginManager for CoffeeManager {
         verbose: bool,
         try_dynamic: bool,
     ) -> Result<(), CoffeeError> {
-        self.remote_sync().await?;
         log::debug!("installing plugin: {plugin}");
         // keep track if the plugin is successfully installed
         for repo in self.repos.values() {
@@ -270,8 +268,6 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn upgrade(&mut self, repo: &str) -> Result<CoffeeUpgrade, CoffeeError> {
-        self.remote_sync().await?;
-
         let repository = self
             .repos
             .get(repo)
@@ -294,42 +290,10 @@ impl PluginManager for CoffeeManager {
         Ok(())
     }
 
-    async fn remote_sync(&mut self) -> Result<(), CoffeeError> {
-        // check if there are any unrelated files or folders in the `repositories` folder
-        let repos_path = PathBuf::from(format!("{}/repositories/", self.config.root_path));
-        let mut dir_entries = fs::read_dir(repos_path)
-            .await
-            .map_err(|_| CoffeeError::new(1, "`repositories` folder wasn't found"))?;
-        while let Some(entry) = dir_entries.next_entry().await? {
-            let entry_name = entry.file_name().to_string_lossy().to_string();
-            if !self.repos.contains_key(&entry_name) {
-                log::warn!("An unknown file or folder was detected in coffee local storage. Coffee is corrupted");
-                return Err(error!(
-                    "coffee storage is out of sync. Please run coffee nurse to resolve the issue"
-                ));
-            }
-        }
-
-        // check if the whole remote repository clone was removed
-        for (repo_name, repo) in self.repos.iter_mut() {
-            let repo_path = repo.url().path_string;
-            let repo_url = repo.url().url_string;
-            if !Path::new(&repo_path).exists() {
-                log::warn!("remote with name {repo_name} and URL {repo_url} is not longer present! Coffee is corrupted");
-                return Err(error!(
-                    "coffee storage is out of sync. Please run coffee nurse to resolve the issue"
-                ));
-            }
-        }
-
-        Ok(())
-    }
-
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError> {
         // FIXME: we should allow some error here like
         // for the add remote command the no found error for the `repository`
         // directory is fine.
-        // self.remote_sync().await?;
 
         if self.repos.contains_key(name) {
             return Err(error!("repository with name: {name} already exists"));
@@ -345,7 +309,6 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn rm_remote(&mut self, name: &str) -> Result<(), CoffeeError> {
-        self.remote_sync().await?;
         log::debug!("remote removing: {}", name);
         match self.repos.get(name) {
             Some(repo) => {
@@ -377,7 +340,6 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn list_remotes(&mut self) -> Result<CoffeeRemote, CoffeeError> {
-        self.remote_sync().await?;
         let mut remote_list = Vec::new();
         for repo in self.repos.values() {
             remote_list.push(CoffeeListRemote {
@@ -392,7 +354,6 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn show(&mut self, plugin: &str) -> Result<CoffeeShow, CoffeeError> {
-        self.remote_sync().await?;
         for repo in self.repos.values() {
             if let Some(plugin) = repo.get_plugin_by_name(plugin) {
                 // FIXME: there are more README file options?
@@ -408,60 +369,8 @@ impl PluginManager for CoffeeManager {
         Err(err)
     }
 
-    async fn nurse(&mut self) -> Result<CoffeeNurse, CoffeeError> {
-        let mut status = NurseStatus::Sane;
-
-        // delete any unrelated files or folders in `repositories` folder
-        let repos_path = PathBuf::from(format!("{}/repositories/", self.config.root_path));
-        let mut dir_entries = fs::read_dir(repos_path).await?;
-        while let Some(entry) = dir_entries.next_entry().await? {
-            let entry_name = entry.file_name().to_string_lossy().to_string();
-            if !self.repos.contains_key(&entry_name) {
-                // if there is an unrelated file or directory in repositories,
-                // we consider the folder corrupted
-                status = NurseStatus::Corrupted;
-                if entry.file_type().await?.is_dir() {
-                    fs::remove_dir_all(entry.path()).await?;
-                    log::debug!("folder removed: {}", entry_name);
-                } else if entry.file_type().await?.is_file() {
-                    fs::remove_file(entry.path()).await?;
-                    log::debug!("file removed: {}", entry_name);
-                }
-            }
-        }
-
-        // check if the existing local repositories clones are corrupt.
-        // remove them from configuration if they are and remove the installed plugins
-        let mut keys_to_remove: Vec<String> = Vec::new();
-        for (repo_name, repo) in &self.repos {
-            let repo_path = repo.url().path_string;
-            if !Path::new(&repo_path).exists() {
-                status = NurseStatus::Corrupted;
-                keys_to_remove.push(repo_name.to_string());
-            }
-        }
-        for repo_name in &keys_to_remove {
-            let remote_repo = self.repos[repo_name].list().await?;
-            let plugins = self.config.plugins.clone();
-            for plugin in &remote_repo {
-                if let Some(ind) = plugins
-                    .iter()
-                    .position(|elem| elem.name() == *plugin.name())
-                {
-                    let plugin_name = &plugins[ind].name().clone();
-                    match self.remove(plugin_name).await {
-                        Ok(_) => {}
-                        Err(err) => return Err(err),
-                    }
-                }
-            }
-        }
-        for key in keys_to_remove {
-            self.repos.remove(&key);
-            log::debug!("repository removed: {key}");
-        }
-        self.flush().await?;
-        Ok(CoffeeNurse { status })
+    async fn nurse(&mut self) -> Result<(), CoffeeError> {
+        unimplemented!("nurse command is not implemented")
     }
 }
 

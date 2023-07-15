@@ -57,17 +57,6 @@ pub mod response {
     }
 
     #[derive(Debug, Serialize, Deserialize)]
-    pub enum NurseStatus {
-        Corrupted,
-        Sane,
-    }
-
-    #[derive(Debug, Serialize, Deserialize)]
-    pub struct CoffeeNurse {
-        pub status: NurseStatus,
-    }
-
-    #[derive(Debug, Serialize, Deserialize)]
     pub enum UpgradeStatus {
         UpToDate,
         Updated,
