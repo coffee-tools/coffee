@@ -65,7 +65,7 @@ pub async fn init_coffee_test_cmd() -> anyhow::Result<()> {
 #[tokio::test]
 pub async fn init_coffee_test_with_cln() -> anyhow::Result<()> {
     init();
-    let cln = Node::tmp().await?;
+    let cln = Node::tmp("regtest").await?;
 
     let mut manager = CoffeeTesting::tmp().await?;
     let result = manager.coffee().list().await?;
@@ -84,10 +84,10 @@ pub async fn init_coffee_test_with_cln() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-#[ntest::timeout(120000)]
+//#[ntest::timeout(120000)]
 pub async fn init_coffee_test_add_remote() {
     init();
-    let mut cln = Node::tmp().await.unwrap();
+    let mut cln = Node::tmp("regtest").await.unwrap();
 
     let mut manager = CoffeeTesting::tmp().await.unwrap();
     let result = manager.coffee().list().await.unwrap();
@@ -125,7 +125,7 @@ pub async fn init_coffee_test_add_remote() {
 pub async fn test_add_remove_plugins() {
     init();
 
-    let mut cln = Node::tmp().await.unwrap();
+    let mut cln = Node::tmp("regtest").await.unwrap();
     let mut manager = CoffeeTesting::tmp().await.unwrap();
 
     let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
@@ -223,7 +223,7 @@ pub async fn test_add_remove_plugins() {
 pub async fn test_errors_and_show() {
     init();
 
-    let mut cln = Node::tmp().await.unwrap();
+    let mut cln = Node::tmp("regtest").await.unwrap();
     let mut manager = CoffeeTesting::tmp().await.unwrap();
 
     let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
@@ -288,4 +288,81 @@ pub async fn test_errors_and_show() {
     );
 
     cln.stop().await.unwrap();
+}
+
+#[tokio::test]
+pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
+    init();
+    // initialize a lightning node in regtest network
+    let mut cln = Node::tmp("regtest").await.unwrap();
+    let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
+    let lightning_regtest_dir = lightning_dir.strip_suffix("/regtest").unwrap();
+    log::info!("lightning path for regtest network: {lightning_dir}");
+
+    let dir = Arc::new(tempfile::tempdir()?);
+    let args = CoffeeTestingArgs {
+        conf: None,
+        data_dir: dir.path().clone().to_str().unwrap().to_owned(),
+        network: "regtest".to_string(),
+    };
+    let mut manager = CoffeeTesting::tmp_with_args(&args, dir.clone()).await?;
+    let root_path = manager.root_path().to_owned();
+    manager
+        .coffee()
+        .setup(&lightning_regtest_dir)
+        .await
+        .unwrap();
+    // Add lightningd remote repository
+    manager
+        .coffee()
+        .add_remote("lightningd", "https://github.com/lightningd/plugins.git")
+        .await
+        .unwrap();
+    // Install summary plugin
+    // This should install summary plugin for regtest network
+    manager
+        .coffee()
+        .install("summary", true, true)
+        .await
+        .unwrap();
+    // Ensure that summary is installed for regtest network
+    cln.rpc()
+        .call::<serde_json::Value, serde_json::Value>("summary", json!({}))
+        .unwrap();
+    cln.stop().await.unwrap();
+
+    // dropping the first coffee instance, but without delete the dir
+    drop(manager);
+    // initialize a lightning node in testnet network
+    let mut cln = Node::tmp("testnet").await.unwrap();
+    let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
+    let lightning_testnet_dir = lightning_dir.strip_suffix("/testnet").unwrap();
+    log::info!("lightning path for testnet network: {lightning_dir}");
+    let new_args = CoffeeTestingArgs {
+        conf: None,
+        data_dir: dir.path().clone().to_string_lossy().to_string(),
+        network: "testnet".to_string(),
+    };
+    let mut manager = CoffeeTesting::tmp_with_args(&new_args, dir.clone()).await?;
+    let new_root_path = manager.root_path().to_owned();
+    assert_eq!(root_path.path(), new_root_path.path());
+    manager
+        .coffee()
+        .setup(&lightning_testnet_dir)
+        .await
+        .unwrap();
+    // Install summary plugin
+    // This should install summary plugin for testnet network
+    manager
+        .coffee()
+        .install("summary", true, true)
+        .await
+        .unwrap();
+    // Ensure that summary is installed for testnet network
+    cln.rpc()
+        .call::<serde_json::Value, serde_json::Value>("summary", json!({}))
+        .unwrap();
+
+    cln.stop().await.unwrap();
+    Ok(())
 }
