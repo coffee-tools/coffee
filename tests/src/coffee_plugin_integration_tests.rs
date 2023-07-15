@@ -12,7 +12,7 @@ pub async fn init_cln_with_coffee_plugin_test() {
     let path = std::path::Path::new(cargo_target).to_str().unwrap();
     let plugin_path = format!("{path}/target/debug/coffee_plugin");
     log::info!("plugin path {plugin_path}");
-    let mut cln = Node::with_params(&format!("--plugin={plugin_path}"))
+    let mut cln = Node::with_params(&format!("--plugin={plugin_path}"), "regtest")
         .await
         .unwrap();
     cln.stop().await.unwrap();
@@ -28,7 +28,7 @@ pub async fn init_cln_with_coffee_add_remore_test() {
     let plugin_path = format!("{path}/target/debug/coffee_plugin");
     log::info!("plugin path {plugin_path}");
 
-    let mut cln = Node::with_params(&format!("--plugin={plugin_path}"))
+    let mut cln = Node::with_params(&format!("--plugin={plugin_path}"), "regtest")
         .await
         .unwrap();
 
@@ -57,7 +57,7 @@ pub async fn init_cln_with_coffee_install_plugin_test() {
     let plugin_path = format!("{path}/target/debug/coffee_plugin");
     log::info!("plugin path {plugin_path}");
 
-    let mut cln = Node::with_params(&format!("--plugin={plugin_path}"))
+    let mut cln = Node::with_params(&format!("--plugin={plugin_path}"), "regtest")
         .await
         .unwrap();
 

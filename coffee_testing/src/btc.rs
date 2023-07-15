@@ -66,7 +66,7 @@ impl Drop for BtcNode {
 }
 
 impl BtcNode {
-    pub async fn tmp() -> anyhow::Result<Self> {
+    pub async fn tmp(network: &str) -> anyhow::Result<Self> {
         let dir = tempfile::tempdir()?;
         let user = "crab".to_owned();
         let pass = "crab".to_owned();
@@ -74,7 +74,7 @@ impl BtcNode {
         let process = macros::bitcoind!(
             dir,
             port,
-            "-server -regtest -rpcuser={user} -rpcpassword={pass}"
+            "-server -{network} -rpcuser={user} -rpcpassword={pass}"
         )?;
         let rpc = Client::new(
             &format!("http://localhost:{port}"),
