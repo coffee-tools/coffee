@@ -130,14 +130,6 @@ coffee list
 ```bash
 coffee show <plugin_name>
 ```
-
-### To fix corrupt remote repositories local clones
-
-> ✅ Implemented
-
-```bash
-coffee nurse
-```
 _________
 ## Running coffee as a server
 
