@@ -56,13 +56,14 @@ impl Drop for Node {
     fn drop(&mut self) {
         for process in self.process.iter() {
             let Some(child) = process.id() else {
-               continue;
+                continue;
             };
             let Ok(mut kill) = std::process::Command::new("kill")
                 .args(["-s", "SIGKILL", &child.to_string()])
-                .spawn() else {
-                    continue;
-                };
+                .spawn()
+            else {
+                continue;
+            };
             let _ = kill.wait();
         }
 

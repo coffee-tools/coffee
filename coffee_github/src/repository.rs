@@ -164,7 +164,9 @@ impl Github {
                     }
 
                     let Some(exec_path) = exec_path else {
-                        return Err(error!("exec path not known, but we should know at this point."));
+                        return Err(error!(
+                            "exec path not known, but we should know at this point."
+                        ));
                     };
 
                     debug!("exec path is {exec_path}");
