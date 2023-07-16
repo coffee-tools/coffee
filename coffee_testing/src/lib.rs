@@ -160,13 +160,14 @@ pub struct CoffeeHTTPDTesting {
 impl Drop for CoffeeHTTPDTesting {
     fn drop(&mut self) {
         let Some(child) = self.httpd_pid.id() else {
-               return;
-            };
+            return;
+        };
         let Ok(mut kill) = std::process::Command::new("kill")
-                .args(["-s", "SIGKILL", &child.to_string()])
-                .spawn() else {
-                    return;
-                };
+            .args(["-s", "SIGKILL", &child.to_string()])
+            .spawn()
+        else {
+            return;
+        };
         let _ = kill.wait();
     }
 }

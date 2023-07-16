@@ -307,11 +307,8 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
     };
     let mut manager = CoffeeTesting::tmp_with_args(&args, dir.clone()).await?;
     let root_path = manager.root_path().to_owned();
-    manager
-        .coffee()
-        .setup(&lightning_regtest_dir)
-        .await
-        .unwrap();
+    let result = manager.coffee().setup(&lightning_regtest_dir).await;
+    assert!(result.is_ok(), "{:?}", result);
     // Add lightningd remote repository
     manager
         .coffee()
@@ -333,6 +330,7 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
 
     // dropping the first coffee instance, but without delete the dir
     drop(manager);
+    log::info!("------ second run -------");
     // initialize a lightning node in testnet network
     let mut cln = Node::tmp("testnet").await.unwrap();
     let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
@@ -345,12 +343,18 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
     };
     let mut manager = CoffeeTesting::tmp_with_args(&new_args, dir.clone()).await?;
     let new_root_path = manager.root_path().to_owned();
-    assert_eq!(root_path.path(), new_root_path.path());
+    assert_eq!(dir.path(), new_root_path.path());
     manager
         .coffee()
         .setup(&lightning_testnet_dir)
         .await
         .unwrap();
+
+    let result = manager
+        .coffee()
+        .add_remote("lightningd", "https://github.com/lightningd/plugins.git")
+        .await;
+    assert!(result.is_err(), "{:?}", result);
     // Install summary plugin
     // This should install summary plugin for testnet network
     manager

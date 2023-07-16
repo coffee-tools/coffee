@@ -23,10 +23,10 @@ impl NoSQlStorage {
 }
 
 #[async_trait]
-impl<T> StorageManager<T> for NoSQlStorage {
+impl StorageManager for NoSQlStorage {
     type Err = CoffeeError;
 
-    async fn load<'c>(&self, key: &str) -> Result<T, Self::Err>
+    async fn load<T>(&self, key: &str) -> Result<T, Self::Err>
     where
         T: serde::de::DeserializeOwned + Send + Sync,
     {
@@ -40,7 +40,7 @@ impl<T> StorageManager<T> for NoSQlStorage {
         Ok(value)
     }
 
-    async fn store(&self, key: &str, to_store: &T) -> Result<(), Self::Err>
+    async fn store<T>(&self, key: &str, to_store: &T) -> Result<(), Self::Err>
     where
         T: serde::Serialize + Send + Sync,
     {

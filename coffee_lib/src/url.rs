@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// This struct will make sure our URLs are of the
 /// correct format and will also check correctness
 /// of associated fields
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct URL {
     /// the url name in case of remote
     pub name: String,

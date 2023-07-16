@@ -59,7 +59,6 @@ impl From<&CoffeeManager> for CoffeeStorageInfo {
 
 pub struct CoffeeManager {
     config: config::CoffeeConf,
-    #[serde(skip_serializing, skip_deerializing)]
     repos: HashMap<String, Box<dyn Repository + Send + Sync>>,
     /// Core lightning configuration managed by coffee
     coffee_cln_config: CLNConf,
@@ -68,7 +67,7 @@ pub struct CoffeeManager {
     cln_config: Option<CLNConf>,
     /// storage instance to make all the plugin manager
     /// information persistent on disk
-    storage: Box<dyn StorageManager<CoffeeStorageInfo, Err = CoffeeError> + Send + Sync>,
+    storage: NoSQlStorage,
     /// core lightning rpc connection
     rpc: Option<Client>,
 }
@@ -80,7 +79,7 @@ impl CoffeeManager {
             config: conf.clone(),
             coffee_cln_config: CLNConf::new(conf.config_path, true),
             repos: HashMap::new(),
-            storage: Box::new(NoSQlStorage::new(&conf.root_path).await?),
+            storage: NoSQlStorage::new(&conf.root_path).await?,
             cln_config: None,
             rpc: None,
         };
@@ -91,23 +90,28 @@ impl CoffeeManager {
     /// when coffee is configured, run an inventory to collect all the necessary information
     /// about the coffee ecosystem.
     async fn inventory(&mut self) -> Result<(), CoffeeError> {
-        let Ok(store) = self.storage.load(&self.config.network).await else {
-            log::debug!("storage do not exist");
-            return Ok(());
-        };
-        // this is really needed? I think no, because coffee at this point
-        // have a new conf loading
-        self.config = store.config;
-        let repositories = self.storage.load::<>("repository")?;
-        store
-            .repositories
-            .iter()
-            .for_each(|repo| match repo.1.kind {
-                Kind::Git => {
-                    let repo = Github::from(repo.1);
-                    self.repos.insert(repo.name(), Box::new(repo));
-                }
+        self.storage
+            .load::<CoffeeStorageInfo>(&self.config.network)
+            .await
+            .and_then(|store| {
+                self.config = store.config;
+                Ok(())
             });
+        // FIXME: check if this exist in a better wai
+        self.storage
+            .load::<HashMap<RepoName, RepositoryInfo>>("repositories")
+            .await
+            .and_then(|item| {
+                log::debug!("repositories in store {:?}", item);
+                item.iter().for_each(|repo| match repo.1.kind {
+                    Kind::Git => {
+                        let repo = Github::from(repo.1);
+                        self.repos.insert(repo.name(), Box::new(repo));
+                    }
+                });
+                Ok(())
+            });
+
         if let Err(err) = self.coffee_cln_config.parse() {
             log::error!("{}", err.cause);
         }
@@ -151,8 +155,12 @@ impl CoffeeManager {
     }
 
     pub async fn flush(&self) -> Result<(), CoffeeError> {
+        let store_info = self.storage_info();
         self.storage
-            .store(&self.config.network, &self.storage_info())
+            .store(&self.config.network, &store_info)
+            .await?;
+        self.storage
+            .store("repositories", &store_info.repositories)
             .await?;
         Ok(())
     }

@@ -3,12 +3,12 @@
 use coffee_lib::{plugin::Plugin, url::URL};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Kind {
     Git,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Repository {
     pub kind: Kind,
     pub name: String,
