@@ -27,14 +27,14 @@ use super::config;
 use crate::config::CoffeeConf;
 use crate::CoffeeArgs;
 
-pub type PluginName = String;
+pub type RepoName = String;
 
 #[derive(Serialize, Deserialize)]
 /// FIXME: move the list of plugin
 /// and the list of repository inside this struct.
 pub struct CoffeeStorageInfo {
     pub config: config::CoffeeConf,
-    pub repositories: HashMap<PluginName, RepositoryInfo>,
+    pub repositories: HashMap<RepoName, RepositoryInfo>,
 }
 
 impl From<&CoffeeManager> for CoffeeStorageInfo {
@@ -59,6 +59,7 @@ impl From<&CoffeeManager> for CoffeeStorageInfo {
 
 pub struct CoffeeManager {
     config: config::CoffeeConf,
+    #[serde(skip_serializing, skip_deerializing)]
     repos: HashMap<String, Box<dyn Repository + Send + Sync>>,
     /// Core lightning configuration managed by coffee
     coffee_cln_config: CLNConf,
@@ -97,6 +98,7 @@ impl CoffeeManager {
         // this is really needed? I think no, because coffee at this point
         // have a new conf loading
         self.config = store.config;
+        let repositories = self.storage.load::<>("repository")?;
         store
             .repositories
             .iter()
