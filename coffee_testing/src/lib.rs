@@ -150,6 +150,7 @@ impl CoffeeTesting {
 }
 
 /// Coffee HTTPD testing manager.
+#[derive(Debug)]
 pub struct CoffeeHTTPDTesting {
     root_path: Arc<TempDir>,
     httpd_pid: tokio::process::Child,
