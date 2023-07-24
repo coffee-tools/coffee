@@ -90,18 +90,19 @@ impl CoffeeManager {
     /// when coffee is configured, run an inventory to collect all the necessary information
     /// about the coffee ecosystem.
     async fn inventory(&mut self) -> Result<(), CoffeeError> {
-        self.storage
+        let _ = self
+            .storage
             .load::<CoffeeStorageInfo>(&self.config.network)
             .await
-            .and_then(|store| {
+            .map(|store| {
                 self.config = store.config;
-                Ok(())
             });
         // FIXME: check if this exist in a better wai
-        self.storage
+        let _ = self
+            .storage
             .load::<HashMap<RepoName, RepositoryInfo>>("repositories")
             .await
-            .and_then(|item| {
+            .map(|item| {
                 log::debug!("repositories in store {:?}", item);
                 item.iter().for_each(|repo| match repo.1.kind {
                     Kind::Git => {
@@ -109,7 +110,6 @@ impl CoffeeManager {
                         self.repos.insert(repo.name(), Box::new(repo));
                     }
                 });
-                Ok(())
             });
 
         if let Err(err) = self.coffee_cln_config.parse() {

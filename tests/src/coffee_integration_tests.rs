@@ -306,7 +306,6 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
         network: "regtest".to_string(),
     };
     let mut manager = CoffeeTesting::tmp_with_args(&args, dir.clone()).await?;
-    let root_path = manager.root_path().to_owned();
     let result = manager.coffee().setup(&lightning_regtest_dir).await;
     assert!(result.is_ok(), "{:?}", result);
     // Add lightningd remote repository
