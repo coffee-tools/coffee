@@ -10,6 +10,19 @@ macro_rules! handle_httpd_response {
             ))),
         }
     };
+    ($result:expr) => {
+        match $result {
+            Ok(val) => {
+                let val = serde_json::to_value(val).map_err(|err| {
+                    actix_web::error::ErrorInternalServerError(format!("Failure: {err}"))
+                })?;
+                Ok(Json(val))
+            }
+            Err(err) => Err(actix_web::error::ErrorInternalServerError(format!(
+                "Failure: {err}"
+            ))),
+        }
+    };
 }
 
 pub use handle_httpd_response;
