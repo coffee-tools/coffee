@@ -21,13 +21,13 @@ your business applications :smile:.
 
 | Package        | Description                                                     | Version    |
 |----------------|-----------------------------------------------------------------|------------|
-| [coffee_core](../coffee_core/)     | Package containing the main implementation of Coffee plugin manager      | pre_release |
-| [coffee_cmd](../coffee_cmd/)     | Package providing CLI to the Coffee plugin manager      | pre_release |
-| [coffee_github](../coffee_github/)     | GitHub interface to the Coffee plugin manager      | pre_release |
-| [coffee_lib](../coffee_lib/)     | The core library to the Coffee plugin ecosystem      | pre_release |
-| [coffee_storage](../coffee_storage/)     | The local storage model package for the Coffee plugin manager     | pre_release |
-| [coffee_httpd](../coffee_httpd/)     | HTTP deamon that expose the public API of coffee     | under development |
-| [coffee_plugin](../coffee_plugin)     | Core Lightning plugin that allo to interact with coffee     | under development |
+| [coffee_core](/coffee_core/)     | Package containing the main implementation of Coffee plugin manager      | pre_release |
+| [coffee_cmd](/coffee_cmd/)     | Package providing CLI to the Coffee plugin manager      | pre_release |
+| [coffee_github](/coffee_github/)     | GitHub interface to the Coffee plugin manager      | pre_release |
+| [coffee_lib](/coffee_lib/)     | The core library to the Coffee plugin ecosystem      | pre_release |
+| [coffee_storage](/coffee_storage/)     | The local storage model package for the Coffee plugin manager     | pre_release |
+| [coffee_httpd](/coffee_httpd/)     | HTTP daemon that expose the public API of coffee     | under development |
+| [coffee_plugin](/coffee_plugin)     | Core Lightning plugin that allow to interact with coffee     | under development |
 
 ## How to contribute
 
