@@ -26,6 +26,11 @@ pub mod request {
     pub struct RemoteRm {
         pub repository_name: String,
     }
+
+    #[derive(Debug, Deserialize, Apiv2Schema, Serialize)]
+    pub struct Show {
+        pub plugin: String,
+    }
 }
 
 // Definition of the response types.
