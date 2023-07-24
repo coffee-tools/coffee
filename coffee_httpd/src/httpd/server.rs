@@ -59,6 +59,7 @@ pub async fn run_httpd<T: ToSocketAddrs>(
             .service(coffee_remote_add)
             .service(coffee_remote_rm)
             .service(coffee_remote_list)
+            .service(coffee_show)
             .with_json_spec_at("/api/v1")
             .build()
     })
@@ -112,17 +113,7 @@ async fn coffee_remove(
 async fn coffee_list(data: web::Data<AppState>) -> Result<Json<Value>, Error> {
     let mut coffee = data.coffee.lock().await;
     let result = coffee.list().await;
-    match result {
-        Ok(coffee_list) => {
-            let val = serde_json::to_value(coffee_list).map_err(|err| {
-                actix_web::error::ErrorInternalServerError(format!("coffee list error: {err}"))
-            })?;
-            Ok(Json(val))
-        }
-        Err(err) => Err(actix_web::error::ErrorInternalServerError(format!(
-            "coffee list error: {err}"
-        ))),
-    }
+    handle_httpd_response!(result)
 }
 
 #[api_v2_operation]
@@ -163,19 +154,18 @@ async fn coffee_remote_list(data: web::Data<AppState>) -> Result<Json<Value>, Er
     let mut coffee = data.coffee.lock().await;
     let result = coffee.list_remotes().await;
 
-    match result {
-        Ok(coffee_remotes) => {
-            let val = serde_json::to_value(coffee_remotes).map_err(|err| {
-                actix_web::error::ErrorInternalServerError(format!(
-                    "Failed to list remote repositories: {err}"
-                ))
-            })?;
-            Ok(Json(val))
-        }
-        Err(err) => Err(actix_web::error::ErrorInternalServerError(format!(
-            "Failed to list remote repositories: {err}"
-        ))),
-    }
+    handle_httpd_response!(result)
+}
+
+#[api_v2_operation]
+#[get("/show")]
+async fn coffee_show(data: web::Data<AppState>, body: Json<Show>) -> Result<Json<Value>, Error> {
+    let plugin = &body.plugin;
+
+    let mut coffee = data.coffee.lock().await;
+    let result = coffee.show(plugin).await;
+
+    handle_httpd_response!(result)
 }
 
 // this is just a hack to support swagger UI with https://paperclip-rs.github.io/paperclip/
