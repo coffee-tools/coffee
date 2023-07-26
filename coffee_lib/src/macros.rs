@@ -48,4 +48,18 @@ macro_rules! sh {
     };
 }
 
-pub use {error, sh};
+/// get the repository's commit ID as a string.
+#[macro_export]
+macro_rules! commit_id {
+    ($repo:expr) => {{
+        $repo
+            .head()
+            .map_err(|err| format!("{}", err.message()))?
+            .peel_to_commit()
+            .map_err(|err| format!("{}", err.message()))?
+            .id()
+            .to_string()
+    }};
+}
+
+pub use {commit_id, error, sh};
