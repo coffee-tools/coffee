@@ -102,6 +102,8 @@ pub struct Plugin {
     pub exec_path: String,
     pub lang: PluginLang,
     conf: Option<Conf>,
+    /// FIXME: this field shouldn't be optional
+    pub commit: Option<String>,
 }
 
 impl Plugin {
@@ -112,6 +114,7 @@ impl Plugin {
         path: &str,
         plugin_lang: PluginLang,
         config: Option<Conf>,
+        commit_id: Option<String>,
     ) -> Self {
         Plugin {
             name: name.to_owned(),
@@ -119,6 +122,7 @@ impl Plugin {
             exec_path: path.to_owned(),
             lang: plugin_lang,
             conf: config,
+            commit: commit_id,
         }
     }
 

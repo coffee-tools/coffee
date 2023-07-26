@@ -10,7 +10,7 @@ use walkdir::DirEntry;
 use walkdir::WalkDir;
 
 use coffee_lib::errors::CoffeeError;
-use coffee_lib::macros::error;
+use coffee_lib::macros::{commit_id, error};
 use coffee_lib::plugin::Plugin;
 use coffee_lib::plugin::PluginLang;
 use coffee_lib::plugin_conf::Conf;
@@ -68,6 +68,9 @@ impl Github {
             .max_depth(1)
             .into_iter()
             .filter_entry(|dir_entry| !is_hidden(dir_entry));
+        let repo = git2::Repository::open(&self.url.path_string)
+            .map_err(|err| CoffeeError::new(1, err.message()))?;
+        let commit = commit_id!(repo);
 
         for plugin_dir in target_dirs {
             match plugin_dir {
@@ -178,6 +181,7 @@ impl Github {
                         &exec_path,
                         plugin_lang,
                         conf.clone(),
+                        Some(commit.clone()),
                     );
 
                     debug!("new plugin: {:?}", plugin);
