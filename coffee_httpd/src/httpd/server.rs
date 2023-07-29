@@ -60,6 +60,7 @@ pub async fn run_httpd<T: ToSocketAddrs>(
             .service(coffee_remote_rm)
             .service(coffee_remote_list)
             .service(coffee_show)
+            .service(coffee_search)
             .with_json_spec_at("/api/v1")
             .build()
     })
@@ -164,6 +165,20 @@ async fn coffee_show(data: web::Data<AppState>, body: Json<Show>) -> Result<Json
 
     let mut coffee = data.coffee.lock().await;
     let result = coffee.show(plugin).await;
+
+    handle_httpd_response!(result)
+}
+
+#[api_v2_operation]
+#[get("/search")]
+async fn coffee_search(
+    data: web::Data<AppState>,
+    body: Json<Search>,
+) -> Result<Json<Value>, Error> {
+    let plugin = &body.plugin;
+
+    let mut coffee = data.coffee.lock().await;
+    let result = coffee.search(plugin).await;
 
     handle_httpd_response!(result)
 }
