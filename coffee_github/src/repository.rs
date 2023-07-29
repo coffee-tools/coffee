@@ -69,7 +69,7 @@ impl Github {
             .into_iter()
             .filter_entry(|dir_entry| !is_hidden(dir_entry));
         let repo = git2::Repository::open(&self.url.path_string)
-            .map_err(|err| CoffeeError::new(1, err.message()))?;
+            .map_err(|err| error!("{}", err.message()))?;
         let commit = commit_id!(repo);
 
         for plugin_dir in target_dirs {
@@ -218,7 +218,7 @@ impl Repository for Github {
                 self.index_repository().await?;
                 clone
             }
-            Err(err) => Err(CoffeeError::new(1, err.message())),
+            Err(err) => Err(error!("{}", err.message())),
         }
     }
 

@@ -134,10 +134,10 @@ impl CoffeeManager {
         if let Some(rpc) = &self.rpc {
             let response = rpc
                 .send_request(method, payload)
-                .map_err(|err| CoffeeError::new(1, &format!("{err}")))?;
+                .map_err(|err| error!("{}", &format!("{err}")))?;
             log::debug!("cln answer with {:?}", response);
             if let Some(err) = response.error {
-                return Err(CoffeeError::new(1, &format!("cln error: {}", err.message)));
+                return Err(error!("{}", &format!("cln error: {}", err.message)));
             }
             return Ok(response.result.unwrap());
         }
@@ -204,7 +204,7 @@ impl CoffeeManager {
         self.load_cln_conf().await?;
         let mut conf = self.cln_config.clone().unwrap();
         conf.add_subconf(self.coffee_cln_config.clone())
-            .map_err(|err| CoffeeError::new(1, &err.cause))?;
+            .map_err(|err| error!("{}", &err.cause))?;
         conf.flush()?;
         Ok(())
     }
@@ -256,30 +256,21 @@ impl PluginManager for CoffeeManager {
                         plugin.exec_path = new_exec_path;
 
                         log::debug!("plugin: {:?}", plugin);
-                        let result = plugin.configure(verbose).await;
-                        log::debug!("result from plugin configure: {:?}", result);
-                        match result {
-                            Ok(path) => {
-                                log::debug!("runnable plugin path {path}");
-                                if !try_dynamic {
-                                    self.config.plugins.push(plugin);
-                                    log::debug!(
-                                        "path coffee conf: {}",
-                                        self.coffee_cln_config.path
-                                    );
-                                    self.coffee_cln_config
-                                        .add_conf("plugin", &path.to_owned())
-                                        .map_err(|err| CoffeeError::new(1, &err.cause))?;
-                                    log::debug!("coffee conf updated: {}", self.coffee_cln_config);
-                                    self.flush().await?;
-                                    self.update_conf().await?;
-                                } else {
-                                    self.start_plugin(&path).await?;
-                                }
-                                return Ok(());
-                            }
-                            Err(err) => return Err(err),
+                        let path = plugin.configure(verbose).await?;
+                        log::debug!("runnable plugin path {path}");
+                        if !try_dynamic {
+                            self.config.plugins.push(plugin);
+                            log::debug!("path coffee conf: {}", self.coffee_cln_config.path);
+                            self.coffee_cln_config
+                                .add_conf("plugin", &path.to_owned())
+                                .map_err(|err| error!("{}", err.cause))?;
+                            log::debug!("coffee conf updated: {}", self.coffee_cln_config);
+                            self.flush().await?;
+                            self.update_conf().await?;
+                        } else {
+                            self.start_plugin(&path).await?;
                         }
+                        return Ok(());
                     }
                     None => return Err(error!("exec path not found")),
                 };
@@ -302,7 +293,7 @@ impl PluginManager for CoffeeManager {
             log::debug!("coffee cln config: {}", self.coffee_cln_config);
             self.coffee_cln_config
                 .rm_conf("plugin", Some(&exec_path.to_owned()))
-                .map_err(|err| CoffeeError::new(1, &err.cause))?;
+                .map_err(|err| error!("{}", &err.cause))?;
             self.flush().await?;
             self.update_conf().await?;
             Ok(CoffeeRemove { plugin })
@@ -414,8 +405,8 @@ impl PluginManager for CoffeeManager {
                 return Ok(CoffeeShow { readme: contents });
             }
         }
-        let err = CoffeeError::new(
-            1,
+        let err = error!(
+            "{}",
             &format!("plugin `{plugin}` are not present inside the repositories"),
         );
         Err(err)

@@ -1,3 +1,4 @@
+use super::macros::error;
 use std::path::Path;
 
 use tokio::fs::create_dir;
@@ -15,7 +16,7 @@ pub fn get_plugin_info_from_path(path: &Path) -> Result<(String, String), Coffee
                 .to_string();
             Ok((path_to_plugin, plugin_name))
         }
-        None => Err(CoffeeError::new(1, "Incorrect path")),
+        None => Err(error!("{}", "Incorrect path")),
     }
 }
 

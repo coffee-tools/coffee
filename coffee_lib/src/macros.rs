@@ -54,9 +54,9 @@ macro_rules! commit_id {
     ($repo:expr) => {{
         $repo
             .head()
-            .map_err(|err| format!("{}", err.message()))?
+            .map_err(|err| error!("{}", err.message()))?
             .peel_to_commit()
-            .map_err(|err| format!("{}", err.message()))?
+            .map_err(|err| error!("{}", err.message()))?
             .id()
             .to_string()
     }};
