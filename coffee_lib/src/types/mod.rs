@@ -68,6 +68,11 @@ pub mod request {
     pub struct Show {
         pub plugin: String,
     }
+
+    #[derive(Debug, Deserialize, Apiv2Schema, Serialize)]
+    pub struct Search {
+        pub plugin: String,
+    }
 }
 
 // Definition of the response types.
