@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.22.0", features = ["full"] }
+fs_extra = "1.3.0"
 async-trait = "0.1.57"
 coffee_lib = { path = "../coffee_lib" }
 coffee_github = { path = "../coffee_github"  }

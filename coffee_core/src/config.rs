@@ -58,6 +58,7 @@ impl CoffeeConf {
         coffee.bind_cmd_line_params(conf)?;
 
         check_dir_or_make_if_missing(format!("{def_path}/{}", coffee.network)).await?;
+        check_dir_or_make_if_missing(format!("{def_path}/{}/plugins", coffee.network)).await?;
         check_dir_or_make_if_missing(format!("{def_path}/repositories")).await?;
         // after we know all the information regarding
         // the configuration we try to see if there is
