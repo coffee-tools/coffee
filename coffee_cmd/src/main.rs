@@ -169,6 +169,14 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
                 coffee_term::show_nurse_result(nurse_result)?;
             }
         }
+        CoffeeCommand::Tip {
+            plugin,
+            amount_msat,
+        } => {
+            let _tip_result = coffee.tip(&[&plugin], amount_msat).await?;
+            term::info!("Tipping done with success");
+            Ok(())
+        }
     };
     Ok(())
 }
