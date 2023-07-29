@@ -1,6 +1,8 @@
 pub mod coffee;
 pub mod config;
 
+mod nurse;
+
 pub use coffee_lib as lib;
 
 #[derive(Clone, Debug)]
