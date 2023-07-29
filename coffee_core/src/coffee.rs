@@ -548,48 +548,44 @@ impl PluginManager for CoffeeManager {
         Ok(nurse_actions)
     }
 
-    async fn tip(
-        &mut self,
-        plugins: &[&str],
-        amount_msat: u64,
-    ) -> Result<Vec<CoffeeTip>, CoffeeError> {
+    async fn tip(&mut self, plugin: &str, amount_msat: u64) -> Result<CoffeeTip, CoffeeError> {
         let plugins = self
             .config
             .plugins
             .iter()
-            .filter(|plugin| plugins.contains(&plugin.name().as_str()))
+            .filter(|repo_plugin| plugin == repo_plugin.name())
             .collect::<Vec<_>>();
-        let mut tips = Vec::new();
-        for plugin in plugins {
-            let Some(tipping) = plugin.tipping_info() else {
-                continue;
-            };
-            // FIXME write a tip_plugin method as method
-            #[derive(Debug, Deserialize)]
-            struct FetchResult {
-                invoice: String,
-            }
-            let invoice: FetchResult = self
-                .cln(
-                    "fetchinvoice",
-                    json!({
-                        "offer": tipping.bolt12,
-                        "amount_msat": amount_msat,
-                    }),
-                )
-                .await?;
-            let tip: CoffeeTip = self
-                .cln(
-                    "pay",
-                    json!({
-                        "bolt11": invoice.invoice,
-                        "amount_msat": amount_msat,
-                    }),
-                )
-                .await?;
-            tips.push(tip);
+        let plugin = plugins.first().ok_or(error!(
+            "No plugin with name `{plugin}` found in the plugins installed"
+        ))?;
+
+        let Some(tipping) = plugin.tipping_info() else {
+            return Err(error!("Plugin `{plugin}` has no tipping information"));
+        };
+        // FIXME write a tip_plugin method as method
+        #[derive(Debug, Deserialize)]
+        struct FetchResult {
+            invoice: String,
         }
-        Ok(tips)
+        let invoice: FetchResult = self
+            .cln(
+                "fetchinvoice",
+                json!({
+                    "offer": tipping.bolt12,
+                    "amount_msat": amount_msat,
+                }),
+            )
+            .await?;
+        let tip: CoffeeTip = self
+            .cln(
+                "pay",
+                json!({
+                    "bolt11": invoice.invoice,
+                    "amount_msat": amount_msat,
+                }),
+            )
+            .await?;
+        Ok(tip)
     }
 }
 

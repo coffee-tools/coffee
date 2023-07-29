@@ -122,11 +122,8 @@ pub fn show_nurse_result(
     Ok(())
 }
 
-pub fn show_tips(coffee_tips: &Vec<CoffeeTip>) -> Result<(), CoffeeError> {
-    term::println(
-        term::format::tertiary_bold("●"),
-        term::format::tertiary("Plugin"),
-    );
+pub fn show_tips(coffee_tip: &CoffeeTip) -> Result<(), CoffeeError> {
+    term::println(term::format::bold("●"), term::format::tertiary("Plugin"));
     let mut table = radicle_term::Table::new(TableOptions::bordered());
     table.push([
         term::format::dim(String::from("●")),
@@ -136,18 +133,16 @@ pub fn show_tips(coffee_tips: &Vec<CoffeeTip>) -> Result<(), CoffeeError> {
     ]);
     table.divider();
 
-    for tip in coffee_tips.iter() {
-        table.push([
-            if tip.status == "completed" {
-                term::format::positive("●").into()
-            } else {
-                term::format::positive("●").into()
-            },
-            term::format::highlight(tip.for_plugin.clone().unwrap_or_default()),
-            term::format::bold(tip.destination.clone().unwrap_or_default()),
-            term::format::highlight(tip.amount_msat.to_string()),
-        ])
-    }
+    table.push([
+        if coffee_tip.status == "completed" {
+            term::format::positive("●").into()
+        } else {
+            term::format::negative("●").into()
+        },
+        term::format::highlight(coffee_tip.for_plugin.clone()),
+        term::format::bold(coffee_tip.destination.clone().unwrap_or_default()),
+        term::format::highlight(coffee_tip.amount_msat.to_string()),
+    ]);
     table.print();
     Ok(())
 }
