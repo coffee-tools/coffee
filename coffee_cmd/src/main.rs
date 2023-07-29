@@ -173,8 +173,8 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
             plugin,
             amount_msat,
         } => {
-            let tip_result = coffee.tip(&[&plugin], amount_msat).await?;
-            coffee_term::show_tips(&tip_result)
+            let tip_result = coffee.tip(&plugin, amount_msat).await?;
+            coffee_term::show_tips(&tip_result)?;
         }
     };
     Ok(())

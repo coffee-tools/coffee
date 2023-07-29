@@ -23,6 +23,8 @@ pub enum CoffeeOperation {
     Search(String),
     Nurse(bool),
     /// Tip operation
+    ///
+    /// (plugin_name, amount_msat)
     Tip(String, u64),
 }
 

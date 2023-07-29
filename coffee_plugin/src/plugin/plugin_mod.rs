@@ -2,6 +2,7 @@
 //! Coffee as a core lightning plugin.
 use std::fmt::Display;
 
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::runtime::Runtime;
 
@@ -30,6 +31,7 @@ pub fn build_plugin() -> Result<Plugin<State>, PluginError> {
             coffee_install,
             coffee_list,
             coffee_remote,
+            coffee_generate_tip,
         ],
         hooks: [],
     };
@@ -123,4 +125,29 @@ fn coffee_remote(plugin: &mut Plugin<State>, request: Value) -> Result<Value, Pl
         })
         .map_err(from)?;
     Ok(json!({}))
+}
+
+#[rpc_method(
+    rpc_name = "coffee_generate_tip",
+    description = "Generate the BOLT 12 to add inside a plugin configuration to receive donation"
+)]
+fn coffee_generate_tip(plugin: &mut Plugin<State>, request: Value) -> Result<Value, PluginError> {
+    let runtime = Runtime::new().unwrap();
+    let coffee = plugin.state.coffee();
+
+    #[derive(Serialize, Deserialize, Debug)]
+    struct Offer {
+        pub bolt12: String,
+    }
+
+    let offer = runtime
+        .block_on(async {
+            let mut coffee = coffee.lock().unwrap();
+            coffee.cln::<Value, Offer>("offer", json!({
+                "amount": "any",
+                "description": "Generating BOLT 12 for coffee tips regarding the plugin ...",
+            })).await
+        })
+        .map_err(from)?;
+    Ok(serde_json::to_value(offer)?)
 }

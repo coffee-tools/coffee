@@ -237,7 +237,7 @@ pub mod response {
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct CoffeeTip {
-        pub for_plugin: Option<String>,
+        pub for_plugin: String,
         pub invoice: String,
         pub status: String,
         pub destination: Option<String>,
