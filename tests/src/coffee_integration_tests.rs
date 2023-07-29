@@ -1,4 +1,6 @@
+use std::path::Path;
 use std::sync::Arc;
+use tokio::fs;
 
 use serde_json::json;
 
@@ -444,6 +446,112 @@ pub async fn test_double_slash() {
             plugin.exec_path
         );
     }
+}
+
+#[tokio::test]
+#[ntest::timeout(560000)]
+pub async fn test_plugin_installation_path() {
+    init();
+    let mut cln = Node::tmp("regtest").await.unwrap();
+
+    let mut manager = CoffeeTesting::tmp().await.unwrap();
+    let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
+    let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
+    log::info!("lightning path: {lightning_dir}");
+
+    manager.coffee().setup(&lightning_dir).await.unwrap();
+
+    // Add lightningd remote repository
+    manager
+        .coffee()
+        .add_remote("lightningd", "https://github.com/lightningd/plugins.git")
+        .await
+        .unwrap();
+
+    // Install summary plugin for regtest network
+    manager
+        .coffee()
+        .install("summary", true, false)
+        .await
+        .unwrap();
+
+    let root_path = manager
+        .root_path()
+        .to_owned()
+        .path()
+        .to_str()
+        .map(String::from);
+    assert!(root_path.is_some(), "{:?}", root_path);
+    let root_path = root_path.unwrap();
+
+    // Construct the path of the regtest config file
+    let regtest_config_file = format!("{}/.coffee/regtest/coffee.conf", root_path);
+    let regtest_config_file = Path::new(&regtest_config_file);
+
+    // Check if the regtest config file exists
+    assert!(
+        regtest_config_file.exists(),
+        "The file {:?} does not exist",
+        regtest_config_file
+    );
+
+    let regtest_config_file_content = fs::read_to_string(&regtest_config_file).await;
+    assert!(
+        regtest_config_file_content.is_ok(),
+        "{:?}",
+        regtest_config_file_content
+    );
+    let regtest_config_file_content = regtest_config_file_content.unwrap();
+
+    log::info!(
+        "regtest_config_file_content: {}",
+        regtest_config_file_content
+    );
+
+    // Extract the executable path of the summary plugin
+    let exec_path = regtest_config_file_content
+        .lines()
+        .find(|line| line.starts_with("plugin="))
+        .and_then(|line| line.split('=').nth(1))
+        .map(String::from);
+    assert!(exec_path.is_some(), "{:?}", exec_path);
+    let exec_path = exec_path.unwrap();
+    log::debug!("summary plugin installation execution path: {}", exec_path);
+    let exec_path = Path::new(&exec_path);
+
+    // Check if the executable path of the summary plugin exists
+    assert!(
+        exec_path.exists(),
+        "The file {:?} does not exist",
+        exec_path
+    );
+
+    // Remove summary plugin
+    let result = manager.coffee().remove("summary").await;
+    assert!(result.is_ok(), "{:?}", result);
+
+    // Check if the executable path of the summary plugin exists
+    // after the removal of the plugin
+    assert!(
+        !exec_path.exists(),
+        "The file {:?} exists where it should have been removed",
+        exec_path
+    );
+
+    // Construct the path of the summary plugin cloned version
+    let summary_exec_path = format!(
+        "{}/.coffee/repositories/lightningd/summary/summary.py",
+        root_path
+    );
+    let summary_exec_path = Path::new(&summary_exec_path);
+    // Check if the executable path of the summary plugin exists
+    // This is the cloned version of the plugin (not specific to regtest network)
+    // This should not be removed
+    assert!(
+        summary_exec_path.exists(),
+        "The file {:?} does not exist",
+        summary_exec_path
+    );
 
     cln.stop().await.unwrap();
 }
