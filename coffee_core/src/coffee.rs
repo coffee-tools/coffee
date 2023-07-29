@@ -25,6 +25,7 @@ use coffee_storage::storage::StorageManager;
 
 use super::config;
 use crate::config::CoffeeConf;
+use crate::nurse::chain::RecoveryChainOfResponsibility;
 use crate::CoffeeArgs;
 
 pub type RepoName = String;
@@ -70,6 +71,8 @@ pub struct CoffeeManager {
     storage: NoSQlStorage,
     /// core lightning rpc connection
     rpc: Option<Client>,
+    /// Recovery Strategies for the nurse command.
+    recovety_strategies: RecoveryChainOfResponsibility,
 }
 
 impl CoffeeManager {
@@ -82,6 +85,7 @@ impl CoffeeManager {
             storage: NoSQlStorage::new(&conf.root_path).await?,
             cln_config: None,
             rpc: None,
+            recovety_strategies: RecoveryChainOfResponsibility::new().await?,
         };
         coffee.inventory().await?;
         Ok(coffee)
@@ -393,7 +397,7 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn nurse(&mut self) -> Result<(), CoffeeError> {
-        unimplemented!("nurse command is not implemented")
+        self.recovety_strategies.scan().await
     }
 }
 
