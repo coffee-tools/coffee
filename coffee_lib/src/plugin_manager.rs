@@ -68,5 +68,9 @@ pub trait PluginManager {
     /// donation is runing the coffee core lightning plugin.
     ///
     /// P.S: only Bitcoin ofc
-    async fn tip(&mut self, plugins: &[&str], amount_msat: u64) -> Result<(), CoffeeError>;
+    async fn tip(
+        &mut self,
+        plugins: &[&str],
+        amount_msat: u64,
+    ) -> Result<Vec<CoffeeTip>, CoffeeError>;
 }

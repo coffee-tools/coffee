@@ -2,12 +2,12 @@
 //! the command result on the terminal!
 
 use radicle_term as term;
-use radicle_term::table::TableOptions;
+use term::table::TableOptions;
+use term::Element;
 
 use coffee_lib::error;
 use coffee_lib::errors::CoffeeError;
-use coffee_lib::types::response::{CoffeeList, CoffeeNurse, CoffeeRemote, NurseStatus};
-use term::Element;
+use coffee_lib::types::response::{CoffeeList, CoffeeNurse, CoffeeRemote, CoffeeTip, NurseStatus};
 
 pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), CoffeeError> {
     let remotes = coffee_list?;
@@ -119,6 +119,35 @@ pub fn show_nurse_result(
         }
         Err(err) => eprintln!("{}", err),
     }
+    Ok(())
+}
 
+pub fn show_tips(coffee_tips: &Vec<CoffeeTip>) -> Result<(), CoffeeError> {
+    term::println(
+        term::format::tertiary_bold("●"),
+        term::format::tertiary("Plugin"),
+    );
+    let mut table = radicle_term::Table::new(TableOptions::bordered());
+    table.push([
+        term::format::dim(String::from("●")),
+        term::format::bold(String::from("Plugin")),
+        term::format::bold(String::from("Receiver")),
+        term::format::bold(String::from("Amount Sent (msat)")),
+    ]);
+    table.divider();
+
+    for tip in coffee_tips.iter() {
+        table.push([
+            if tip.status == "completed" {
+                term::format::positive("●").into()
+            } else {
+                term::format::positive("●").into()
+            },
+            term::format::highlight(tip.for_plugin.clone().unwrap_or_default()),
+            term::format::bold(tip.destination.clone().unwrap_or_default()),
+            term::format::highlight(tip.amount_msat.to_string()),
+        ])
+    }
+    table.print();
     Ok(())
 }

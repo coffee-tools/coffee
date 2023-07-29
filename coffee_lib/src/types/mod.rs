@@ -234,4 +234,16 @@ pub mod response {
             }
         }
     }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct CoffeeTip {
+        pub for_plugin: Option<String>,
+        pub invoice: String,
+        pub status: String,
+        pub destination: Option<String>,
+        pub amount_msat: u64,
+        // This includes the fee
+        pub amount_sent_msat: u64,
+        pub warning_partial_completion: Option<String>,
+    }
 }
