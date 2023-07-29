@@ -134,6 +134,41 @@ pub async fn httpd_add_remove_plugins() {
     // Assert that the `readme` starts with the expected content
     assert!(readme.starts_with("# Helpme plugin"), "{:?}", readme);
 
+    // Define the request body to be sent to the /search endpoint
+    let search_request = Search {
+        plugin: "summary".to_string(),
+    };
+
+    let response = client
+        .get(format!("{}/search", url))
+        .json(&search_request)
+        .send()
+        .await;
+    assert!(response.is_ok(), "{:?}", response);
+    let response = response.unwrap();
+
+    // Check the response status code, log the body.
+    assert!(response.status().is_success());
+    let body = response.text().await.unwrap();
+    log::info!("/search response: {}", body);
+
+    // Parse the response body
+    let response_json = serde_json::from_str(&body);
+    assert!(response_json.is_ok(), "{:?}", response_json);
+    let response_json: serde_json::Value = response_json.unwrap();
+
+    // Extract the `repository_url` field from the response JSON
+    let repository_url = response_json["repository_url"].as_str();
+    assert!(repository_url.is_some(), "{:?}", repository_url);
+    let repository_url = repository_url.unwrap();
+
+    // Assert that repository_url is the expected value
+    assert_eq!(
+        repository_url, "https://github.com/lightningd/plugins",
+        "{:?}",
+        repository_url
+    );
+
     // Define the request body to be sent to the /install endpoint
     let install_request = Install {
         plugin: "summary".to_string(),
