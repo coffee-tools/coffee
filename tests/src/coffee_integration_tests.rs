@@ -84,7 +84,7 @@ pub async fn init_coffee_test_with_cln() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-//#[ntest::timeout(120000)]
+#[ntest::timeout(560000)]
 pub async fn init_coffee_test_add_remote() {
     init();
     let mut cln = Node::tmp("regtest").await.unwrap();
@@ -239,6 +239,17 @@ pub async fn test_errors_and_show() {
         .add_remote(repo_name, repo_url)
         .await
         .unwrap();
+
+    // Search for summary plugin
+    let result = manager.coffee().search("summary").await;
+    assert!(result.is_ok(), "{:?}", result);
+    let result = result.unwrap();
+    let repo_url = result.repository_url.as_str();
+    assert_eq!(
+        repo_url, "https://github.com/lightningd/plugins",
+        "{:?}",
+        repo_url
+    );
 
     // Install summary plugin
     let result = manager.coffee().install("summary", true, false).await;
