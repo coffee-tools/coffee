@@ -588,6 +588,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "clightningrpc-plugin-macros"
+version = "0.3.0-beta.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef81a4e59115a4ed470ea218793a76fa67d9974e6fdf9b93cb1c693130eb7755"
+dependencies = [
+ "clightningrpc-plugin",
+ "convert_case 0.5.0",
+ "kproc-parser",
+ "serde_json",
+]
+
+[[package]]
 name = "coffee"
 version = "0.0.1-alpha.1"
 dependencies = [
@@ -677,6 +689,7 @@ version = "0.1.0"
 dependencies = [
  "clightningrpc-common",
  "clightningrpc-plugin",
+ "clightningrpc-plugin-macros",
  "coffee_core",
  "coffee_lib",
  "log",
@@ -735,6 +748,12 @@ name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
+
+[[package]]
+name = "convert_case"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb4a24b1aaf0fd0ce8b45161144d6f42cd91677fd5940fd431183eb023b3a2b8"
 
 [[package]]
 name = "cookie"
@@ -896,7 +915,7 @@ version = "0.99.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fb810d30a7c1953f91334de7244731fc3f3c10d7fe163338a35b9f640960321"
 dependencies = [
- "convert_case",
+ "convert_case 0.4.0",
  "proc-macro2",
  "quote",
  "rustc_version",
@@ -1410,6 +1429,12 @@ dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "kproc-parser"
+version = "0.0.1-beta.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4a3c5d81e3af35bb269378a933889f7f45c884bdf820a9c268711035430f3f7"
 
 [[package]]
 name = "language-tags"
