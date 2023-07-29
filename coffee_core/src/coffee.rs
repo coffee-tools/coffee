@@ -1,5 +1,6 @@
 //! Coffee mod implementation
 use coffee_storage::nosql_db::NoSQlStorage;
+use fs_extra::dir;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::vec::Vec;
@@ -227,27 +228,61 @@ impl PluginManager for CoffeeManager {
         for repo in self.repos.values() {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
                 log::trace!("{:#?}", plugin);
-                let result = plugin.configure(verbose).await;
-                log::debug!("result from plugin configure: {:?}", result);
-                match result {
-                    Ok(path) => {
-                        log::debug!("runnable plugin path {path}");
-                        if !try_dynamic {
-                            self.config.plugins.push(plugin);
-                            log::debug!("path coffee conf: {}", self.coffee_cln_config.path);
-                            self.coffee_cln_config
-                                .add_conf("plugin", &path.to_owned())
-                                .map_err(|err| CoffeeError::new(1, &err.cause))?;
-                            log::debug!("coffee conf updated: {}", self.coffee_cln_config);
-                            self.flush().await?;
-                            self.update_conf().await?;
-                        } else {
-                            self.start_plugin(&path).await?;
+
+                // old_root_path is the path where the plugin is cloned and currently stored
+                // eg. ~/.coffee/repositories/<repo_name>/<plugin_name>
+                let old_root_path = plugin.root_path.clone();
+                // new_root_path is the path where the plugin will be installed specific to the network
+                // eg. ~/.coffee/<network>/plugins/<plugin_name>
+                let new_root_path = format!(
+                    "{}/{}/plugins/{}",
+                    self.config.root_path,
+                    self.config.network,
+                    plugin.name()
+                );
+                dir::copy(
+                    &old_root_path,
+                    format!("{}/{}/plugins/", self.config.root_path, self.config.network),
+                    &dir::CopyOptions::new(),
+                )
+                .map_err(|err| error!("{}", err.to_string()))?;
+
+                let old_exec_path = plugin.exec_path.clone();
+
+                match old_exec_path.strip_prefix(&old_root_path) {
+                    Some(relative_path) => {
+                        let new_exec_path = format!("{}{}", new_root_path, relative_path);
+                        plugin.root_path = new_root_path;
+                        plugin.exec_path = new_exec_path;
+
+                        log::debug!("plugin: {:?}", plugin);
+                        let result = plugin.configure(verbose).await;
+                        log::debug!("result from plugin configure: {:?}", result);
+                        match result {
+                            Ok(path) => {
+                                log::debug!("runnable plugin path {path}");
+                                if !try_dynamic {
+                                    self.config.plugins.push(plugin);
+                                    log::debug!(
+                                        "path coffee conf: {}",
+                                        self.coffee_cln_config.path
+                                    );
+                                    self.coffee_cln_config
+                                        .add_conf("plugin", &path.to_owned())
+                                        .map_err(|err| CoffeeError::new(1, &err.cause))?;
+                                    log::debug!("coffee conf updated: {}", self.coffee_cln_config);
+                                    self.flush().await?;
+                                    self.update_conf().await?;
+                                } else {
+                                    self.start_plugin(&path).await?;
+                                }
+                                return Ok(());
+                            }
+                            Err(err) => return Err(err),
                         }
-                        return Ok(());
                     }
-                    Err(err) => return Err(err),
-                }
+                    None => return Err(error!("exec path not found")),
+                };
             }
         }
         Err(error!(
@@ -261,6 +296,7 @@ impl PluginManager for CoffeeManager {
         if let Some(index) = plugins.iter().position(|x| x.name() == plugin) {
             let plugin = plugins[index].clone();
             let exec_path = plugin.exec_path.clone();
+            fs::remove_dir_all(plugin.root_path.clone()).await?;
             log::debug!("runnable plugin path: {exec_path}");
             plugins.remove(index);
             log::debug!("coffee cln config: {}", self.coffee_cln_config);
@@ -282,6 +318,8 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn upgrade(&mut self, repo: &str) -> Result<CoffeeUpgrade, CoffeeError> {
+        // TODO: upgrade should now be able to upgrade a single plugin
+        // without affecting other plugins installed from the same repo
         let repository = self
             .repos
             .get(repo)

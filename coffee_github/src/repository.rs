@@ -228,6 +228,8 @@ impl Repository for Github {
         let mut plugins_effected: Vec<String> = vec![];
         let remote_repo = self.list().await?;
 
+        // FIXME: upgrading the repository must also upgrade the commit
+        // field of all plugins cloned from this repository.
         let plugins = plugins.clone();
 
         // FIXME: mark inside a repository what plugin is installed, and remove
