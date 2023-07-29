@@ -130,6 +130,14 @@ coffee list
 ```bash
 coffee show <plugin_name>
 ```
+
+## Searching for a plugin in remote repositories 
+
+> ✅ Implemented
+
+```bash
+coffee search <plugin_name>
+```
 _________
 ## Running coffee as a server
 

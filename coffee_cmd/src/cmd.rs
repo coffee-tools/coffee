@@ -50,6 +50,9 @@ pub enum CoffeeCommand {
     /// show the README file of the plugin
     #[clap(arg_required_else_help = true)]
     Show { plugin: String },
+    /// search the remote repositories for a plugin
+    #[clap(arg_required_else_help = true)]
+    Search { plugin: String },
     /// clean up remote repositories storage information
     #[clap(arg_required_else_help = false)]
     Nurse {},
@@ -76,6 +79,7 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
             CoffeeCommand::Remote { action } => Self::Remote(action.into()),
             CoffeeCommand::Remove { plugin } => Self::Remove(plugin.to_owned()),
             CoffeeCommand::Show { plugin } => Self::Show(plugin.to_owned()),
+            CoffeeCommand::Search { plugin } => Self::Search(plugin.to_owned()),
             CoffeeCommand::Nurse {} => Self::Nurse,
         }
     }

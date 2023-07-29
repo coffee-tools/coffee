@@ -379,6 +379,19 @@ impl PluginManager for CoffeeManager {
         Err(err)
     }
 
+    async fn search(&mut self, plugin: &str) -> Result<CoffeeSearch, CoffeeError> {
+        for repo in self.repos.values() {
+            if let Some(plugin) = repo.get_plugin_by_name(plugin) {
+                return Ok(CoffeeSearch {
+                    repository_url: repo.url().url_string,
+                    plugin,
+                });
+            }
+        }
+        let err = CoffeeError::new(404, &format!("unable to locate plugin `{plugin}`"));
+        Err(err)
+    }
+
     async fn nurse(&mut self) -> Result<(), CoffeeError> {
         unimplemented!("nurse command is not implemented")
     }

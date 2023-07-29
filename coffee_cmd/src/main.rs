@@ -115,6 +115,14 @@ async fn main() -> Result<(), CoffeeError> {
             }
             Err(err) => Err(err),
         },
+        CoffeeCommand::Search { plugin } => match coffee.search(&plugin).await {
+            Ok(val) => {
+                let repository_url = val.repository_url.as_str();
+                term::success!("found plugin {plugin} in remote repository {repository_url}");
+                Ok(())
+            }
+            Err(err) => Err(err),
+        },
         CoffeeCommand::Nurse {} => {
             term::info!("Nurse command is not implemented");
             Ok(())
