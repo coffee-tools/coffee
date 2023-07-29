@@ -1,5 +1,4 @@
 //! Coffee mod implementation
-
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::vec::Vec;
@@ -12,6 +11,7 @@ use clightningrpc_conf::{CLNConf, SyncCLNConf};
 use log;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use tokio::process::Command;
 
 use coffee_github::repository::Github;
@@ -548,8 +548,48 @@ impl PluginManager for CoffeeManager {
         Ok(nurse_actions)
     }
 
-    async fn tip(&mut self, plugins: &[&str], amount_msat: u64) -> Result<(), CoffeeError> {
-        unimplemented!()
+    async fn tip(
+        &mut self,
+        plugins: &[&str],
+        amount_msat: u64,
+    ) -> Result<Vec<CoffeeTip>, CoffeeError> {
+        let plugins = self
+            .config
+            .plugins
+            .iter()
+            .filter(|plugin| plugins.contains(&plugin.name().as_str()))
+            .collect::<Vec<_>>();
+        let mut tips = Vec::new();
+        for plugin in plugins {
+            let Some(tipping) = plugin.tipping_info() else {
+                continue;
+            };
+            // FIXME write a tip_plugin method as method
+            #[derive(Debug, Deserialize)]
+            struct FetchResult {
+                invoice: String,
+            }
+            let invoice: FetchResult = self
+                .cln(
+                    "fetchinvoice",
+                    json!({
+                        "offer": tipping.bolt12,
+                        "amount_msat": amount_msat,
+                    }),
+                )
+                .await?;
+            let tip: CoffeeTip = self
+                .cln(
+                    "pay",
+                    json!({
+                        "bolt11": invoice.invoice,
+                        "amount_msat": amount_msat,
+                    }),
+                )
+                .await?;
+            tips.push(tip);
+        }
+        Ok(tips)
     }
 }
 
