@@ -17,6 +17,8 @@ pub enum CoffeeOperation {
     /// Setup(core lightning root path)
     Setup(String),
     Show(String),
+    /// Search(plugin name)
+    Search(String),
     Nurse,
 }
 

@@ -118,4 +118,10 @@ pub mod response {
     pub struct CoffeeShow {
         pub readme: String,
     }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct CoffeeSearch {
+        pub repository_url: String,
+        pub plugin: Plugin,
+    }
 }

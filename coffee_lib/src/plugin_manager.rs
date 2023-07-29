@@ -43,6 +43,9 @@ pub trait PluginManager {
     /// show the README file of the plugin
     async fn show(&mut self, plugin: &str) -> Result<CoffeeShow, CoffeeError>;
 
+    /// search remote repositories for a plugin by name
+    async fn search(&mut self, plugin: &str) -> Result<CoffeeSearch, CoffeeError>;
+
     /// clean up storage information about the remote repositories of the plugin manager.
     async fn nurse(&mut self) -> Result<(), CoffeeError>;
 }
