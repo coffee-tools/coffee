@@ -547,6 +547,10 @@ impl PluginManager for CoffeeManager {
         }
         Ok(nurse_actions)
     }
+
+    async fn tip(&mut self, plugins: &[&str], amount_msat: u64) -> Result<(), CoffeeError> {
+        unimplemented!()
+    }
 }
 
 // FIXME: we need to move on but this is not safe and with the coffee
