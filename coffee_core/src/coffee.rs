@@ -287,7 +287,12 @@ impl PluginManager for CoffeeManager {
         if let Some(index) = plugins.iter().position(|x| x.name() == plugin) {
             let plugin = plugins[index].clone();
             let exec_path = plugin.exec_path.clone();
-            fs::remove_dir_all(plugin.root_path.clone()).await?;
+            let root_path = plugin.root_path.clone();
+            let cloned_repositories_path = format!("{}/repositories", self.config.root_path,);
+            // make sure that we are not deleting the cloned repositories
+            if !root_path.contains(&cloned_repositories_path) {
+                fs::remove_dir_all(root_path).await?;
+            }
             log::debug!("runnable plugin path: {exec_path}");
             plugins.remove(index);
             log::debug!("coffee cln config: {}", self.coffee_cln_config);
