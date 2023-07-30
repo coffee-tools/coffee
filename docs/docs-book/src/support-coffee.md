@@ -41,3 +41,25 @@ itself. With some craziness will be also possible to manage core lightning itsel
 
 Please if you feel that additional meta information needs to be specified open an issue 
 https://github.com/coffee-tools/coffee/issues
+
+## Tipping
+
+While there are possibility to tipping anything on lightning, there is any solution to tipping a core lightning plugin
+developer. So with coffee as developer you can define a BOLT 12 invoice that allow the developer of the plugin 
+to receive tips. So, the developer of the plugin should define a coffee manifest that specify the `tipping` info.
+
+An example can be:
+
+```yaml
+---
+plugin:
+  name: btcli4j
+  version: 0.0.1
+  lang: java
+  install: |
+    sh -C ./gradlew createRunnableScript
+  main: btcli4j-gen.sh
+tipping: 
+  bolt12: <bolt12 invoice>
+```
+
