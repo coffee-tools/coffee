@@ -380,3 +380,70 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
     cln.stop().await.unwrap();
     Ok(())
 }
+
+#[tokio::test]
+#[ntest::timeout(560000)]
+pub async fn test_double_slash() {
+    init();
+
+    let mut cln = Node::tmp("regtest").await.unwrap();
+    let mut manager = CoffeeTesting::tmp().await.unwrap();
+
+    let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
+    let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
+    log::info!("lightning path: {lightning_dir}");
+    manager.coffee().setup(&lightning_dir).await.unwrap();
+
+    // Add lightningd remote repository
+    let repo_name = "lightningd";
+    let repo_url = "https://github.com/lightningd/plugins.git";
+    manager
+        .coffee()
+        .add_remote(repo_name, repo_url)
+        .await
+        .unwrap();
+
+    // Install summary plugin
+    let result = manager.coffee().install("summary", true, false).await;
+    assert!(result.is_ok(), "{:?}", result);
+
+    // Install helpme plugin
+    manager
+        .coffee()
+        .install("helpme", true, false)
+        .await
+        .unwrap();
+
+    // Ensure that the list of plugins is correct
+    let result = manager.coffee().list().await;
+    assert!(result.is_ok(), "{:?}", result);
+    let plugins = result.unwrap().plugins;
+    log::debug!("plugins: {:?}", plugins);
+    assert_eq!(plugins.len(), 2, "{:?}", plugins);
+    assert!(
+        plugins.iter().any(|plugin| plugin.name() == "summary"),
+        "Plugin 'summary' not found"
+    );
+    assert!(
+        plugins.iter().any(|plugin| plugin.name() == "helpme"),
+        "Plugin 'helpme' not found"
+    );
+
+    // Assert that root_path and exec_path of all plugins don't have "//"
+    for plugin in &plugins {
+        assert!(
+            !plugin.root_path.contains("//"),
+            "Double slash found in root_path of plugin '{}': {}",
+            plugin.name(),
+            plugin.root_path
+        );
+        assert!(
+            !plugin.exec_path.contains("//"),
+            "Double slash found in exec_path of plugin '{}': {}",
+            plugin.name(),
+            plugin.exec_path
+        );
+    }
+
+    cln.stop().await.unwrap();
+}
