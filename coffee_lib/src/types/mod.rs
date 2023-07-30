@@ -37,6 +37,13 @@ pub mod request {
     pub struct Show {
         pub plugin: String,
     }
+
+    #[cfg(not(feature = "open-api"))]
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct Search {
+        pub plugin: String,
+    }
+
     #[cfg(feature = "open-api")]
     #[derive(Debug, Deserialize, Apiv2Schema, Serialize)]
     pub struct Install {
@@ -69,6 +76,7 @@ pub mod request {
         pub plugin: String,
     }
 
+    #[cfg(feature = "open-api")]
     #[derive(Debug, Deserialize, Apiv2Schema, Serialize)]
     pub struct Search {
         pub plugin: String,
