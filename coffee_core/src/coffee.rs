@@ -1,6 +1,5 @@
 //! Coffee mod implementation
 use coffee_storage::nosql_db::NoSQlStorage;
-use fs_extra::dir;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::vec::Vec;
@@ -13,14 +12,15 @@ use clightningrpc_conf::{CLNConf, SyncCLNConf};
 use log;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use tokio::process::Command;
 
 use coffee_github::repository::Github;
-use coffee_lib::error;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
 use coffee_lib::types::response::*;
 use coffee_lib::url::URL;
+use coffee_lib::{error, sh};
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::storage::StorageManager;
 
@@ -188,7 +188,7 @@ impl CoffeeManager {
         log::info!("looking for the cln config: {path}");
         file.parse()
             .map_err(|err| CoffeeError::new(err.core, &err.cause))?;
-        log::debug!("{:#?}", file.fields);
+        log::trace!("{:?}", file.fields);
         self.cln_config = Some(file);
         Ok(())
     }
@@ -227,7 +227,7 @@ impl PluginManager for CoffeeManager {
         // keep track if the plugin is successfully installed
         for repo in self.repos.values() {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
-                log::trace!("{:#?}", plugin);
+                log::trace!("{:?}", plugin);
 
                 // old_root_path is the path where the plugin is cloned and currently stored
                 // eg. ~/.coffee/repositories/<repo_name>/<plugin_name>
@@ -240,13 +240,19 @@ impl PluginManager for CoffeeManager {
                     self.config.network,
                     plugin.name()
                 );
-                dir::copy(
-                    &old_root_path,
-                    format!("{}/{}/plugins/", self.config.root_path, self.config.network),
-                    &dir::CopyOptions::new(),
-                )
-                .map_err(|err| error!("{}", err.to_string()))?;
 
+                log::debug!(
+                    "Start! copying directory from {} inside the new one {}",
+                    old_root_path,
+                    new_root_path
+                );
+                let script = format!("cp -r {old_root_path} {new_root_path}");
+                sh!(self.config.root_path.clone(), script, verbose);
+                log::debug!(
+                    "Done! copying directory from {} inside the new one {}",
+                    old_root_path,
+                    new_root_path
+                );
                 let old_exec_path = plugin.exec_path.clone();
 
                 match old_exec_path.strip_prefix(&old_root_path) {

@@ -13,12 +13,12 @@ macro_rules! error {
 /// script as a sequence of commands.
 #[macro_export]
 macro_rules! sh {
-    ($root: expr, $script:expr, $verbose:expr) => {
+    ($root: expr, $script:expr, $verbose:expr) => {{
         let script = $script.trim();
         let cmds = script.split("\n"); // Check if the script contains `\`
-        debug!("cmds: {:?}", cmds);
+        log::debug!("cmds: {:?}", cmds);
         for cmd in cmds {
-            debug!("cmd {:?}", cmd);
+            log::debug!("cmd {:?}", cmd);
             let cmd_tok: Vec<&str> = cmd.split(" ").collect();
             let command = cmd_tok.first().unwrap().to_string();
             let mut cmd = Command::new(command);
@@ -41,7 +41,7 @@ macro_rules! sh {
                 return Err(CoffeeError::new(2, &content));
             }
         }
-    };
+    }};
 
     ($root:expr, $script:expr) => {
         sh!($root, $script, false)
