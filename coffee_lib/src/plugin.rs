@@ -2,7 +2,7 @@
 //! from a plugin manager point of view.
 use std::fmt::{self, Display};
 
-use log::debug;
+use log;
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 
@@ -130,6 +130,7 @@ impl Plugin {
     ///
     /// In case of success return the path of the executable.
     pub async fn configure(&mut self, verbose: bool) -> Result<String, CoffeeError> {
+        log::debug!("install plugin inside from root dir {}", self.root_path);
         let exec_path = if let Some(conf) = &self.conf {
             if let Some(script) = &conf.plugin.install {
                 sh!(self.root_path.clone(), script, verbose);
