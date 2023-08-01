@@ -31,7 +31,7 @@ your business applications :smile:.
 
 ## How to contribute
 
-Read our [Hacking guide](docs-book/src/contributing-to-coffee.md)
+Read our [Hacking guide](docs/docs-book/src/contributing-to-coffee.md)
 
 ## License
 

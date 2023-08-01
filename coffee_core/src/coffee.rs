@@ -73,7 +73,7 @@ pub struct CoffeeManager {
     /// core lightning rpc connection
     rpc: Option<Client>,
     /// Recovery Strategies for the nurse command.
-    recovety_strategies: RecoveryChainOfResponsibility,
+    recovery_strategies: RecoveryChainOfResponsibility,
 }
 
 impl CoffeeManager {
@@ -86,7 +86,7 @@ impl CoffeeManager {
             storage: NoSQlStorage::new(&conf.root_path).await?,
             cln_config: None,
             rpc: None,
-            recovety_strategies: RecoveryChainOfResponsibility::new().await?,
+            recovery_strategies: RecoveryChainOfResponsibility::new().await?,
         };
         coffee.inventory().await?;
         Ok(coffee)
@@ -437,7 +437,7 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn nurse(&mut self) -> Result<(), CoffeeError> {
-        self.recovety_strategies.scan().await
+        self.recovery_strategies.scan().await
     }
 }
 
