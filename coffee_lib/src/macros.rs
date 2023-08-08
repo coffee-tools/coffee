@@ -62,4 +62,27 @@ macro_rules! commit_id {
     }};
 }
 
-pub use {commit_id, error, sh};
+/// get the repository's commit ID and the date of the last commit.
+#[macro_export]
+macro_rules! get_repo_info {
+    ($repo:ident) => {{
+        let commit_id = commit_id!($repo);
+
+        let oid = git2::Oid::from_str(&commit_id).map_err(|err| error!("{}", err.message()))?;
+        let commit = $repo
+            .find_commit(oid)
+            .map_err(|err| error!("{}", err.message()))?;
+        let commit_time = commit.time();
+        let timestamp = commit_time.seconds();
+        let date_time = Utc.timestamp_opt(timestamp, 0).single();
+
+        if let Some(date_time) = date_time {
+            let formatted_date = date_time.format("%d/%m/%Y").to_string();
+            (commit_id.clone(), formatted_date.clone())
+        } else {
+            return Err(error!("Invalid timestamp"));
+        }
+    }};
+}
+
+pub use {commit_id, error, get_repo_info, sh};
