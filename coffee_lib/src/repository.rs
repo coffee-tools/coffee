@@ -25,7 +25,7 @@ pub trait Repository: Any {
     async fn list(&self) -> Result<Vec<Plugin>, CoffeeError>;
 
     /// upgrade the repository
-    async fn upgrade(&self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError>;
+    async fn upgrade(&mut self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError>;
 
     /// return the name of the repository.
     fn name(&self) -> String;

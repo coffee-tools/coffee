@@ -1,6 +1,7 @@
 use std::any::Any;
 
 use async_trait::async_trait;
+use chrono::{TimeZone, Utc};
 use coffee_lib::types::response::CoffeeUpgrade;
 use git2;
 use log::debug;
@@ -10,7 +11,7 @@ use walkdir::DirEntry;
 use walkdir::WalkDir;
 
 use coffee_lib::errors::CoffeeError;
-use coffee_lib::macros::{commit_id, error};
+use coffee_lib::macros::{commit_id, error, get_repo_info};
 use coffee_lib::plugin::Plugin;
 use coffee_lib::plugin::PluginLang;
 use coffee_lib::plugin_conf::Conf;
@@ -36,6 +37,10 @@ pub struct Github {
     /// the name of the branch to be able to
     /// pull the changes from the correct branch
     branch: String,
+    /// the latest commit id of the repository
+    git_head: Option<String>,
+    /// the latest commit date of the repository
+    last_activity: Option<String>,
 }
 
 // FIXME: move this inside a utils dir craters
@@ -57,6 +62,8 @@ impl Github {
             url: url.clone(),
             plugins: vec![],
             branch: "".to_owned(),
+            git_head: None,
+            last_activity: None,
         }
     }
 
@@ -68,9 +75,7 @@ impl Github {
             .max_depth(1)
             .into_iter()
             .filter_entry(|dir_entry| !is_hidden(dir_entry));
-        let repo = git2::Repository::open(&self.url.path_string)
-            .map_err(|err| error!("{}", err.message()))?;
-        let commit = commit_id!(repo);
+        let commit_id = &self.git_head;
 
         for plugin_dir in target_dirs {
             match plugin_dir {
@@ -181,7 +186,7 @@ impl Github {
                         &exec_path,
                         plugin_lang,
                         conf.clone(),
-                        Some(commit.clone()),
+                        commit_id.clone(),
                     );
 
                     debug!("new plugin: {:?}", plugin);
@@ -214,6 +219,10 @@ impl Repository for Github {
                 } else {
                     "main".to_owned()
                 };
+                let (commit, date) = get_repo_info!(repo);
+                self.git_head = Some(commit.clone());
+                self.last_activity = Some(date.clone());
+
                 let clone = clone_recursive_fix(repo, &self.url).await;
                 self.index_repository().await?;
                 clone
@@ -222,7 +231,7 @@ impl Repository for Github {
         }
     }
 
-    async fn upgrade(&self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError> {
+    async fn upgrade(&mut self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError> {
         // get the list of the plugins installed from this repository
         // TODO: add a field of installed plugins in the repository struct instead
         let mut plugins_effected: Vec<String> = vec![];
@@ -245,6 +254,13 @@ impl Repository for Github {
         }
         // pull the changes from the repository
         let status = fast_forward(&self.url.path_string, &self.branch)?;
+        // update the git information
+        // (git HEAD and date of the last commit)
+        let repo = git2::Repository::open(&self.url.path_string)
+            .map_err(|err| error!("{}", err.message()))?;
+        let (commit, date) = get_repo_info!(repo);
+        self.git_head = Some(commit.clone());
+        self.last_activity = Some(date.clone());
         Ok(CoffeeUpgrade {
             repo: self.name(),
             status,
@@ -289,6 +305,8 @@ impl From<StorageRepository> for Github {
             name: value.name,
             plugins: value.plugins,
             branch: value.branch,
+            git_head: value.git_head,
+            last_activity: value.last_activity,
         }
     }
 }
@@ -300,6 +318,8 @@ impl From<&StorageRepository> for Github {
             name: value.name.to_owned(),
             plugins: value.plugins.to_owned(),
             branch: value.branch.to_owned(),
+            git_head: value.git_head.to_owned(),
+            last_activity: value.last_activity.to_owned(),
         }
     }
 }
@@ -312,6 +332,8 @@ impl From<Github> for StorageRepository {
             url: value.url,
             plugins: value.plugins,
             branch: value.branch,
+            git_head: value.git_head,
+            last_activity: value.last_activity,
         }
     }
 }
@@ -324,6 +346,8 @@ impl From<&Github> for StorageRepository {
             url: value.url.to_owned(),
             plugins: value.plugins.to_owned(),
             branch: value.branch.to_owned(),
+            git_head: value.git_head.to_owned(),
+            last_activity: value.last_activity.to_owned(),
         }
     }
 }
