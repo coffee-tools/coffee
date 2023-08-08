@@ -14,13 +14,14 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 
+use chrono::{TimeZone, Utc};
 use coffee_github::repository::Github;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
 use coffee_lib::types::response::*;
 use coffee_lib::url::URL;
-use coffee_lib::{error, sh};
+use coffee_lib::{commit_id, error, get_repo_info, sh};
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::storage::StorageManager;
 
@@ -324,7 +325,7 @@ impl PluginManager for CoffeeManager {
         // without affecting other plugins installed from the same repo
         let repository = self
             .repos
-            .get(repo)
+            .get_mut(repo)
             .ok_or_else(|| error!("Repository with name: `{}` not found", repo))?;
 
         let status = repository.upgrade(&self.config.plugins).await?;
@@ -396,10 +397,15 @@ impl PluginManager for CoffeeManager {
     async fn list_remotes(&mut self) -> Result<CoffeeRemote, CoffeeError> {
         let mut remote_list = Vec::new();
         for repo in self.repos.values() {
+            let repository = git2::Repository::open(repo.url().path_string.as_str())
+                .map_err(|err| error!("{}", err.message()))?;
+            let (commit, date) = get_repo_info!(repository);
             remote_list.push(CoffeeListRemote {
                 local_name: repo.name(),
                 url: repo.url().url_string,
                 plugins: repo.list().await?,
+                commit_id: Some(commit),
+                date: Some(date),
             });
         }
         Ok(CoffeeRemote {

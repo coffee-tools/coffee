@@ -15,4 +15,6 @@ pub struct Repository {
     pub url: URL,
     pub plugins: Vec<Plugin>,
     pub branch: String,
+    pub git_head: Option<String>,
+    pub last_activity: Option<String>,
 }

@@ -109,6 +109,8 @@ pub mod response {
         pub local_name: String,
         pub url: String,
         pub plugins: Vec<Plugin>,
+        pub commit_id: Option<String>,
+        pub date: Option<String>,
     }
 
     #[derive(Debug, Serialize, Deserialize)]

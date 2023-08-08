@@ -54,15 +54,27 @@ pub fn show_remote_list(remote_list: Result<CoffeeRemote, CoffeeError>) -> Resul
         term::format::bold(String::from("Repository Alias")),
         term::format::bold(String::from("URL")),
         term::format::bold(String::from("N. Plugins")),
+        term::format::bold(String::from("Git HEAD")),
+        term::format::bold(String::from("Last Update")),
     ]);
     table.divider();
 
     for repository in &repositories {
+        let commit_id = match &repository.commit_id {
+            Some(commit_id) => commit_id.to_owned(),
+            None => String::from(""),
+        };
+        let date = match &repository.date {
+            Some(date) => date.to_owned(),
+            None => String::from(""),
+        };
         table.push([
             term::format::positive("●").into(),
             term::format::highlight(repository.local_name.to_owned()),
             term::format::bold(repository.url.to_owned()),
             term::format::highlight(repository.plugins.len().to_string()),
+            term::format::primary(commit_id),
+            term::format::bold(date),
         ])
     }
     table.print();
