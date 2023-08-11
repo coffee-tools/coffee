@@ -6,6 +6,7 @@ use std::vec::Vec;
 use tokio::fs;
 
 use async_trait::async_trait;
+use chrono::{TimeZone, Utc};
 use clightningrpc_common::client::Client;
 use clightningrpc_common::json_utils;
 use clightningrpc_conf::{CLNConf, SyncCLNConf};
@@ -14,7 +15,6 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 
-use chrono::{TimeZone, Utc};
 use coffee_github::repository::Github;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
