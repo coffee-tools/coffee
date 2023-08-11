@@ -60,14 +60,9 @@ pub fn show_remote_list(remote_list: Result<CoffeeRemote, CoffeeError>) -> Resul
     table.divider();
 
     for repository in &repositories {
-        let commit_id = match &repository.commit_id {
-            Some(commit_id) => commit_id.to_owned(),
-            None => String::from(""),
-        };
-        let date = match &repository.date {
-            Some(date) => date.to_owned(),
-            None => String::from(""),
-        };
+        let mut commit_id = repository.commit_id.clone().unwrap_or_default();
+        commit_id = commit_id.chars().take(7).collect::<String>();
+        let date = repository.date.clone().unwrap_or_default();
         table.push([
             term::format::positive("●").into(),
             term::format::highlight(repository.local_name.to_owned()),
