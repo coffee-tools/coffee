@@ -442,7 +442,7 @@ impl PluginManager for CoffeeManager {
         Err(err)
     }
 
-    async fn nurse(&mut self) -> Result<(), CoffeeError> {
+    async fn nurse(&mut self) -> Result<CoffeeNurse, CoffeeError> {
         self.recovery_strategies.scan().await
     }
 }
