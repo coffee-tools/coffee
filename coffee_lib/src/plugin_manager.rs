@@ -47,5 +47,5 @@ pub trait PluginManager {
     async fn search(&mut self, plugin: &str) -> Result<CoffeeSearch, CoffeeError>;
 
     /// clean up storage information about the remote repositories of the plugin manager.
-    async fn nurse(&mut self) -> Result<(), CoffeeError>;
+    async fn nurse(&mut self) -> Result<CoffeeNurse, CoffeeError>;
 }

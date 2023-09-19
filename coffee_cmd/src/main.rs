@@ -7,7 +7,7 @@ use radicle_term as term;
 use coffee_core::coffee::CoffeeManager;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
-use coffee_lib::types::response::UpgradeStatus;
+use coffee_lib::types::response::{NurseStatus, UpgradeStatus};
 
 use crate::cmd::CoffeeArgs;
 use crate::cmd::CoffeeCommand;
@@ -123,10 +123,26 @@ async fn main() -> Result<(), CoffeeError> {
             }
             Err(err) => Err(err),
         },
-        CoffeeCommand::Nurse {} => {
-            term::info!("Nurse command is not implemented");
-            Ok(())
-        }
+        CoffeeCommand::Nurse {} => match coffee.nurse().await {
+            Ok(val) => {
+                match val.status {
+                    NurseStatus::Sane => {
+                        term::success!("coffee configuration is not corrupt!")
+                    }
+                    NurseStatus::RepositoryLocallyAbsent => {
+                        term::success!("A repository was locally absent");
+                    }
+                    NurseStatus::RepositoryLocallyCorrupt => {
+                        term::success!("A repository was locally corrupt");
+                    }
+                    NurseStatus::RepositoryMissingInConfiguration => {
+                        term::success!("A repository was missing in the configuration");
+                    }
+                }
+                Ok(())
+            }
+            Err(err) => Err(err),
+        },
     };
 
     if let Err(err) = result {

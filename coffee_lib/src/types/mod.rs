@@ -139,4 +139,20 @@ pub mod response {
         pub repository_url: String,
         pub plugin: Plugin,
     }
+
+    /// This struct is used to represent the status of nurse,
+    /// either sane or not.
+    /// If not sane, return the reason of the problem.
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub enum NurseStatus {
+        Sane,
+        RepositoryLocallyAbsent,
+        RepositoryLocallyCorrupt,
+        RepositoryMissingInConfiguration,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct CoffeeNurse {
+        pub status: NurseStatus,
+    }
 }
