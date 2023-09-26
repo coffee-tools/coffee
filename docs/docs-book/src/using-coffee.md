@@ -113,8 +113,6 @@ Coffee tightly integrates with git, allowing you to easily upgrade your plugins 
 coffee upgrade <repo_name>
 ```
 
-
-
 ### Listing all the plugins
 
 > ✅ Implemented
@@ -131,12 +129,20 @@ coffee list
 coffee show <plugin_name>
 ```
 
-## Searching for a plugin in remote repositories 
+### Searching for a plugin in remote repositories 
 
 > ✅ Implemented
 
 ```bash
 coffee search <plugin_name>
+```
+
+### To solve issues with coffee configuration and ensure its integrity on disk
+
+> ✅ Implemented
+
+```bash
+coffee nurse
 ```
 _________
 ## Running coffee as a server
