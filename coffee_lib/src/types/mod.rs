@@ -159,7 +159,7 @@ pub mod response {
     /// This struct is used to represent the status of nurse,
     /// either sane or not.
     /// If not sane, return the action that nurse has taken.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
     pub enum NurseStatus {
         Sane,
         RepositoryLocallyRestored(Vec<String>),

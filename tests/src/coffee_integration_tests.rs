@@ -5,6 +5,7 @@ use tokio::fs;
 use serde_json::json;
 
 use coffee_lib::plugin_manager::PluginManager;
+use coffee_lib::types::response::NurseStatus;
 use coffee_testing::cln::Node;
 use coffee_testing::prelude::tempfile;
 use coffee_testing::{CoffeeTesting, CoffeeTestingArgs};
@@ -551,6 +552,110 @@ pub async fn test_plugin_installation_path() {
         summary_exec_path.exists(),
         "The file {:?} does not exist",
         summary_exec_path
+    );
+
+    cln.stop().await.unwrap();
+}
+
+#[tokio::test]
+#[ntest::timeout(560000)]
+pub async fn test_nurse_repository_missing_on_disk() {
+    init();
+    let mut cln = Node::tmp("regtest").await.unwrap();
+
+    let mut manager = CoffeeTesting::tmp().await.unwrap();
+    let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
+    let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
+    log::info!("lightning path: {lightning_dir}");
+
+    manager.coffee().setup(&lightning_dir).await.unwrap();
+
+    // Construct the root path
+    let root_path = manager
+        .root_path()
+        .to_owned()
+        .path()
+        .to_str()
+        .map(String::from);
+    assert!(root_path.is_some(), "{:?}", root_path);
+    let root_path = root_path.unwrap();
+
+    // Add folgore remote repository
+    manager
+        .coffee()
+        .add_remote("folgore", "https://github.com/coffee-tools/folgore.git")
+        .await
+        .unwrap();
+
+    // Construct the path of the folgore repository
+    let folgore_path = format!("{}/.coffee/repositories/folgore", root_path);
+    let folgore_path = Path::new(&folgore_path);
+    // Check if the folgore repository exists
+    assert!(
+        folgore_path.exists(),
+        "The folder {:?} does not exist",
+        folgore_path
+    );
+
+    // Make sure that the folgore repository has README.md file
+    // This is to ensure that the repository is cloned correctly later
+    // (not just an empty folder)
+    let folgore_readme_path = format!("{}/.coffee/repositories/folgore/README.md", root_path);
+    let folgore_readme_path = Path::new(&folgore_readme_path);
+    // Check if the folgore repository has README.md file
+    assert!(
+        folgore_readme_path.exists(),
+        "The file {:?} does not exist",
+        folgore_readme_path
+    );
+
+    // Assert that nurse returns that coffee is Sane
+    let result = manager.coffee().nurse().await;
+    assert!(result.is_ok(), "{:?}", result);
+    let result = result.unwrap();
+    // Assert result has only 1 value
+    assert_eq!(result.status.len(), 1, "{:?}", result);
+    // Assert that the value is Sane
+    assert_eq!(result.status[0], NurseStatus::Sane, "{:?}", result);
+
+    // Remove folgore repository (we militate that the repository is missing on disk)
+    let result = fs::remove_dir_all(&folgore_path).await;
+    assert!(result.is_ok(), "{:?}", result);
+
+    // Assert that folgore repository is missing on disk
+    assert!(
+        !folgore_path.exists(),
+        "The folder {:?} exists",
+        folgore_path
+    );
+
+    // Run nurse again
+    // Assert that nurse returns that coffee isn't Sane
+    let result = manager.coffee().nurse().await;
+    assert!(result.is_ok(), "{:?}", result);
+    let result = result.unwrap();
+    // Assert result has only 1 value
+    assert_eq!(result.status.len(), 1, "{:?}", result);
+    // Assert that the value is RepositoryLocallyRestored
+    assert_eq!(
+        result.status[0],
+        NurseStatus::RepositoryLocallyRestored(vec!["folgore".to_string()]),
+        "{:?}",
+        result
+    );
+
+    // Assert that the folgore repository is cloned again
+    assert!(
+        folgore_path.exists(),
+        "The folder {:?} does not exist",
+        folgore_path
+    );
+
+    // Assert that the folgore repository has README.md file
+    assert!(
+        folgore_readme_path.exists(),
+        "The file {:?} does not exist",
+        folgore_readme_path
     );
 
     cln.stop().await.unwrap();
