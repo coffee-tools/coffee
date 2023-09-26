@@ -27,6 +27,9 @@ pub trait Repository: Any {
     /// upgrade the repository
     async fn upgrade(&mut self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError>;
 
+    /// recover the repository from the commit id.
+    async fn recover(&mut self) -> Result<(), CoffeeError>;
+
     /// return the name of the repository.
     fn name(&self) -> String;
 

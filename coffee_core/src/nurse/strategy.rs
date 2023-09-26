@@ -21,19 +21,16 @@
 //! be able to choose the algorithm at runtime.
 //!
 //! Author: Vincenzo Palazzo <vincenzopalazzo@member.fsf.org>
+use std::path::Path;
 use std::sync::Arc;
 
 use async_trait::async_trait;
 
 use coffee_lib::errors::CoffeeError;
-use coffee_lib::types::response::{CoffeeNurse, NurseStatus};
+use coffee_lib::types::response::Defect;
 
+use crate::coffee::CoffeeManager;
 use crate::nurse::chain::Handler;
-
-#[async_trait]
-pub trait RecoveryStrategy: Send + Sync {
-    async fn patch(&self) -> Result<CoffeeNurse, CoffeeError>;
-}
 
 /// Strategy for handling the situation when a Git repository exists in coffee configuration
 /// but is absent from the local storage.
@@ -45,28 +42,8 @@ pub trait RecoveryStrategy: Send + Sync {
 pub struct GitRepositoryLocallyAbsentStrategy;
 
 #[async_trait]
-impl RecoveryStrategy for GitRepositoryLocallyAbsentStrategy {
-    /// Attempts to address the absence of a Git repository from local storage.
-    ///
-    /// This method is responsible for managing the scenario where a Git repository is listed
-    /// in the coffee configuration but is not present in the `.coffee/repositories` folder.
-    ///
-    /// It takes the following actions:
-    ///
-    /// 1. Attempts to clone the repository using the Git HEAD reference stored in the configuration.
-    ///    This is done in an effort to retrieve the missing repository from its source.
-    ///
-    /// 2. If the cloning process fails, it will remove the repository entry from the coffee configuration.
-    async fn patch(&self) -> Result<CoffeeNurse, CoffeeError> {
-        Ok(CoffeeNurse {
-            status: NurseStatus::RepositoryLocallyAbsent,
-        })
-    }
-}
-
-#[async_trait]
 impl Handler for GitRepositoryLocallyAbsentStrategy {
-    /// Determines if [`GitRepositoryLocallyAbsentStrategy`] can be applied.
+    /// Determines if a repository is missing from local storage.
     ///
     /// This function iterates over the Git repositories listed in the coffee configuration and
     /// checks if each one exists in the `.coffee/repositories` folder. If any repository is found
@@ -74,7 +51,26 @@ impl Handler for GitRepositoryLocallyAbsentStrategy {
     /// this situation should be applied.
     async fn can_be_applied(
         self: Arc<Self>,
-    ) -> Result<Option<std::sync::Arc<dyn RecoveryStrategy>>, CoffeeError> {
-        Ok(Some(self))
+        coffee: &CoffeeManager,
+    ) -> Result<Option<Defect>, CoffeeError> {
+        let mut repos: Vec<String> = Vec::new();
+        let coffee_repos = coffee.repos();
+        for repo in coffee_repos.values() {
+            log::debug!("Checking if repository {} exists locally", repo.name());
+            let repo_path = repo.url().path_string;
+            let repo_path = Path::new(&repo_path);
+            if !repo_path.exists() {
+                log::debug!("Repository {} is missing locally", repo.name());
+                repos.push(repo.name().to_string());
+            }
+        }
+
+        if repos.is_empty() {
+            log::debug!("No repositories missing locally");
+            return Ok(None);
+        } else {
+            log::debug!("Found {} repositories missing locally", repos.len());
+            return Ok(Some(Defect::RepositoryLocallyAbsent(repos)));
+        }
     }
 }

@@ -1,5 +1,5 @@
 //! Coffee mod implementation
-use coffee_storage::nosql_db::NoSQlStorage;
+
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::vec::Vec;
@@ -23,6 +23,7 @@ use coffee_lib::types::response::*;
 use coffee_lib::url::URL;
 use coffee_lib::{commit_id, error, get_repo_info, sh};
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
+use coffee_storage::nosql_db::NoSQlStorage;
 use coffee_storage::storage::StorageManager;
 
 use super::config;
@@ -78,6 +79,11 @@ pub struct CoffeeManager {
 }
 
 impl CoffeeManager {
+    /// return the repos of the plugin manager
+    pub fn repos(&self) -> &HashMap<String, Box<dyn Repository + Send + Sync>> {
+        &self.repos
+    }
+
     pub async fn new(conf: &dyn CoffeeArgs) -> Result<Self, CoffeeError> {
         let conf = CoffeeConf::new(conf).await?;
         let mut coffee = CoffeeManager {
@@ -443,7 +449,69 @@ impl PluginManager for CoffeeManager {
     }
 
     async fn nurse(&mut self) -> Result<CoffeeNurse, CoffeeError> {
-        self.recovery_strategies.scan().await
+        let status = self.recovery_strategies.scan(self).await?;
+        let mut nurse_actions: Vec<NurseStatus> = vec![];
+        for defect in status.defects.iter() {
+            log::debug!("defect: {:?}", defect);
+            match defect {
+                Defect::RepositoryLocallyAbsent(repos) => {
+                    let mut actions = self.patch_repository_locally_absent(repos.to_vec()).await?;
+                    nurse_actions.append(&mut actions);
+                }
+            }
+        }
+
+        // If there was no actions taken by nurse, we return a sane status.
+        if nurse_actions.is_empty() {
+            nurse_actions.push(NurseStatus::Sane);
+        }
+        Ok(CoffeeNurse {
+            status: nurse_actions,
+        })
+    }
+
+    async fn patch_repository_locally_absent(
+        &mut self,
+        repos: Vec<String>,
+    ) -> Result<Vec<NurseStatus>, CoffeeError> {
+        // initialize the nurse actions
+        let mut nurse_actions: Vec<NurseStatus> = vec![];
+        // for every repository that is absent locally
+        // we try to recover it.
+        // There are 2 cases:
+        // 1. the repository can be recovered from the remote
+        // 2. the repository can't be recovered from the remote. In this case
+        //   we remove the repository from the coffee configuration.
+        for repo_name in repos.iter() {
+            // Get the repository from the name
+            let repo = self
+                .repos
+                .get_mut(repo_name)
+                .ok_or_else(|| error!("repository with name: {repo_name} not found"))?;
+
+            match repo.recover().await {
+                Ok(_) => {
+                    log::info!("repository {} recovered", repo_name.clone());
+                    nurse_actions.push(NurseStatus::RepositoryLocallyRestored(vec![
+                        repo_name.clone()
+                    ]));
+                }
+                Err(err) => {
+                    log::debug!(
+                        "error while recovering repository {}: {err}",
+                        repo_name.clone()
+                    );
+                    log::info!("removing repository {}", repo_name.clone());
+                    self.repos.remove(repo_name);
+                    log::debug!("remote removed: {}", repo_name);
+                    self.flush().await?;
+                    nurse_actions.push(NurseStatus::RepositoryLocallyRemoved(vec![
+                        repo_name.clone()
+                    ]));
+                }
+            }
+        }
+        Ok(nurse_actions)
     }
 }
 

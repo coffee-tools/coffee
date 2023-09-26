@@ -268,6 +268,46 @@ impl Repository for Github {
         })
     }
 
+    async fn recover(&mut self) -> Result<(), CoffeeError> {
+        let commit = self.git_head.clone();
+
+        debug!(
+            "recovering repository: {} {} > {}",
+            self.name, &self.url.url_string, &self.url.path_string,
+        );
+        // recursively clone the repository
+        let res = git2::Repository::clone(&self.url.url_string, &self.url.path_string);
+        match res {
+            Ok(repo) => {
+                // get the commit id
+                let oid = git2::Oid::from_str(&commit.unwrap())
+                    .map_err(|err| error!("{}", err.message()))?;
+                // Retrieve the commit associated with the OID
+                let target_commit = match repo.find_commit(oid) {
+                    Ok(commit) => commit,
+                    Err(err) => return Err(error!("{}", err.message())),
+                };
+
+                // Update HEAD to point to the target commit
+                repo.set_head_detached(target_commit.id())
+                    .map_err(|err| error!("{}", err.message()))?;
+
+                // retrieve the submodules
+                let submodules = repo.submodules().unwrap_or_default();
+                for (_, sub) in submodules.iter().enumerate() {
+                    let path =
+                        format!("{}/{}", &self.url.path_string, sub.path().to_str().unwrap());
+                    if let Err(err) = git2::Repository::clone(sub.url().unwrap(), &path) {
+                        return Err(error!("{}", err.message()));
+                    }
+                }
+
+                Ok(())
+            }
+            Err(err) => Err(error!("{}", err.message())),
+        }
+    }
+
     /// list of the plugin installed inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, CoffeeError> {
         Ok(self.plugins.clone())
