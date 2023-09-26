@@ -86,6 +86,7 @@ pub mod request {
 // Definition of the response types.
 pub mod response {
     use serde::{Deserialize, Serialize};
+    use std::fmt;
 
     use crate::plugin::Plugin;
 
@@ -140,19 +141,50 @@ pub mod response {
         pub plugin: Plugin,
     }
 
+    /// This struct is used to represent a defect
+    /// that can be patched by the nurse.
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub enum Defect {
+        // A patch operation when a git repository is present in the coffee configuration
+        // but is absent from the local storage.
+        RepositoryLocallyAbsent(Vec<String>),
+        // TODO: Add more patch operations
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct ChainOfResponsibilityStatus {
+        pub defects: Vec<Defect>,
+    }
+
     /// This struct is used to represent the status of nurse,
     /// either sane or not.
-    /// If not sane, return the reason of the problem.
+    /// If not sane, return the action that nurse has taken.
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub enum NurseStatus {
         Sane,
-        RepositoryLocallyAbsent,
-        RepositoryLocallyCorrupt,
-        RepositoryMissingInConfiguration,
+        RepositoryLocallyRestored(Vec<String>),
+        RepositoryLocallyRemoved(Vec<String>),
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct CoffeeNurse {
-        pub status: NurseStatus,
+        pub status: Vec<NurseStatus>,
+    }
+
+    impl fmt::Display for NurseStatus {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            match self {
+                NurseStatus::Sane => write!(
+                    f,
+                    "coffee configuration is not corrupt! No need to run coffee nurse"
+                ),
+                NurseStatus::RepositoryLocallyRestored(val) => {
+                    write!(f, "Repositories restored locally: {}", val.join(" "))
+                }
+                NurseStatus::RepositoryLocallyRemoved(val) => {
+                    write!(f, "Repositories removed locally: {}", val.join(" "))
+                }
+            }
+        }
     }
 }

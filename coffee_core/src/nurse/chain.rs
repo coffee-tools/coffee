@@ -31,16 +31,17 @@ use std::sync::Arc;
 use async_trait::async_trait;
 
 use coffee_lib::errors::CoffeeError;
-use coffee_lib::types::response::{CoffeeNurse, NurseStatus};
+use coffee_lib::types::response::{ChainOfResponsibilityStatus, Defect};
 
 use super::strategy::GitRepositoryLocallyAbsentStrategy;
-use super::strategy::RecoveryStrategy;
+use crate::coffee::CoffeeManager;
 
 #[async_trait]
 pub trait Handler: Send + Sync {
     async fn can_be_applied(
         self: Arc<Self>,
-    ) -> Result<Option<Arc<dyn RecoveryStrategy>>, CoffeeError>;
+        coffee: &CoffeeManager,
+    ) -> Result<Option<Defect>, CoffeeError>;
 }
 
 pub struct RecoveryChainOfResponsibility {
@@ -48,20 +49,26 @@ pub struct RecoveryChainOfResponsibility {
 }
 
 impl RecoveryChainOfResponsibility {
+    /// Create a new instance of the chain of responsibility
     pub async fn new() -> Result<Self, CoffeeError> {
         Ok(Self {
             handlers: vec![Arc::new(GitRepositoryLocallyAbsentStrategy)],
         })
     }
 
-    pub async fn scan(&self) -> Result<CoffeeNurse, CoffeeError> {
+    /// Scan the chain of responsibility to see what can be applied
+    /// and return the status of the chain of responsibility
+    /// with the list of defects
+    pub async fn scan(
+        &self,
+        coffee: &CoffeeManager,
+    ) -> Result<ChainOfResponsibilityStatus, CoffeeError> {
+        let mut defects: Vec<Defect> = vec![];
         for handler in self.handlers.iter() {
-            if let Some(strategy) = handler.clone().can_be_applied().await? {
-                return strategy.patch().await;
+            if let Some(defect) = handler.clone().can_be_applied(coffee).await? {
+                defects.push(defect);
             }
         }
-        Ok(CoffeeNurse {
-            status: NurseStatus::Sane,
-        })
+        Ok(ChainOfResponsibilityStatus { defects })
     }
 }
