@@ -33,6 +33,7 @@ pub mod macros {
                     .arg(format!("--lightning-dir={path}"))
                     .arg("--dev-fast-gossip")
                     .arg("--funding-confirms=1")
+                    .arg("--developer")
                     .stdout(Stdio::null())
                     .spawn()
             }.await
