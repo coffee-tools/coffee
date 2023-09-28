@@ -54,7 +54,7 @@ impl Handler for GitRepositoryLocallyAbsentStrategy {
         coffee: &CoffeeManager,
     ) -> Result<Option<Defect>, CoffeeError> {
         let mut repos: Vec<String> = Vec::new();
-        let coffee_repos = coffee.repos();
+        let coffee_repos = &coffee.repos;
         for repo in coffee_repos.values() {
             log::debug!("Checking if repository {} exists locally", repo.name());
             let repo_path = repo.url().path_string;
@@ -67,10 +67,10 @@ impl Handler for GitRepositoryLocallyAbsentStrategy {
 
         if repos.is_empty() {
             log::debug!("No repositories missing locally");
-            return Ok(None);
+            Ok(None)
         } else {
             log::debug!("Found {} repositories missing locally", repos.len());
-            return Ok(Some(Defect::RepositoryLocallyAbsent(repos)));
+            Ok(Some(Defect::RepositoryLocallyAbsent(repos)))
         }
     }
 }

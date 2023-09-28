@@ -85,8 +85,9 @@ pub mod request {
 
 // Definition of the response types.
 pub mod response {
-    use serde::{Deserialize, Serialize};
     use std::fmt;
+
+    use serde::{Deserialize, Serialize};
 
     use crate::plugin::Plugin;
 

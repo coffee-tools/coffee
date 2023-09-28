@@ -123,16 +123,10 @@ async fn main() -> Result<(), CoffeeError> {
             }
             Err(err) => Err(err),
         },
-        CoffeeCommand::Nurse {} => match coffee.nurse().await {
-            Ok(val) => {
-                // For every status in CoffeeNurse, print it
-                for status in val.status {
-                    term::success!("{}", status.to_string());
-                }
-                Ok(())
-            }
-            Err(err) => Err(err),
-        },
+        CoffeeCommand::Nurse {} => {
+            let nurse_result = coffee.nurse().await;
+            coffee_term::show_nurse_result(nurse_result)
+        }
     };
 
     if let Err(err) = result {
