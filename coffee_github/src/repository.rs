@@ -271,9 +271,11 @@ impl Repository for Github {
     async fn recover(&mut self) -> Result<(), CoffeeError> {
         let commit = self.git_head.clone();
 
-        debug!(
+        log::debug!(
             "recovering repository: {} {} > {}",
-            self.name, &self.url.url_string, &self.url.path_string,
+            self.name,
+            &self.url.url_string,
+            &self.url.path_string,
         );
         // recursively clone the repository
         let res = git2::Repository::clone(&self.url.url_string, &self.url.path_string);

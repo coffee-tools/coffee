@@ -6,7 +6,7 @@ use radicle_term::table::TableOptions;
 
 use coffee_lib::error;
 use coffee_lib::errors::CoffeeError;
-use coffee_lib::types::response::{CoffeeList, CoffeeRemote};
+use coffee_lib::types::response::{CoffeeList, CoffeeNurse, CoffeeRemote, NurseStatus};
 use term::Element;
 
 pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), CoffeeError> {
@@ -73,6 +73,54 @@ pub fn show_remote_list(remote_list: Result<CoffeeRemote, CoffeeError>) -> Resul
         ])
     }
     table.print();
+
+    Ok(())
+}
+
+pub fn show_nurse_result(
+    nurse_result: Result<CoffeeNurse, CoffeeError>,
+) -> Result<(), CoffeeError> {
+    match nurse_result {
+        Ok(nurse) => {
+            // special case: if the nurse is sane
+            // we print a message and return
+            if nurse.status[0] == NurseStatus::Sane {
+                term::success!("Coffee configuration is not corrupt! No need to run coffee nurse");
+                return Ok(());
+            }
+            let mut table = radicle_term::Table::new(TableOptions::bordered());
+            table.push([
+                term::format::dim(String::from("●")),
+                term::format::bold(String::from("Actions Taken")),
+                term::format::bold(String::from("Affected repositories")),
+            ]);
+            table.divider();
+
+            for status in &nurse.status {
+                let action_str = match status {
+                    NurseStatus::Sane => "".to_string(),
+                    NurseStatus::RepositoryLocallyRestored(_) => "Restored using Git".to_string(),
+                    NurseStatus::RepositoryLocallyRemoved(_) => {
+                        "Removed from local storage".to_string()
+                    }
+                };
+                let repos_str = match status {
+                    NurseStatus::Sane => "".to_string(),
+                    NurseStatus::RepositoryLocallyRestored(repos)
+                    | NurseStatus::RepositoryLocallyRemoved(repos) => repos.join(", "),
+                };
+
+                table.push([
+                    term::format::positive("●").into(),
+                    term::format::bold(action_str.clone()),
+                    term::format::highlight(repos_str.clone()),
+                ]);
+            }
+
+            table.print();
+        }
+        Err(err) => eprintln!("{}", err),
+    }
 
     Ok(())
 }

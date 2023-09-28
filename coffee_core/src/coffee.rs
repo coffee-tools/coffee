@@ -62,28 +62,23 @@ impl From<&CoffeeManager> for CoffeeStorageInfo {
 }
 
 pub struct CoffeeManager {
-    config: config::CoffeeConf,
-    repos: HashMap<String, Box<dyn Repository + Send + Sync>>,
+    pub config: config::CoffeeConf,
+    pub repos: HashMap<String, Box<dyn Repository + Send + Sync>>,
     /// Core lightning configuration managed by coffee
-    coffee_cln_config: CLNConf,
+    pub coffee_cln_config: CLNConf,
     /// Core lightning configuration that include the
     /// configuration managed by coffee
-    cln_config: Option<CLNConf>,
+    pub cln_config: Option<CLNConf>,
     /// storage instance to make all the plugin manager
     /// information persistent on disk
-    storage: NoSQlStorage,
+    pub storage: NoSQlStorage,
     /// core lightning rpc connection
-    rpc: Option<Client>,
+    pub rpc: Option<Client>,
     /// Recovery Strategies for the nurse command.
-    recovery_strategies: RecoveryChainOfResponsibility,
+    pub recovery_strategies: RecoveryChainOfResponsibility,
 }
 
 impl CoffeeManager {
-    /// return the repos of the plugin manager
-    pub fn repos(&self) -> &HashMap<String, Box<dyn Repository + Send + Sync>> {
-        &self.repos
-    }
-
     pub async fn new(conf: &dyn CoffeeArgs) -> Result<Self, CoffeeError> {
         let conf = CoffeeConf::new(conf).await?;
         let mut coffee = CoffeeManager {
@@ -497,10 +492,7 @@ impl PluginManager for CoffeeManager {
                     ]));
                 }
                 Err(err) => {
-                    log::debug!(
-                        "error while recovering repository {}: {err}",
-                        repo_name.clone()
-                    );
+                    log::debug!("error while recovering repository {repo_name}: {err}");
                     log::info!("removing repository {}", repo_name.clone());
                     self.repos.remove(repo_name);
                     log::debug!("remote removed: {}", repo_name);
