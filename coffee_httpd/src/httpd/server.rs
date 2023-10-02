@@ -61,6 +61,7 @@ pub async fn run_httpd<T: ToSocketAddrs>(
             .service(coffee_remote_list)
             .service(coffee_show)
             .service(coffee_search)
+            .service(coffee_list_plugins_in_remote)
             .with_json_spec_at("/api/v1")
             .build()
     })
@@ -154,6 +155,20 @@ async fn coffee_remote_rm(
 async fn coffee_remote_list(data: web::Data<AppState>) -> Result<Json<Value>, Error> {
     let mut coffee = data.coffee.lock().await;
     let result = coffee.list_remotes().await;
+
+    handle_httpd_response!(result)
+}
+
+#[api_v2_operation]
+#[get("/remote/list_plugins")]
+async fn coffee_list_plugins_in_remote(
+    data: web::Data<AppState>,
+    body: Json<RemotePluginsList>,
+) -> Result<Json<Value>, Error> {
+    let repository_name = &body.repository_name;
+
+    let coffee = data.coffee.lock().await;
+    let result = coffee.get_plugins_in_remote(repository_name).await;
 
     handle_httpd_response!(result)
 }

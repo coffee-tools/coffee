@@ -103,6 +103,37 @@ pub async fn httpd_add_remove_plugins() {
     let body = response.text().await.unwrap();
     log::info!("/remote/add response: {}", body);
 
+    // Define the request body to be sent to the /remote/list_plugins endpoint
+    let remote_plugins_list_request = RemotePluginsList {
+        repository_name: "lightningd".to_string(),
+    };
+
+    let response = client
+        .get(format!("{}/remote/list_plugins", url))
+        .json(&remote_plugins_list_request)
+        .send()
+        .await;
+    assert!(response.is_ok(), "{:?}", response);
+    let response = response.unwrap();
+
+    let body = response.json::<serde_json::Value>().await;
+    assert!(body.is_ok(), "{:?}", body);
+    let body = body.unwrap();
+
+    // Log the response body
+    log::info!("/remote/list_plugins response: {}", body);
+
+    // Assert the response plugin list is not empty
+    let plugins = body["plugins"].as_array();
+    assert!(plugins.is_some(), "{:?}", plugins);
+    let plugins = plugins.unwrap();
+
+    // Assert that the "helpme" plugin exists in the response
+    assert!(
+        plugins.iter().any(|plugin| plugin["name"] == "helpme"),
+        "helpme plugin not found in the response"
+    );
+
     // Define the request body to be sent to the /show endpoint
     let show_request = Show {
         plugin: "helpme".to_string(),
