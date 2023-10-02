@@ -33,7 +33,7 @@ pub async fn init_coffee_test_cmd() -> anyhow::Result<()> {
     let dir = Arc::new(tempfile::tempdir()?);
     let args = CoffeeTestingArgs {
         conf: None,
-        data_dir: dir.path().clone().to_str().unwrap().to_owned(),
+        data_dir: dir.path().to_str().unwrap().to_owned(),
         network: "bitcoin".to_string(),
     };
     let mut manager = CoffeeTesting::tmp_with_args(&args, dir.clone()).await?;
@@ -48,7 +48,7 @@ pub async fn init_coffee_test_cmd() -> anyhow::Result<()> {
     drop(manager);
     let new_args = CoffeeTestingArgs {
         conf: None,
-        data_dir: dir.path().clone().to_string_lossy().to_string(),
+        data_dir: dir.path().to_string_lossy().to_string(),
         network: "testnet".to_string(),
     };
     let mut manager = CoffeeTesting::tmp_with_args(&new_args, dir.clone()).await?;
@@ -144,6 +144,27 @@ pub async fn test_add_remove_plugins() {
         .add_remote(repo_name, repo_url)
         .await
         .unwrap();
+
+    // Get the list of plugins available in the remote repository
+    let result = manager.coffee().get_plugins_in_remote(repo_name).await;
+    assert!(result.is_ok(), "{:?}", result);
+    let result = result.unwrap();
+    let plugins = result.plugins;
+    // Assert the length of the list of plugins is greater than 0
+    assert!(
+        plugins.len() > 0,
+        "The list of plugins is empty: {:?}",
+        plugins
+    );
+    // Assert that the list of plugins contains the summary  and helpme plugin
+    assert!(
+        plugins.iter().any(|plugin| plugin.name() == "summary"),
+        "Plugin 'summary' not found"
+    );
+    assert!(
+        plugins.iter().any(|plugin| plugin.name() == "helpme"),
+        "Plugin 'helpme' not found"
+    );
 
     // Install summary plugin
     let result = manager.coffee().install("summary", true, false).await;
@@ -316,7 +337,7 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
     let dir = Arc::new(tempfile::tempdir()?);
     let args = CoffeeTestingArgs {
         conf: None,
-        data_dir: dir.path().clone().to_str().unwrap().to_owned(),
+        data_dir: dir.path().to_str().unwrap().to_owned(),
         network: "regtest".to_string(),
     };
     let mut manager = CoffeeTesting::tmp_with_args(&args, dir.clone()).await?;
@@ -351,7 +372,7 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
     log::info!("lightning path for testnet network: {lightning_dir}");
     let new_args = CoffeeTestingArgs {
         conf: None,
-        data_dir: dir.path().clone().to_string_lossy().to_string(),
+        data_dir: dir.path().to_string_lossy().to_string(),
         network: "testnet".to_string(),
     };
     let mut manager = CoffeeTesting::tmp_with_args(&new_args, dir.clone()).await?;
@@ -389,7 +410,7 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
 pub async fn test_double_slash() {
     init();
 
-    let mut cln = Node::tmp("regtest").await.unwrap();
+    let cln = Node::tmp("regtest").await.unwrap();
     let mut manager = CoffeeTesting::tmp().await.unwrap();
 
     let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;

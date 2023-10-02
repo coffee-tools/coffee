@@ -72,6 +72,12 @@ pub mod request {
 
     #[cfg(feature = "open-api")]
     #[derive(Debug, Deserialize, Apiv2Schema, Serialize)]
+    pub struct RemotePluginsList {
+        pub repository_name: String,
+    }
+
+    #[cfg(feature = "open-api")]
+    #[derive(Debug, Deserialize, Apiv2Schema, Serialize)]
     pub struct Show {
         pub plugin: String,
     }
@@ -96,6 +102,10 @@ pub mod response {
         pub plugin: Plugin,
     }
 
+    // This struct is used to represent the list of plugins
+    // that are installed in the coffee configuration
+    // or the list of plugins that are available in a remote
+    // repository.
     #[derive(Debug, Serialize, Deserialize)]
     pub struct CoffeeList {
         pub plugins: Vec<Plugin>,
