@@ -68,6 +68,14 @@ To list plugin repositories, simply run the following command.
 coffee remote list 
 ```
 
+To list available plugins in a specific remote repository
+
+> ✅ Implemented
+
+```bash
+coffee remote <repository_name> --plugins
+```
+
 ### Install a Plugin
 
 > ✅ Implemented
