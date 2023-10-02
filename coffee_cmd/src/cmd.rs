@@ -41,7 +41,11 @@ pub enum CoffeeCommand {
     #[clap(arg_required_else_help = true)]
     Remote {
         #[clap(subcommand)]
-        action: RemoteAction,
+        action: Option<RemoteAction>,
+        #[arg(short, long, action = clap::ArgAction::SetTrue, requires = "remote-name")]
+        plugins: bool,
+        #[arg(name = "remote-name", help = "The name of the remote repository")]
+        name: Option<String>,
     },
     /// Configure coffee with the core lightning
     /// configuration
@@ -60,8 +64,11 @@ pub enum CoffeeCommand {
 
 #[derive(Debug, Subcommand)]
 pub enum RemoteAction {
+    /// Add a remote repository to the plugin manager.
     Add { name: String, url: String },
+    /// Remove a remote repository from the plugin manager.
     Rm { name: String },
+    /// List the remote repositories from the plugin manager.
     List {},
 }
 
@@ -76,7 +83,16 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
             CoffeeCommand::Upgrade { repo } => Self::Upgrade(repo.to_owned()),
             CoffeeCommand::List {} => Self::List,
             CoffeeCommand::Setup { cln_conf } => Self::Setup(cln_conf.to_owned()),
-            CoffeeCommand::Remote { action } => Self::Remote(action.into()),
+            CoffeeCommand::Remote {
+                action,
+                plugins,
+                name,
+            } => {
+                if let Some(action) = action {
+                    return Self::Remote(Some(action.into()), *plugins, name.clone());
+                }
+                Self::Remote(None, *plugins, name.clone())
+            }
             CoffeeCommand::Remove { plugin } => Self::Remove(plugin.to_owned()),
             CoffeeCommand::Show { plugin } => Self::Show(plugin.to_owned()),
             CoffeeCommand::Search { plugin } => Self::Search(plugin.to_owned()),

@@ -414,6 +414,16 @@ impl PluginManager for CoffeeManager {
         })
     }
 
+    async fn get_plugins_in_remote(&self, name: &str) -> Result<CoffeeList, CoffeeError> {
+        log::debug!("Listing plugins for repository: {}", name);
+        let repo = self
+            .repos
+            .get(name)
+            .ok_or_else(|| error!("repository with name: {name} not found"))?;
+        let plugins = repo.list().await?;
+        Ok(CoffeeList { plugins })
+    }
+
     async fn show(&mut self, plugin: &str) -> Result<CoffeeShow, CoffeeError> {
         for repo in self.repos.values() {
             if let Some(plugin) = repo.get_plugin_by_name(plugin) {
