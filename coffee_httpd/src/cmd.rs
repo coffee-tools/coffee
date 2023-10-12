@@ -36,4 +36,11 @@ impl coffee_core::CoffeeArgs for HttpdArgs {
     fn network(&self) -> Option<String> {
         self.network.clone()
     }
+
+    // We don't need to verify the nurse in the httpd
+    // daemon.
+    // there is no endpoint for `nurse` in the httpd
+    fn skip_verify(&self) -> bool {
+        true
+    }
 }
