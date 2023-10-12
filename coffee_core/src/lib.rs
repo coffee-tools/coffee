@@ -21,7 +21,7 @@ pub enum CoffeeOperation {
     Show(String),
     /// Search(plugin name)
     Search(String),
-    Nurse,
+    Nurse(bool),
 }
 
 #[derive(Clone, Debug)]
@@ -40,4 +40,6 @@ pub trait CoffeeArgs: Send + Sync {
     fn network(&self) -> Option<String>;
     /// return the data dir
     fn data_dir(&self) -> Option<String>;
+    /// return the skip verify flag
+    fn skip_verify(&self) -> bool;
 }

@@ -5,7 +5,7 @@ use tokio::fs;
 use serde_json::json;
 
 use coffee_lib::plugin_manager::PluginManager;
-use coffee_lib::types::response::NurseStatus;
+use coffee_lib::types::response::{Defect, NurseStatus};
 use coffee_testing::cln::Node;
 use coffee_testing::prelude::tempfile;
 use coffee_testing::{CoffeeTesting, CoffeeTestingArgs};
@@ -634,10 +634,8 @@ pub async fn test_nurse_repository_missing_on_disk() {
     let result = manager.coffee().nurse().await;
     assert!(result.is_ok(), "{:?}", result);
     let result = result.unwrap();
-    // Assert result has only 1 value
-    assert_eq!(result.status.len(), 1, "{:?}", result);
     // Assert that the value is Sane
-    assert_eq!(result.status[0], NurseStatus::Sane, "{:?}", result);
+    assert!(result.is_sane());
 
     // Remove folgore repository (we militate that the repository is missing on disk)
     let result = fs::remove_dir_all(&folgore_path).await;
@@ -648,6 +646,20 @@ pub async fn test_nurse_repository_missing_on_disk() {
         !folgore_path.exists(),
         "The folder {:?} exists",
         folgore_path
+    );
+
+    // Assert that nurse --verify returns that coffee is corrupt
+    let result = manager.coffee().nurse_verify().await;
+    assert!(result.is_ok(), "{:?}", result);
+    let result = result.unwrap();
+    // Assert that the value is Corrupt
+    let defects = result.defects;
+    assert_eq!(defects.len(), 1, "{:?}", defects);
+    assert_eq!(
+        defects[0],
+        Defect::RepositoryLocallyAbsent(vec!["folgore".to_string()]),
+        "{:?}",
+        defects
     );
 
     // Run nurse again
@@ -678,6 +690,13 @@ pub async fn test_nurse_repository_missing_on_disk() {
         "The file {:?} does not exist",
         folgore_readme_path
     );
+
+    // Assert that nurse --verify returns that coffee is Sane
+    let result = manager.coffee().nurse_verify().await;
+    assert!(result.is_ok(), "{:?}", result);
+    let result = result.unwrap();
+    // Assert that the value is Sane
+    assert!(result.is_sane());
 
     cln.stop().await.unwrap();
 }

@@ -84,7 +84,7 @@ pub fn show_nurse_result(
         Ok(nurse) => {
             // special case: if the nurse is sane
             // we print a message and return
-            if nurse.status[0] == NurseStatus::Sane {
+            if nurse.is_sane() {
                 term::success!("Coffee configuration is not corrupt! No need to run coffee nurse");
                 return Ok(());
             }
@@ -98,14 +98,12 @@ pub fn show_nurse_result(
 
             for status in &nurse.status {
                 let action_str = match status {
-                    NurseStatus::Sane => "".to_string(),
                     NurseStatus::RepositoryLocallyRestored(_) => "Restored using Git".to_string(),
                     NurseStatus::RepositoryLocallyRemoved(_) => {
                         "Removed from local storage".to_string()
                     }
                 };
                 let repos_str = match status {
-                    NurseStatus::Sane => "".to_string(),
                     NurseStatus::RepositoryLocallyRestored(repos)
                     | NurseStatus::RepositoryLocallyRemoved(repos) => repos.join(", "),
                 };

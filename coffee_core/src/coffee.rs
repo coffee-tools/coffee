@@ -122,6 +122,19 @@ impl CoffeeManager {
         if let Err(err) = self.coffee_cln_config.parse() {
             log::error!("{}", err.cause);
         }
+        if !self.config.skip_verify {
+            // Check for the chain of responsibility
+            let status = self.recovery_strategies.scan(self).await?;
+            log::debug!("Chain of responsibility status: {:?}", status);
+            // if any defect is found, we print a warning message (we don't take action)
+            if !status.defects.is_empty() {
+                return Err(
+                    error!("Coffee found some defects in the configuration. Please run `coffee nurse` to fix them.
+                    If you are want to skip the verification, please add the `--skip-verify ` flag to the command.")
+                );
+            };
+        }
+
         self.load_cln_conf().await?;
         log::debug!("cln conf {:?}", self.coffee_cln_config);
         log::debug!("finish plugin manager inventory");
@@ -453,6 +466,10 @@ impl PluginManager for CoffeeManager {
         Err(err)
     }
 
+    async fn nurse_verify(&self) -> Result<ChainOfResponsibilityStatus, CoffeeError> {
+        self.recovery_strategies.scan(self).await
+    }
+
     async fn nurse(&mut self) -> Result<CoffeeNurse, CoffeeError> {
         let status = self.recovery_strategies.scan(self).await?;
         let mut nurse_actions: Vec<NurseStatus> = vec![];
@@ -465,14 +482,11 @@ impl PluginManager for CoffeeManager {
                 }
             }
         }
-
-        // If there was no actions taken by nurse, we return a sane status.
-        if nurse_actions.is_empty() {
-            nurse_actions.push(NurseStatus::Sane);
-        }
-        Ok(CoffeeNurse {
+        let mut nurse = CoffeeNurse {
             status: nurse_actions,
-        })
+        };
+        nurse.organize();
+        Ok(nurse)
     }
 
     async fn patch_repository_locally_absent(
@@ -503,6 +517,16 @@ impl PluginManager for CoffeeManager {
                 }
                 Err(err) => {
                     log::debug!("error while recovering repository {repo_name}: {err}");
+                    // We make sure that the repository folder is removed
+                    // from local storage.
+                    // Maybe when trying to recover the repository,
+                    // we have created the folder but we were not able
+                    // to clone the repository.
+                    let repo_path = repo.url().path_string;
+                    // This shouldn't return an error if the repository
+                    // is not present locally.
+                    let _ = fs::remove_dir_all(repo_path).await;
+
                     log::info!("removing repository {}", repo_name.clone());
                     self.repos.remove(repo_name);
                     log::debug!("remote removed: {}", repo_name);
