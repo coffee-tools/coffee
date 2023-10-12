@@ -75,6 +75,11 @@ impl CoffeeArgs for PluginArgs {
     fn network(&self) -> Option<String> {
         Some(self.network.clone())
     }
+
+    // we don't need to verify the nurse
+    fn skip_verify(&self) -> bool {
+        true
+    }
 }
 
 impl From<CLNConf> for PluginArgs {

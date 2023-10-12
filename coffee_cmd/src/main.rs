@@ -160,9 +160,18 @@ async fn main() -> Result<(), CoffeeError> {
             }
             Err(err) => Err(err),
         },
-        CoffeeCommand::Nurse {} => {
-            let nurse_result = coffee.nurse().await;
-            coffee_term::show_nurse_result(nurse_result)
+        CoffeeCommand::Nurse { verify } => {
+            if verify {
+                let result = coffee.nurse_verify().await?;
+                term::info!("{}", result);
+                if !result.is_sane() {
+                    term::info!("Coffee local directory is damaged, please run `coffee nurse` to try to fix it");
+                }
+                Ok(())
+            } else {
+                let nurse_result = coffee.nurse().await;
+                coffee_term::show_nurse_result(nurse_result)
+            }
         }
     };
 

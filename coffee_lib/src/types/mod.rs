@@ -116,7 +116,7 @@ pub mod response {
 
     /// This struct is used to represent a defect
     /// that can be patched by the nurse.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
     pub enum Defect {
         // A patch operation when a git repository is present in the coffee configuration
         // but is absent from the local storage.
@@ -129,12 +129,38 @@ pub mod response {
         pub defects: Vec<Defect>,
     }
 
+    impl ChainOfResponsibilityStatus {
+        pub fn is_sane(&self) -> bool {
+            self.defects.is_empty()
+        }
+    }
+
+    impl fmt::Display for ChainOfResponsibilityStatus {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            if self.defects.is_empty() {
+                write!(f, "Coffee is sane")
+            } else {
+                writeln!(f, "Coffee has the following defects:")?;
+                for (i, defect) in self.defects.iter().enumerate() {
+                    match defect {
+                        Defect::RepositoryLocallyAbsent(repos) => {
+                            write!(f, "{}. Repository missing locally: ", i + 1)?;
+                            for repo in repos {
+                                write!(f, " {}", repo)?;
+                            }
+                        }
+                    }
+                }
+                Ok(())
+            }
+        }
+    }
+
     /// This struct is used to represent the status of nurse,
     /// either sane or not.
     /// If not sane, return the action that nurse has taken.
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
     pub enum NurseStatus {
-        Sane,
         RepositoryLocallyRestored(Vec<String>),
         RepositoryLocallyRemoved(Vec<String>),
     }
@@ -144,13 +170,44 @@ pub mod response {
         pub status: Vec<NurseStatus>,
     }
 
+    impl CoffeeNurse {
+        pub fn is_sane(&self) -> bool {
+            self.status.is_empty()
+        }
+
+        pub fn organize(&mut self) {
+            // For every action taken by the nurse, we want to
+            // have 1 entry with the list of repositories affected.
+            let mut new_status: Vec<NurseStatus> = vec![];
+            let mut repositories_locally_removed: Vec<String> = vec![];
+            let mut repositories_locally_restored: Vec<String> = vec![];
+            for repo in self.status.iter() {
+                match repo {
+                    NurseStatus::RepositoryLocallyRemoved(repos) => {
+                        repositories_locally_removed.append(&mut repos.clone())
+                    }
+                    NurseStatus::RepositoryLocallyRestored(repos) => {
+                        repositories_locally_restored.append(&mut repos.clone())
+                    }
+                }
+            }
+            if !repositories_locally_removed.is_empty() {
+                new_status.push(NurseStatus::RepositoryLocallyRemoved(
+                    repositories_locally_removed,
+                ));
+            }
+            if !repositories_locally_restored.is_empty() {
+                new_status.push(NurseStatus::RepositoryLocallyRestored(
+                    repositories_locally_restored,
+                ));
+            }
+            self.status = new_status;
+        }
+    }
+
     impl fmt::Display for NurseStatus {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {
-                NurseStatus::Sane => write!(
-                    f,
-                    "coffee configuration is not corrupt! No need to run coffee nurse"
-                ),
                 NurseStatus::RepositoryLocallyRestored(val) => {
                     write!(f, "Repositories restored locally: {}", val.join(" "))
                 }

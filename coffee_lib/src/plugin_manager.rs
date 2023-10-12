@@ -52,6 +52,9 @@ pub trait PluginManager {
     /// clean up storage information about the remote repositories of the plugin manager.
     async fn nurse(&mut self) -> Result<CoffeeNurse, CoffeeError>;
 
+    /// verify that coffee configuration is sane without taking any action.
+    async fn nurse_verify(&self) -> Result<ChainOfResponsibilityStatus, CoffeeError>;
+
     /// patch coffee configuration in the case that a repository is present in the coffee
     /// configuration but is absent from the local storage.
     async fn patch_repository_locally_absent(
