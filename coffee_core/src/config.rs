@@ -3,6 +3,7 @@ use log::info;
 use serde::{Deserialize, Serialize};
 use std::env;
 
+use crate::CoffeeOperation;
 use coffee_lib::utils::check_dir_or_make_if_missing;
 use coffee_lib::{errors::CoffeeError, plugin::Plugin};
 
@@ -28,6 +29,10 @@ pub struct CoffeeConf {
     /// all plugins that are installed
     /// with the plugin manager.
     pub plugins: Vec<Plugin>,
+    /// A flag that indicates if the
+    /// user wants to skip the verification
+    /// of nurse.
+    pub skip_verify: bool,
 }
 
 impl CoffeeConf {
@@ -51,6 +56,7 @@ impl CoffeeConf {
             plugins: vec![],
             cln_config_path: None,
             cln_root: None,
+            skip_verify: false,
         };
 
         // check the command line arguments and bind them
@@ -80,6 +86,20 @@ impl CoffeeConf {
 
         if let Some(config) = &conf.conf() {
             self.config_path = config.to_owned();
+        }
+
+        // If the command is nurse we skip the verification
+        // because nurse is the command that needs
+        // to solve the configuration problems.
+        if !conf.skip_verify() {
+            match conf.command() {
+                CoffeeOperation::Nurse(_) => {
+                    self.skip_verify = true;
+                }
+                _ => {
+                    self.skip_verify = false;
+                }
+            }
         }
 
         // FIXME: be able to put the directory also in another place!

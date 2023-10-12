@@ -14,6 +14,8 @@ pub struct CoffeeArgs {
     pub network: Option<String>,
     #[clap(short, long, value_parser, name = "data-dir")]
     pub data_dir: Option<String>,
+    #[clap(short, long, action = clap::ArgAction::SetTrue)]
+    pub skip_verify: bool,
 }
 
 /// Coffee subcommand of the command line daemon.
@@ -59,7 +61,11 @@ pub enum CoffeeCommand {
     Search { plugin: String },
     /// clean up remote repositories storage information
     #[clap(arg_required_else_help = false)]
-    Nurse {},
+    Nurse {
+        /// verify that coffee configuration is sane (without taking any action)
+        #[arg(short, long, action = clap::ArgAction::SetTrue)]
+        verify: bool,
+    },
 }
 
 #[derive(Debug, Subcommand)]
@@ -96,7 +102,7 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
             CoffeeCommand::Remove { plugin } => Self::Remove(plugin.to_owned()),
             CoffeeCommand::Show { plugin } => Self::Show(plugin.to_owned()),
             CoffeeCommand::Search { plugin } => Self::Search(plugin.to_owned()),
-            CoffeeCommand::Nurse {} => Self::Nurse,
+            CoffeeCommand::Nurse { verify } => Self::Nurse(*verify),
         }
     }
 }
@@ -126,5 +132,9 @@ impl coffee_core::CoffeeArgs for CoffeeArgs {
 
     fn network(&self) -> Option<String> {
         self.network.clone()
+    }
+
+    fn skip_verify(&self) -> bool {
+        self.skip_verify
     }
 }

@@ -95,6 +95,10 @@ impl coffee_core::CoffeeArgs for CoffeeTestingArgs {
     fn network(&self) -> Option<String> {
         Some(self.network.clone())
     }
+
+    fn skip_verify(&self) -> bool {
+        true
+    }
 }
 
 /// Coffee testing manager
