@@ -37,6 +37,7 @@ the correct network.
 - `--data-dir`: by default set to `/home/alice/.coffee`, you may want to set
 this option if you are looking to specify a different directory for the
 Coffee home.
+- `--skip-verify`: Use this option to bypass `coffee`'s validation process, which checks for conflicts between its configuration and the local storage.
 
 ### Add a Plugin Repository
 
@@ -151,6 +152,11 @@ coffee search <plugin_name>
 
 ```bash
 coffee nurse
+```
+Additionally, if you wish to perform a verification of coffee without making any changes, you can use the `--verify` flag:
+
+```bash
+coffee nurse --verify
 ```
 _________
 ## Running coffee as a server
