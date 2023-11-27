@@ -195,10 +195,12 @@ impl CoffeeManager {
         if self.config.cln_config_path.is_none() {
             return Ok(());
         }
-        let root = self.config.cln_root.clone().unwrap();
+        let root = self.config.cln_root.clone();
+        let root = root.ok_or_else(|| error!("cln root path not found."))?;
         let rpc = Client::new(format!("{root}/{}/lightning-rpc", self.config.network));
         self.rpc = Some(rpc);
-        let path = self.config.cln_config_path.clone().unwrap();
+        let path = self.config.cln_config_path.clone();
+        let path = path.ok_or_else(|| error!("cln config path not found."))?;
         let mut file = CLNConf::new(path.clone(), true);
         log::info!("looking for the cln config: {path}");
         file.parse()
@@ -217,7 +219,8 @@ impl CoffeeManager {
         self.config.cln_config_path = Some(path_with_network);
         self.config.cln_root = Some(cln_dir.to_owned());
         self.load_cln_conf().await?;
-        let mut conf = self.cln_config.clone().unwrap();
+        let conf = self.cln_config.clone();
+        let mut conf = conf.ok_or_else(|| error!("cln config path not found."))?;
         conf.add_subconf(self.coffee_cln_config.clone())
             .map_err(|err| error!("{}", &err.cause))?;
         conf.flush()?;
