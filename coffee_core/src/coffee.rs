@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::path::Path;
 use std::vec::Vec;
 use tokio::fs;
 
@@ -201,6 +202,17 @@ impl CoffeeManager {
         self.rpc = Some(rpc);
         let path = self.config.cln_config_path.clone();
         let path = path.ok_or_else(|| error!("cln config path not found."))?;
+
+        // The path is the path of the cln config file (eg. ~/.lightning/bitcoin/config)
+        // We need to check that the root folder (eg. ~/.lightning/bitcoin) exists
+        // otherwise we return an error.
+
+        // We can unwrap here because we are sure that the path ends with /config
+        let lightning_path = path.strip_suffix("/config").unwrap();
+        if !Path::new(&lightning_path).exists() {
+            return Err(error!("The path {lightning_path} does not exist"));
+        }
+
         let mut file = CLNConf::new(path.clone(), true);
         log::info!("looking for the cln config: {path}");
         file.parse()
