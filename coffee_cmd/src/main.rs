@@ -58,11 +58,6 @@ async fn main() -> Result<(), CoffeeError> {
             coffee_term::show_list(remotes)
         }
         CoffeeCommand::Upgrade { repo, verbose } => {
-            let spinner = if !verbose {
-                Some(term::spinner("Compiling and installing"))
-            } else {
-                None
-            };
             match coffee.upgrade(&repo, verbose).await {
                 Ok(res) => match res.status {
                     UpgradeStatus::UpToDate => {
