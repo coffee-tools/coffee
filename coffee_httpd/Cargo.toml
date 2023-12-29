@@ -13,7 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 actix-web = "4"
-clap = "4.1.11"
+clap = { version = "4.1.11", features = ["derive"] }
 tokio = { version = "1.22.0", features = ["sync"] }
 coffee_core = { path = "../coffee_core" }
 coffee_lib = { path = "../coffee_lib", features = ["open-api"] }
