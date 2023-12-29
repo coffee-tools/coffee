@@ -349,7 +349,6 @@ impl PluginManager for CoffeeManager {
         let status = repository.upgrade(&self.config.plugins).await?;
         for plugins in status.plugins_effected.iter() {
             self.remove(plugins).await?;
-            // FIXME: pass the verbose flag to the upgrade command
             self.install(plugins, verbose, false).await?;
         }
         self.flush().await?;
