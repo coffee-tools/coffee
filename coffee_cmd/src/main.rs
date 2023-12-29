@@ -57,8 +57,16 @@ async fn main() -> Result<(), CoffeeError> {
             let remotes = coffee.list().await;
             coffee_term::show_list(remotes)
         }
-        CoffeeCommand::Upgrade { repo } => {
-            match coffee.upgrade(&repo).await {
+        CoffeeCommand::Upgrade { 
+            repo, 
+            verbose, 
+        } => {
+            let spinner = if !verbose {
+                Some(term::spinner("Compiling and installing"))
+            } else {
+                None
+            };
+            match coffee.upgrade(&repo, verbose).await {
                 Ok(res) => match res.status {
                     UpgradeStatus::UpToDate => {
                         term::info!("Remote repository `{}` is already up to date!", res.repo)

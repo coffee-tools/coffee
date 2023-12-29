@@ -11,8 +11,8 @@ pub enum CoffeeOperation {
     Install(String, bool, bool),
     /// List
     List,
-    // Upgrade(name of the repository)
-    Upgrade(String),
+    // Upgrade(name of the repository, verbose run)
+    Upgrade(String, bool),
     Remove(String),
     /// Remote(name repository, url of the repository)
     Remote(Option<RemoteAction>, bool, Option<String>),
