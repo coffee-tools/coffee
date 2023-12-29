@@ -25,7 +25,7 @@ pub trait PluginManager {
     async fn list(&mut self) -> Result<CoffeeList, CoffeeError>;
 
     /// upgrade a single or multiple repositories.
-    async fn upgrade(&mut self, repo: &str) -> Result<CoffeeUpgrade, CoffeeError>;
+    async fn upgrade(&mut self, repo: &str, verbose: bool) -> Result<CoffeeUpgrade, CoffeeError>;
 
     /// add the remote repository to the plugin manager.
     async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError>;
