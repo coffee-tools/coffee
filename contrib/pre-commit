@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Run make fmt before committing
+# Run make fmt
+make fmt
+
+# If make fmt fails, prevent the commit
+if [ $? -ne 0 ]; then
+    echo "Error: make fmt failed. Please fix formatting issues before committing."
+    exit 1
+fi
