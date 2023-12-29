@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# check everything else
+cargo fmt -- --check
+
+[ $? -eq 0 ] && echo "Code Sanity check passed" || echo "Plase run `make fmt` and then commit again"

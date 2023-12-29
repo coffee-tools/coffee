@@ -33,3 +33,6 @@ install:
 
 integration: default
 	$(CC) test -j 4 -p tests $(ARGS)
+
+setup:
+	git config core.hooksPath .githooks
