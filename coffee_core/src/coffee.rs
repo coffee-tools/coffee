@@ -344,7 +344,7 @@ impl PluginManager for CoffeeManager {
         })
     }
 
-    async fn upgrade(&mut self, repo: &str) -> Result<CoffeeUpgrade, CoffeeError> {
+    async fn upgrade(&mut self, repo: &str, verbose: bool) -> Result<CoffeeUpgrade, CoffeeError> {
         // TODO: upgrade should now be able to upgrade a single plugin
         // without affecting other plugins installed from the same repo
         let repository = self
@@ -355,8 +355,7 @@ impl PluginManager for CoffeeManager {
         let status = repository.upgrade(&self.config.plugins).await?;
         for plugins in status.plugins_effected.iter() {
             self.remove(plugins).await?;
-            // FIXME: pass the verbose flag to the upgrade command
-            self.install(plugins, false, false).await?;
+            self.install(plugins, verbose, false).await?;
         }
         self.flush().await?;
         Ok(status)

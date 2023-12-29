@@ -57,20 +57,31 @@ async fn main() -> Result<(), CoffeeError> {
             let remotes = coffee.list().await;
             coffee_term::show_list(remotes)
         }
-        CoffeeCommand::Upgrade { repo } => {
-            match coffee.upgrade(&repo).await {
-                Ok(res) => match res.status {
-                    UpgradeStatus::UpToDate => {
-                        term::info!("Remote repository `{}` is already up to date!", res.repo)
+        CoffeeCommand::Upgrade { repo, verbose } => {
+            let spinner = if !verbose {
+                Some(term::spinner("Upgrading"))
+            } else {
+                None
+            };
+            match coffee.upgrade(&repo, verbose).await {
+                Ok(res) => {
+                    spinner.and_then(|splinner| Some(splinner.finish()));
+                    match res.status {
+                        UpgradeStatus::UpToDate => {
+                            term::info!("Remote repository `{}` is already up to date!", res.repo)
+                        }
+                        UpgradeStatus::Updated => {
+                            term::success!(
+                                "Remote repository `{}` was successfully upgraded!",
+                                res.repo
+                            )
+                        }
                     }
-                    UpgradeStatus::Updated => {
-                        term::success!(
-                            "Remote repository `{}` was successfully upgraded!",
-                            res.repo
-                        )
-                    }
-                },
-                Err(err) => return Err(err),
+                }
+                Err(err) => {
+                    spinner.and_then(|spinner| Some(spinner.failed()));
+                    return Err(err);
+                }
             }
             Ok(())
         }
