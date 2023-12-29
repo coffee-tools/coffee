@@ -149,10 +149,7 @@ impl Plugin {
     }
 
     /// upgrade the plugin to a new version.
-    pub async fn upgrade(
-        &mut self, 
-        verbose: bool
-    ) -> Result<(), CoffeeError> {
+    pub async fn upgrade(&mut self, verbose: bool) -> Result<(), CoffeeError> {
         todo!("not implemented yet")
     }
 

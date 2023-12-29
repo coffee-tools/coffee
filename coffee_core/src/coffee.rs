@@ -334,11 +334,7 @@ impl PluginManager for CoffeeManager {
         })
     }
 
-    async fn upgrade(
-        &mut self, 
-        repo: &str, 
-        verbose: bool,
-    ) -> Result<CoffeeUpgrade, CoffeeError> {
+    async fn upgrade(&mut self, repo: &str, verbose: bool) -> Result<CoffeeUpgrade, CoffeeError> {
         // TODO: upgrade should now be able to upgrade a single plugin
         // without affecting other plugins installed from the same repo
         let repository = self

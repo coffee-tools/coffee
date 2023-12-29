@@ -57,10 +57,7 @@ async fn main() -> Result<(), CoffeeError> {
             let remotes = coffee.list().await;
             coffee_term::show_list(remotes)
         }
-        CoffeeCommand::Upgrade { 
-            repo, 
-            verbose, 
-        } => {
+        CoffeeCommand::Upgrade { repo, verbose } => {
             let spinner = if !verbose {
                 Some(term::spinner("Compiling and installing"))
             } else {
