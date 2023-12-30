@@ -18,7 +18,7 @@ make install
 coffee --help
 ```
 
-You can also install `coffee_httpd` binary to [run coffee as a server](../src/using-coffee.md#running-coffee-as-a-server). run:
+You can also install `coffee_httpd` binary to [run coffee as a server](../using-coffee.md#running-coffee-as-a-server). run:
 ```bash
 cargo install --bin coffee_httpd
 ```
