@@ -15,6 +15,9 @@ a **Coffee** plugin manager maintainer looks like.
 After reading this, you should be prepared to contribute to the repository
 and be a potential maintainer in the future if you desire!
 
+Before starting developing you can with `make setup` to configure all
+the necessary check before create a commit.
+
 ## Code style
 
 To ensure consistency throughout the source code, these rules are to be kept in mind:
