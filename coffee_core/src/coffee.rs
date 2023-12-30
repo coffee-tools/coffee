@@ -196,6 +196,16 @@ impl CoffeeManager {
             return Ok(());
         }
         let root = self.config.cln_root.clone().unwrap();
+        // We check if there is some problem we the path that we know
+        if !fs::try_exists(root.clone()).await? {
+            return Err(error!("lightning root path `{}` do not exist", root));
+        } else if !fs::try_exists(format!("{root}/{}", self.config.network)).await? {
+            return Err(error!(
+                "lightning network path `{root}/{}` do not exist",
+                self.config.network
+            ));
+        }
+        // All safe, we can move with the logic
         let rpc = Client::new(format!("{root}/{}/lightning-rpc", self.config.network));
         self.rpc = Some(rpc);
         let path = self.config.cln_config_path.clone().unwrap();
