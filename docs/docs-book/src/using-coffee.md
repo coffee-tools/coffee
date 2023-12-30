@@ -22,7 +22,7 @@ coffee setup /home/alice/.lightning
 ```
 
 Then you will find an include at the end of the config file at
-`/home/alice/.lightnig/bitcoin/config`, in case this config file do not exist
+`/home/alice/.lightning/bitcoin/config`, in case this config file do not exist
 Coffee will create it.
 
 ```text
