@@ -247,6 +247,7 @@ impl PluginManager for CoffeeManager {
         plugin: &str,
         verbose: bool,
         try_dynamic: bool,
+        _branch: Option<String>,
     ) -> Result<(), CoffeeError> {
         log::debug!("installing plugin: {plugin}");
         // keep track if the plugin is successfully installed
@@ -355,7 +356,7 @@ impl PluginManager for CoffeeManager {
         let status = repository.upgrade(&self.config.plugins).await?;
         for plugins in status.plugins_effected.iter() {
             self.remove(plugins).await?;
-            self.install(plugins, verbose, false).await?;
+            self.install(plugins, verbose, false, None).await?;
         }
         self.flush().await?;
         Ok(status)
