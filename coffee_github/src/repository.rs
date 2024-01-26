@@ -308,7 +308,7 @@ impl Repository for Github {
         }
     }
 
-    async fn switch_branch(&self, branch_name: &str) -> Result<(), CoffeeError> {
+    async fn switch_branch(&mut self, branch_name: &str) -> Result<(), CoffeeError> {
         let repo = git2::Repository::open(&self.url.path_string)
             .map_err(|err| error!("{}", err.message()))?;
         let mut remote = repo
@@ -325,6 +325,7 @@ impl Repository for Github {
             .map_err(|err| error!("{}", err.message()))?;
         repo.reset(&obj, git2::ResetType::Hard, None)
             .map_err(|err| error!("{}", err.message()))?;
+        self.branch = branch_name.to_string();
         Ok(())
     }
 

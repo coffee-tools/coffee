@@ -35,7 +35,7 @@ pub trait Repository: Any {
     async fn recover(&mut self) -> Result<(), CoffeeError>;
 
     /// switch to the specified branch.
-    async fn switch_branch(&self, branch_name: &str) -> Result<(), CoffeeError>;
+    async fn switch_branch(&mut self, branch_name: &str) -> Result<(), CoffeeError>;
 
     /// return the name of the repository.
     fn name(&self) -> String;
