@@ -11,6 +11,7 @@ pub mod request {
     pub struct Install {
         pub plugin: String,
         pub try_dynamic: bool,
+        pub branch: Option<String>,
     }
 
     #[cfg(feature = "open-api")]
