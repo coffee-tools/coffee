@@ -6,7 +6,6 @@ use std::vec::Vec;
 use tokio::fs;
 
 use async_trait::async_trait;
-use chrono::{TimeZone, Utc};
 use clightningrpc_common::client::Client;
 use clightningrpc_common::json_utils;
 use clightningrpc_conf::{CLNConf, SyncCLNConf};
