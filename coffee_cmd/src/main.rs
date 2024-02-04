@@ -67,10 +67,10 @@ async fn main() -> Result<(), CoffeeError> {
                 Ok(res) => {
                     spinner.and_then(|splinner| Some(splinner.finish()));
                     match res.status {
-                        UpgradeStatus::UpToDate => {
+                        UpgradeStatus::UpToDate(_, _) => {
                             term::info!("Remote repository `{}` is already up to date!", res.repo)
                         }
-                        UpgradeStatus::Updated => {
+                        UpgradeStatus::Updated(_, _) => {
                             term::success!(
                                 "Remote repository `{}` was successfully upgraded!",
                                 res.repo

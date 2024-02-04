@@ -36,11 +36,11 @@ pub async fn git_upgrade(path: &str, branch: &str) -> Result<UpgradeStatus, Coff
     cmd += &format!("git reset --hard origin/{branch}");
     sh!(path, cmd, verbose);
 
-    let (upstream_commit, _) = get_repo_info!(repo);
+    let (upstream_commit, date) = get_repo_info!(repo);
 
     if local_commit == upstream_commit {
-        Ok(UpgradeStatus::UpToDate)
+        Ok(UpgradeStatus::UpToDate(upstream_commit, date))
     } else {
-        Ok(UpgradeStatus::Updated)
+        Ok(UpgradeStatus::Updated(upstream_commit, date))
     }
 }
