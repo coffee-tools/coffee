@@ -1,8 +1,6 @@
 use std::any::Any;
 
 use async_trait::async_trait;
-use chrono::{TimeZone, Utc};
-use coffee_lib::types::response::CoffeeUpgrade;
 use git2;
 use log::debug;
 use tokio::fs::File;
@@ -16,6 +14,7 @@ use coffee_lib::plugin::Plugin;
 use coffee_lib::plugin::PluginLang;
 use coffee_lib::plugin_conf::Conf;
 use coffee_lib::repository::Repository;
+use coffee_lib::types::response::CoffeeUpgrade;
 use coffee_lib::url::URL;
 use coffee_lib::utils::get_plugin_info_from_path;
 use coffee_storage::model::repository::Kind;
@@ -254,13 +253,8 @@ impl Repository for Github {
         }
         // pull the changes from the repository
         let status = git_upgrade(&self.url.path_string, &self.branch).await?;
-        // update the git information
-        // (git HEAD and date of the last commit)
-        let repo = git2::Repository::open(&self.url.path_string)
-            .map_err(|err| error!("{}", err.message()))?;
-        let (commit, date) = get_repo_info!(repo);
-        self.git_head = Some(commit.clone());
-        self.last_activity = Some(date.clone());
+        self.git_head = Some(status.commit_id());
+        self.last_activity = Some(status.date());
         Ok(CoffeeUpgrade {
             repo: self.name(),
             status,

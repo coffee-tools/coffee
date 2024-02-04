@@ -148,11 +148,6 @@ impl Plugin {
         Ok(exec_path)
     }
 
-    /// upgrade the plugin to a new version.
-    pub async fn upgrade(&mut self, _: bool) -> Result<(), CoffeeError> {
-        todo!("not implemented yet")
-    }
-
     /// remove the plugin and clean up all the data.
     async fn remove(&mut self) -> Result<(), CoffeeError> {
         todo!("not implemented yet")

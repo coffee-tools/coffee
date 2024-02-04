@@ -89,8 +89,25 @@ pub mod response {
 
     #[derive(Debug, Serialize, Deserialize)]
     pub enum UpgradeStatus {
-        UpToDate,
-        Updated,
+        /// CommitId, Date
+        UpToDate(String, String),
+        /// CommitId, Date
+        Updated(String, String),
+    }
+
+    impl UpgradeStatus {
+        pub fn date(&self) -> String {
+            match self {
+                UpgradeStatus::UpToDate(_, date) => date.clone(),
+                UpgradeStatus::Updated(_, date) => date.clone(),
+            }
+        }
+        pub fn commit_id(&self) -> String {
+            match self {
+                UpgradeStatus::UpToDate(commit_id, _) => commit_id.clone(),
+                UpgradeStatus::Updated(commit_id, _) => commit_id.clone(),
+            }
+        }
     }
 
     #[derive(Debug, Serialize, Deserialize)]
