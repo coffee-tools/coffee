@@ -22,7 +22,7 @@ use coffee_storage::model::repository::Kind;
 use coffee_storage::model::repository::Repository as StorageRepository;
 
 use crate::utils::clone_recursive_fix;
-use crate::utils::fast_forward;
+use crate::utils::git_upgrade;
 
 pub struct Github {
     /// the url of the repository to be able
@@ -253,7 +253,7 @@ impl Repository for Github {
             }
         }
         // pull the changes from the repository
-        let status = fast_forward(&self.url.path_string, &self.branch)?;
+        let status = git_upgrade(&self.url.path_string, &self.branch).await?;
         // update the git information
         // (git HEAD and date of the last commit)
         let repo = git2::Repository::open(&self.url.path_string)

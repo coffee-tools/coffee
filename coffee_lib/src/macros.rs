@@ -62,6 +62,8 @@ macro_rules! commit_id {
 #[macro_export]
 macro_rules! get_repo_info {
     ($repo:ident) => {{
+        use chrono::TimeZone;
+
         let commit_id = commit_id!($repo);
 
         let oid = git2::Oid::from_str(&commit_id).map_err(|err| error!("{}", err.message()))?;
@@ -70,7 +72,7 @@ macro_rules! get_repo_info {
             .map_err(|err| error!("{}", err.message()))?;
         let commit_time = commit.time();
         let timestamp = commit_time.seconds();
-        let date_time = Utc.timestamp_opt(timestamp, 0).single();
+        let date_time = chrono::Utc.timestamp_opt(timestamp, 0).single();
 
         if let Some(date_time) = date_time {
             let formatted_date = date_time.format("%d/%m/%Y").to_string();
