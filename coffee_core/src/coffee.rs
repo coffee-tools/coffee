@@ -351,7 +351,7 @@ impl PluginManager for CoffeeManager {
             .get_mut(repo)
             .ok_or_else(|| error!("Repository with name: `{}` not found", repo))?;
 
-        let status = repository.upgrade(&self.config.plugins).await?;
+        let status = repository.upgrade(&self.config.plugins, verbose).await?;
         for plugins in status.plugins_effected.iter() {
             self.remove(plugins).await?;
             self.install(plugins, verbose, false).await?;

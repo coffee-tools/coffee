@@ -230,7 +230,11 @@ impl Repository for Github {
         }
     }
 
-    async fn upgrade(&mut self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError> {
+    async fn upgrade(
+        &mut self,
+        plugins: &Vec<Plugin>,
+        verbose: bool,
+    ) -> Result<CoffeeUpgrade, CoffeeError> {
         // get the list of the plugins installed from this repository
         // TODO: add a field of installed plugins in the repository struct instead
         let mut plugins_effected: Vec<String> = vec![];
@@ -252,7 +256,7 @@ impl Repository for Github {
             }
         }
         // pull the changes from the repository
-        let status = git_upgrade(&self.url.path_string, &self.branch).await?;
+        let status = git_upgrade(&self.url.path_string, &self.branch, verbose).await?;
         self.git_head = Some(status.commit_id());
         self.last_activity = Some(status.date());
         Ok(CoffeeUpgrade {
