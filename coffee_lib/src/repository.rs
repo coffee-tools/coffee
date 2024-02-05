@@ -25,7 +25,11 @@ pub trait Repository: Any {
     async fn list(&self) -> Result<Vec<Plugin>, CoffeeError>;
 
     /// upgrade the repository
-    async fn upgrade(&mut self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError>;
+    async fn upgrade(
+        &mut self,
+        plugins: &Vec<Plugin>,
+        verbose: bool,
+    ) -> Result<CoffeeUpgrade, CoffeeError>;
 
     /// recover the repository from the commit id.
     async fn recover(&mut self) -> Result<(), CoffeeError>;

@@ -25,7 +25,11 @@ pub async fn clone_recursive_fix(repo: git2::Repository, url: &URL) -> Result<()
     Ok(())
 }
 
-pub async fn git_upgrade(path: &str, branch: &str) -> Result<UpgradeStatus, CoffeeError> {
+pub async fn git_upgrade(
+    path: &str,
+    branch: &str,
+    verbose: bool,
+) -> Result<UpgradeStatus, CoffeeError> {
     use tokio::process::Command;
 
     let repo = git2::Repository::open(path).map_err(|err| error!("{}", err.message()))?;
