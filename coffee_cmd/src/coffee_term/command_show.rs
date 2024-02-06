@@ -13,7 +13,7 @@ pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), Cof
     let remotes = coffee_list?;
 
     term::println(
-        term::format::tertiary_bold("●"),
+        term::format::bold("●"),
         term::format::tertiary("Plugin installed"),
     );
     let mut table = radicle_term::Table::new(TableOptions::bordered());
@@ -45,7 +45,7 @@ pub fn show_remote_list(remote_list: Result<CoffeeRemote, CoffeeError>) -> Resul
     };
 
     term::println(
-        term::format::tertiary_bold("●"),
+        term::format::bold("●"),
         term::format::tertiary("List of repositories"),
     );
     let mut table = radicle_term::Table::new(TableOptions::bordered());
