@@ -352,10 +352,18 @@ impl PluginManager for CoffeeManager {
             .ok_or_else(|| error!("Repository with name: `{}` not found", repo))?;
 
         let status = repository.upgrade(&self.config.plugins, verbose).await?;
-        for plugins in status.plugins_effected.iter() {
-            self.remove(plugins).await?;
-            self.install(plugins, verbose, false).await?;
+
+        // if status is not up to date, we need to update the plugins as well
+        match status.status {
+            UpgradeStatus::Updated(_, _) => {
+                for plugins in status.plugins_effected.iter() {
+                    self.remove(plugins).await?;
+                    self.install(plugins, verbose, false).await?;
+                }
+            }
+            _ => {}
         }
+
         self.flush().await?;
         Ok(status)
     }
