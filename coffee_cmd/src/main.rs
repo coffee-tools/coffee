@@ -14,12 +14,8 @@ use crate::cmd::CoffeeArgs;
 use crate::cmd::CoffeeCommand;
 use crate::cmd::RemoteAction;
 
-#[tokio::main]
-async fn main() -> Result<(), CoffeeError> {
-    env_logger::init();
-    let args = CoffeeArgs::parse();
-    let mut coffee = CoffeeManager::new(&args).await?;
-    let result = match args.command {
+async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeError> {
+    match args.command {
         CoffeeCommand::Install {
             plugin,
             verbose,
@@ -40,7 +36,6 @@ async fn main() -> Result<(), CoffeeError> {
             } else if result.is_ok() {
                 term::success!("Plugin {plugin} Compiled and Installed")
             }
-            result
         }
         CoffeeCommand::Remove { plugin } => {
             let mut spinner = term::spinner(format!("Uninstalling plugin {plugin}"));
@@ -51,11 +46,10 @@ async fn main() -> Result<(), CoffeeError> {
             }
             spinner.message("Plugin uninstalled!");
             spinner.finish();
-            Ok(())
         }
         CoffeeCommand::List {} => {
             let remotes = coffee.list().await;
-            coffee_term::show_list(remotes)
+            coffee_term::show_list(remotes)?;
         }
         CoffeeCommand::Upgrade { repo, verbose } => {
             let spinner = if !verbose {
@@ -83,7 +77,6 @@ async fn main() -> Result<(), CoffeeError> {
                     return Err(err);
                 }
             }
-            Ok(())
         }
         CoffeeCommand::Remote {
             action,
@@ -92,7 +85,7 @@ async fn main() -> Result<(), CoffeeError> {
         } => {
             if plugins {
                 let result = coffee.get_plugins_in_remote(&name.unwrap()).await;
-                coffee_term::show_list(result)
+                coffee_term::show_list(result)?;
             } else {
                 match action {
                     Some(RemoteAction::Add { name, url }) => {
@@ -104,7 +97,6 @@ async fn main() -> Result<(), CoffeeError> {
                         }
                         spinner.message("Remote added!");
                         spinner.finish();
-                        Ok(())
                     }
                     Some(RemoteAction::Rm { name }) => {
                         let mut spinner = term::spinner(format!("Removing remote {name}"));
@@ -115,11 +107,10 @@ async fn main() -> Result<(), CoffeeError> {
                         }
                         spinner.message("Remote removed!");
                         spinner.finish();
-                        Ok(())
                     }
                     Some(RemoteAction::List {}) => {
                         let remotes = coffee.list_remotes().await;
-                        coffee_term::show_remote_list(remotes)
+                        coffee_term::show_remote_list(remotes)?;
                     }
                     None => {
                         // This is the case when the user does not provides the
@@ -144,7 +135,7 @@ async fn main() -> Result<(), CoffeeError> {
                         let remote = Ok(CoffeeRemote {
                             remotes: Some(vec![remote.clone()]),
                         });
-                        coffee_term::show_remote_list(remote)
+                        coffee_term::show_remote_list(remote)?;
                     }
                 }
             }
@@ -152,25 +143,20 @@ async fn main() -> Result<(), CoffeeError> {
         CoffeeCommand::Setup { cln_conf } => {
             // FIXME: read the core lightning config
             // and the coffee script
-            coffee.setup(&cln_conf).await
+            coffee.setup(&cln_conf).await?;
         }
-        CoffeeCommand::Show { plugin } => match coffee.show(&plugin).await {
-            Ok(val) => {
-                // FIXME: modify the radicle_term markdown
-                let val = val.readme.as_str();
-                term::markdown(val);
-                Ok(())
-            }
-            Err(err) => Err(err),
-        },
-        CoffeeCommand::Search { plugin } => match coffee.search(&plugin).await {
-            Ok(val) => {
-                let repository_url = val.repository_url.as_str();
-                term::success!("found plugin {plugin} in remote repository {repository_url}");
-                Ok(())
-            }
-            Err(err) => Err(err),
-        },
+        CoffeeCommand::Show { plugin } => {
+            let val = coffee.show(&plugin).await?;
+
+            // FIXME: modify the radicle_term markdown
+            let val = val.readme.as_str();
+            term::markdown(val);
+        }
+        CoffeeCommand::Search { plugin } => {
+            let val = coffee.search(&plugin).await?;
+            let repository_url = val.repository_url.as_str();
+            term::success!("found plugin {plugin} in remote repository {repository_url}");
+        }
         CoffeeCommand::Nurse { verify } => {
             if verify {
                 let result = coffee.nurse_verify().await?;
@@ -178,17 +164,22 @@ async fn main() -> Result<(), CoffeeError> {
                 if !result.is_sane() {
                     term::info!("Coffee local directory is damaged, please run `coffee nurse` to try to fix it");
                 }
-                Ok(())
             } else {
                 let nurse_result = coffee.nurse().await;
-                coffee_term::show_nurse_result(nurse_result)
+                coffee_term::show_nurse_result(nurse_result)?;
             }
         }
     };
+    Ok(())
+}
 
-    if let Err(err) = result {
-        term::error(format!("{err}"));
+#[tokio::main]
+async fn main() -> Result<(), CoffeeError> {
+    env_logger::init();
+    let args = CoffeeArgs::parse();
+    let coffee = CoffeeManager::new(&args).await?;
+    if let Err(err) = run(args, coffee).await {
+        term::error(format!("{err}"))
     }
-
     Ok(())
 }
