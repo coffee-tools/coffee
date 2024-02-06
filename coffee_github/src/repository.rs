@@ -2,7 +2,6 @@ use std::any::Any;
 
 use async_trait::async_trait;
 use chrono::{TimeZone, Utc};
-use coffee_lib::types::response::CoffeeUpgrade;
 use git2;
 use log::debug;
 use tokio::fs::File;
@@ -16,6 +15,7 @@ use coffee_lib::plugin::Plugin;
 use coffee_lib::plugin::PluginLang;
 use coffee_lib::plugin_conf::Conf;
 use coffee_lib::repository::Repository;
+use coffee_lib::types::response::CoffeeUpgrade;
 use coffee_lib::url::URL;
 use coffee_lib::utils::get_plugin_info_from_path;
 use coffee_storage::model::repository::Kind;
@@ -101,8 +101,18 @@ impl Github {
 
                             let conf_file = serde_yaml::from_str::<Conf>(&conf_str)
                                 .map_err(|err| error!("Coffee manifest malformed: {err}"))?;
-                            plugin_name = Some(conf_file.plugin.name.to_string());
-                            let conf_lang = conf_file.plugin.lang.to_owned();
+
+                            let Some(ref plugin) = conf_file.plugin else {
+                                // FIXME: read the binary information and store it anywhere
+                                break;
+                            };
+
+                            plugin_name = Some(plugin.name.to_string());
+                            let conf_lang = plugin.lang.to_owned().ok_or(error!(
+                                "Coffee manifest should contain the `lang` field for plugins"
+                            ))?;
+
+                            // SAFETY: it is sage to unwrao
                             match conf_lang.as_str() {
                                 "pypip" => plugin_lang = PluginLang::PyPip,
                                 "pypoetry" => plugin_lang = PluginLang::PyPoetry,
@@ -117,7 +127,10 @@ impl Github {
                                 }
                             };
 
-                            exec_path = Some(format!("{root_path}/{}", conf_file.plugin.main));
+                            let main = plugin.main.clone().ok_or(error!(
+                                "Coffee manifest should contain the `main` field for plugins"
+                            ))?;
+                            exec_path = Some(format!("{root_path}/{}", main));
                             conf = Some(conf_file);
                             break;
                         }
@@ -232,6 +245,8 @@ impl Repository for Github {
     }
 
     async fn upgrade(&mut self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError> {
+        // TODO: upgrade a binary
+
         // get the list of the plugins installed from this repository
         // TODO: add a field of installed plugins in the repository struct instead
         let mut plugins_effected: Vec<String> = vec![];
