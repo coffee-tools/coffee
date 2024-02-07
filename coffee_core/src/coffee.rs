@@ -432,7 +432,8 @@ impl PluginManager for CoffeeManager {
         if self.repos.contains_key(name) {
             return Err(error!("repository with name: {name} already exists"));
         }
-        let url = URL::new(&self.config.root_path, url, name);
+        let local_path = format!("{}/{}", self.config.root_path, self.config.network);
+        let url = URL::new(&local_path, url, name);
         log::debug!("remote adding: {} {}", name, &url.url_string);
         let mut repo = Github::new(name, &url);
         repo.init().await?;

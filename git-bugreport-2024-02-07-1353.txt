@@ -1,0 +1,32 @@
+Thank you for filling out a Git bug report!
+Please answer the following questions to help us understand your issue.
+
+What did you do before the bug happened? (Steps to reproduce your issue)
+
+What did you expect to happen? (Expected behavior)
+
+What happened instead? (Actual behavior)
+
+What's different between what you expected and what actually happened?
+
+Anything else you want to add:
+
+Please review the rest of the bug report below.
+You can delete any lines you don't wish to share.
+
+
+[System Info]
+git version:
+git version 2.43.0
+cpu: x86_64
+no commit associated with this build
+sizeof-long: 8
+sizeof-size_t: 8
+shell-path: /bin/sh
+uname: Linux 6.6.15-2-lts #1 SMP PREEMPT_DYNAMIC Fri, 02 Feb 2024 17:04:24 +0000 x86_64
+compiler info: gnuc: 13.2
+libc info: glibc: 2.39
+$SHELL (typically, interactive shell): /usr/bin/zsh
+
+
+[Enabled Hooks]

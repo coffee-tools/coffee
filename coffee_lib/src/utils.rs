@@ -2,6 +2,7 @@ use super::macros::error;
 use std::path::Path;
 
 use tokio::fs::create_dir;
+use tokio::fs::rename;
 
 use crate::errors::CoffeeError;
 
@@ -24,6 +25,14 @@ pub async fn check_dir_or_make_if_missing(path: String) -> Result<(), CoffeeErro
     if !Path::exists(Path::new(&path.to_owned())) {
         create_dir(path.clone()).await?;
         log::debug!("created dir {path}");
+    }
+    Ok(())
+}
+
+pub async fn move_dir_if_exist(origin: &str, destination: &str) -> Result<(), CoffeeError> {
+    if Path::exists(Path::new(&origin)) {
+        rename(origin, destination).await?;
+        log::debug!("move dir from {origin} to {destination}");
     }
     Ok(())
 }
