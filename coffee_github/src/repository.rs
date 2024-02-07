@@ -311,6 +311,7 @@ impl Repository for Github {
     }
 
     async fn switch_branch(&mut self, branch_name: &str) -> Result<(), CoffeeError> {
+        // FIXME: implement the From git2 Error for `CoffeError`
         let repo = git2::Repository::open(&self.url.path_string)
             .map_err(|err| error!("{}", err.message()))?;
         let mut remote = repo

@@ -91,7 +91,8 @@ async fn coffee_install(
     let try_dynamic = body.try_dynamic;
 
     let mut coffee = data.coffee.lock().await;
-    let result = coffee.install(plugin, false, try_dynamic, None).await;
+    let branch = body.branch;
+    let result = coffee.install(plugin, false, try_dynamic, branch).await;
 
     handle_httpd_response!(result, "Plugin '{plugin}' installed successfully")
 }

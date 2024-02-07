@@ -98,7 +98,7 @@ impl RPCCommand<State> for CoffeeInstall {
         let rt = Runtime::new().unwrap();
 
         let request: InstallReq = serde_json::from_value(request)?;
-        rt.block_on(coffee.install(&request.name, false, true, None))
+        rt.block_on(coffee.install(&request.name, false, true, Some(request.branch)))
             .map_err(from)?;
         Ok(json!({}))
     }
