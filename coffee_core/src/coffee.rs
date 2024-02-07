@@ -246,6 +246,7 @@ impl PluginManager for CoffeeManager {
         plugin: &str,
         verbose: bool,
         try_dynamic: bool,
+        branch: Option<String>,
     ) -> Result<(), CoffeeError> {
         log::debug!("installing plugin: {plugin}");
         // keep track if the plugin is successfully installed
@@ -358,7 +359,7 @@ impl PluginManager for CoffeeManager {
             UpgradeStatus::Updated(_, _) => {
                 for plugins in status.plugins_effected.iter() {
                     self.remove(plugins).await?;
-                    self.install(plugins, verbose, false).await?;
+                    self.install(plugins, verbose, false, branch).await?;
                 }
             }
             _ => {}

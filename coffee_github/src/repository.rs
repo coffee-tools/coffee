@@ -308,6 +308,28 @@ impl Repository for Github {
         }
     }
 
+    async fn switch_branch(&mut self, branch_name: &str) -> Result<(), CoffeeError> {
+        // FIXME: implement the From git2 Error for `CoffeError`
+        let repo = git2::Repository::open(&self.url.path_string)
+            .map_err(|err| error!("{}", err.message()))?;
+        let mut remote = repo
+            .find_remote("origin")
+            .map_err(|err| error!("{}", err.message()))?;
+        remote
+            .fetch(&[&branch_name], None, None)
+            .map_err(|err| error!("{}", err.message()))?;
+        let oid = repo
+            .refname_to_id(&format!("refs/remotes/origin/{}", branch_name))
+            .map_err(|err| error!("{}", err.message()))?;
+        let obj = repo
+            .find_object(oid, None)
+            .map_err(|err| error!("{}", err.message()))?;
+        repo.reset(&obj, git2::ResetType::Hard, None)
+            .map_err(|err| error!("{}", err.message()))?;
+        self.branch = branch_name.to_string();
+        Ok(())
+    }
+
     /// list of the plugin installed inside the repository.
     async fn list(&self) -> Result<Vec<Plugin>, CoffeeError> {
         Ok(self.plugins.clone())

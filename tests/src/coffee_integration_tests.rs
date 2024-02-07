@@ -112,7 +112,7 @@ pub async fn init_coffee_test_add_remote() {
         .unwrap();
     manager
         .coffee()
-        .install("summary", true, true)
+        .install("summary", true, true, None)
         .await
         .unwrap();
 
@@ -167,13 +167,13 @@ pub async fn test_add_remove_plugins() {
     );
 
     // Install summary plugin
-    let result = manager.coffee().install("summary", true, false).await;
+    let result = manager.coffee().install("summary", true, false, None).await;
     assert!(result.is_ok(), "{:?}", result);
 
     // Install helpme plugin
     manager
         .coffee()
-        .install("helpme", true, false)
+        .install("helpme", true, false, None)
         .await
         .unwrap();
 
@@ -276,7 +276,7 @@ pub async fn test_errors_and_show() {
     );
 
     // Install summary plugin
-    let result = manager.coffee().install("summary", true, false).await;
+    let result = manager.coffee().install("summary", true, false, None).await;
     assert!(result.is_ok(), "{:?}", result);
 
     // Get the README file for a plugin that is not installed
@@ -285,7 +285,7 @@ pub async fn test_errors_and_show() {
     assert!(val.starts_with("# Helpme plugin"));
 
     // Install a plugin that is not in the repository
-    let result = manager.coffee().install("x", true, false).await;
+    let result = manager.coffee().install("x", true, false, None).await;
     assert!(result.is_err(), "{:?}", result);
 
     // Remove helpme plugin
@@ -353,7 +353,7 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
     // This should install summary plugin for regtest network
     manager
         .coffee()
-        .install("summary", true, true)
+        .install("summary", true, true, None)
         .await
         .unwrap();
     // Ensure that summary is installed for regtest network
@@ -393,7 +393,7 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
     // This should install summary plugin for testnet network
     manager
         .coffee()
-        .install("summary", true, true)
+        .install("summary", true, true, None)
         .await
         .unwrap();
     // Ensure that summary is installed for testnet network
@@ -428,13 +428,13 @@ pub async fn test_double_slash() {
         .unwrap();
 
     // Install summary plugin
-    let result = manager.coffee().install("summary", true, false).await;
+    let result = manager.coffee().install("summary", true, false, None).await;
     assert!(result.is_ok(), "{:?}", result);
 
     // Install helpme plugin
     manager
         .coffee()
-        .install("helpme", true, false)
+        .install("helpme", true, false, None)
         .await
         .unwrap();
 
@@ -493,7 +493,7 @@ pub async fn test_plugin_installation_path() {
     // Install summary plugin for regtest network
     manager
         .coffee()
-        .install("summary", true, false)
+        .install("summary", true, false, None)
         .await
         .unwrap();
 

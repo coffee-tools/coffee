@@ -45,6 +45,7 @@ pub async fn httpd_init_add_remote() {
     let install_request = Install {
         plugin: "summary".to_string(),
         try_dynamic: true,
+        branch: None,
     };
 
     // Send the request to install a plugin
@@ -107,6 +108,7 @@ pub async fn httpd_add_remove_plugins() {
     let install_request = Install {
         plugin: "summary".to_string(),
         try_dynamic: false,
+        branch: None,
     };
 
     let response = client

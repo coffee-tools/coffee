@@ -52,6 +52,8 @@ pub enum CoffeeCommand {
         plugins: bool,
         #[arg(name = "remote-name", help = "The name of the remote repository")]
         name: Option<String>,
+        #[arg(short, long)]
+        branch: Option<String>,
     },
     /// Configure coffee with the core lightning
     /// configuration
@@ -92,7 +94,8 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
                 plugin,
                 verbose,
                 dynamic,
-            } => Self::Install(plugin.to_owned(), *verbose, *dynamic),
+                branch,
+            } => Self::Install(plugin.to_owned(), *verbose, *dynamic, branch.to_owned()),
             CoffeeCommand::Upgrade { repo, verbose } => Self::Upgrade(repo.to_owned(), *verbose),
             CoffeeCommand::List {} => Self::List,
             CoffeeCommand::Setup { cln_conf } => Self::Setup(cln_conf.to_owned()),

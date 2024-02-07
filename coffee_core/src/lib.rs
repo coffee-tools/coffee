@@ -7,8 +7,8 @@ pub use coffee_lib as lib;
 
 #[derive(Clone, Debug)]
 pub enum CoffeeOperation {
-    /// Install(plugin name, verbose run, dynamic installation)
-    Install(String, bool, bool),
+    /// Install(plugin name, verbose run, dynamic installation branch)
+    Install(String, bool, bool, Option<String>),
     /// List
     List,
     // Upgrade(name of the repository, verbose run)

@@ -91,7 +91,7 @@ fn coffee_install(plugin: &mut Plugin<State>, request: Value) -> Result<Value, P
     let rt = Runtime::new().unwrap();
 
     let request: InstallReq = serde_json::from_value(request)?;
-    rt.block_on(coffee.install(&request.name, false, true))
+    rt.block_on(coffee.install(&request.name, false, true, Some(request.branch)))
         .map_err(from)?;
     Ok(json!({}))
 }
