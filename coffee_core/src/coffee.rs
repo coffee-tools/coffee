@@ -352,7 +352,7 @@ impl PluginManager for CoffeeManager {
             .get_mut(repo)
             .ok_or_else(|| error!("Repository with name: `{}` not found", repo))?;
 
-        let status = repository.upgrade(&self.config.plugins).await?;
+        let status = repository.upgrade(&self.config.plugins, verbose).await?;
 
         // if status is not up to date, we need to update the plugins as well
         match status.status {
