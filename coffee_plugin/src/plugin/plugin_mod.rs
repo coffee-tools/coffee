@@ -90,11 +90,12 @@ fn coffee_install(plugin: &mut Plugin<State>, request: Value) -> Result<Value, P
     let mut coffee = coffee.lock().unwrap();
     let rt = Runtime::new().unwrap();
 
-    let request: InstallReq = serde_json::from_value(request)?;
-    rt.block_on(coffee.install(&request.name, false, true))
-        .map_err(from)?;
-    Ok(json!({}))
-}
+        let request: InstallReq = serde_json::from_value(request)?;
+        rt.block_on(coffee.install(&request.name, false, true, None))
+            .map_err(from)?;
+        Ok(json!({}))
+    }
+
 
 #[rpc_method(
     rpc_name = "coffee_list",

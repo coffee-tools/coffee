@@ -246,6 +246,7 @@ impl PluginManager for CoffeeManager {
         plugin: &str,
         verbose: bool,
         try_dynamic: bool,
+        _branch: Option<String>,
     ) -> Result<(), CoffeeError> {
         log::debug!("installing plugin: {plugin}");
         // keep track if the plugin is successfully installed
@@ -351,19 +352,18 @@ impl PluginManager for CoffeeManager {
             .get_mut(repo)
             .ok_or_else(|| error!("Repository with name: `{}` not found", repo))?;
 
-        let status = repository.upgrade(&self.config.plugins, verbose).await?;
+        let status = repository.upgrade(&self.config.plugins).await?;
 
         // if status is not up to date, we need to update the plugins as well
         match status.status {
             UpgradeStatus::Updated(_, _) => {
                 for plugins in status.plugins_effected.iter() {
                     self.remove(plugins).await?;
-                    self.install(plugins, verbose, false).await?;
+                    self.install(plugins, verbose, false, branch).await?;
                 }
             }
             _ => {}
         }
-
         self.flush().await?;
         Ok(status)
     }
