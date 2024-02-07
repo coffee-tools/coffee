@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use coffee_lib::utils::check_dir_or_make_if_missing;
 use nosql_db::NoSQL;
+use nosql_sled::sled;
 use nosql_sled::SledDB;
 
 use coffee_lib::error;
@@ -17,7 +18,8 @@ impl NoSQlStorage {
     pub async fn new(path: &str) -> Result<Self, CoffeeError> {
         let path = format!("{path}/storage");
         check_dir_or_make_if_missing(path.clone()).await?;
-        let db = SledDB::new(&path).map_err(|err| error!("{err}"))?;
+        let config = sled::Config::new().path(path).cache_capacity(1_000_000);
+        let db = SledDB::try_from(config).map_err(|err| error!("{err}"))?;
         Ok(Self { inner: db })
     }
 }
