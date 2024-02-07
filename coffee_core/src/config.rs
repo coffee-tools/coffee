@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::env;
 
 use crate::CoffeeOperation;
-use coffee_lib::utils::{check_dir_or_make_if_missing, move_dir_if_exist};
+use coffee_lib::utils::{check_dir_or_make_if_missing, copy_dir_if_exist};
 use coffee_lib::{errors::CoffeeError, plugin::Plugin};
 
 use crate::CoffeeArgs;
@@ -66,7 +66,9 @@ impl CoffeeConf {
         check_dir_or_make_if_missing(format!("{def_path}/{}", coffee.network)).await?;
         check_dir_or_make_if_missing(format!("{def_path}/{}/plugins", coffee.network)).await?;
         let repo_dir = format!("{def_path}/{}/repositories", coffee.network);
-        move_dir_if_exist(&format!("{def_path}/repositories"), &repo_dir).await?;
+        // older version of coffee has a repository inside the directory
+        copy_dir_if_exist(&format!("{def_path}/repositories"), &repo_dir).await?;
+        // FIXME: nurse should clean up the  `{def_path}/repositories`.
         check_dir_or_make_if_missing(repo_dir).await?;
         // after we know all the information regarding
         // the configuration we try to see if there is

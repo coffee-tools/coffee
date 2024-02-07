@@ -2,7 +2,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::vec::Vec;
-use tokio::fs;
 
 use async_trait::async_trait;
 use clightningrpc_common::client::Client;
@@ -12,6 +11,7 @@ use log;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tokio::fs;
 use tokio::process::Command;
 
 use coffee_github::repository::Github;
@@ -20,6 +20,7 @@ use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
 use coffee_lib::types::response::*;
 use coffee_lib::url::URL;
+use coffee_lib::utils::rm_dir_if_exist;
 use coffee_lib::{commit_id, error, get_repo_info, sh};
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::nosql_db::NoSQlStorage;
@@ -424,12 +425,8 @@ impl PluginManager for CoffeeManager {
         Ok(())
     }
 
-    async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError> {
-        // FIXME: we should allow some error here like
-        // for the add remote command the no found error for the `repository`
-        // directory is fine.
-
-        if self.repos.contains_key(name) {
+    async fn add_remote(&mut self, name: &str, url: &str, force: bool) -> Result<(), CoffeeError> {
+        if !force && self.repos.contains_key(name) {
             return Err(error!("repository with name: {name} already exists"));
         }
         let local_path = format!("{}/{}", self.config.root_path, self.config.network);
@@ -545,6 +542,24 @@ impl PluginManager for CoffeeManager {
                 Defect::RepositoryLocallyAbsent(repos) => {
                     let mut actions = self.patch_repository_locally_absent(repos.to_vec()).await?;
                     nurse_actions.append(&mut actions);
+                }
+
+                Defect::CoffeeGlobalRepoCleanup(networks) => {
+                    let iter = self
+                        .repos
+                        .iter()
+                        .map(|(name, repo)| (name.to_owned(), repo.url()))
+                        .collect::<Vec<(String, URL)>>();
+                    for (network, _) in networks {
+                        log::debug!("reindexing repository for the network `{:?}`", network);
+                        for (name, url) in &iter {
+                            self.add_remote(&name, &url.url_string, true).await?;
+                        }
+                        nurse_actions
+                            .push(NurseStatus::MovingGlobalRepostoryTo(network.to_owned()));
+                    }
+                    let global_repo = format!("{}/repositories", self.config.root_path);
+                    rm_dir_if_exist(&global_repo).await?;
                 }
             }
         }

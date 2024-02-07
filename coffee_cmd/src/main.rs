@@ -82,7 +82,7 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
             match action {
                 Some(RemoteAction::Add { name, url }) => {
                     let mut spinner = term::spinner(format!("Fetch remote from {url}"));
-                    let result = coffee.add_remote(&name, &url).await;
+                    let result = coffee.add_remote(&name, &url, false).await;
                     if let Err(err) = &result {
                         spinner.error(format!("Error while add remote: {err}"));
                         return result;

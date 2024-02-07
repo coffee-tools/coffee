@@ -119,7 +119,11 @@ fn coffee_remote(plugin: &mut Plugin<State>, request: Value) -> Result<Value, Pl
             let mut coffee = coffee.lock().unwrap();
             let cmd = request.cmd().unwrap();
             match cmd {
-                RemoteCmd::Add => coffee.add_remote(&request.name, &request.url()).await,
+                RemoteCmd::Add => {
+                    coffee
+                        .add_remote(&request.name, &request.url(), false)
+                        .await
+                }
                 RemoteCmd::Rm => coffee.rm_remote(&request.name).await,
             }
         })

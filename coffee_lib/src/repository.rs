@@ -41,4 +41,8 @@ pub trait Repository: Any {
     fn url(&self) -> URL;
 
     fn as_any(&self) -> &dyn Any;
+
+    /// Return the vector of plugin
+    /// that are inside the repository
+    fn plugins(&mut self) -> &mut Vec<Plugin>;
 }

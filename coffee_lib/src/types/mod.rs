@@ -150,6 +150,8 @@ pub mod response {
         // A patch operation when a git repository is present in the coffee configuration
         // but is absent from the local storage.
         RepositoryLocallyAbsent(Vec<String>),
+        /// (Affected network, path)
+        CoffeeGlobalRepoCleanup(Vec<(String, String)>),
         // TODO: Add more patch operations
     }
 
@@ -178,6 +180,16 @@ pub mod response {
                                 write!(f, " {}", repo)?;
                             }
                         }
+                        Defect::CoffeeGlobalRepoCleanup(networks) => {
+                            writeln!(
+                                f,
+                                "Global repository migration completed for the networks: {}",
+                                networks
+                                    .iter()
+                                    .map(|(network, _)| network.to_owned())
+                                    .collect::<String>()
+                            )?;
+                        }
                     }
                 }
                 Ok(())
@@ -192,6 +204,7 @@ pub mod response {
     pub enum NurseStatus {
         RepositoryLocallyRestored(Vec<String>),
         RepositoryLocallyRemoved(Vec<String>),
+        MovingGlobalRepostoryTo(String),
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -218,6 +231,7 @@ pub mod response {
                     NurseStatus::RepositoryLocallyRestored(repos) => {
                         repositories_locally_restored.append(&mut repos.clone())
                     }
+                    NurseStatus::MovingGlobalRepostoryTo(_) => {}
                 }
             }
             if !repositories_locally_removed.is_empty() {
@@ -242,6 +256,12 @@ pub mod response {
                 }
                 NurseStatus::RepositoryLocallyRemoved(val) => {
                     write!(f, "Repositories removed locally: {}", val.join(" "))
+                }
+                NurseStatus::MovingGlobalRepostoryTo(net) => {
+                    write!(
+                        f,
+                        "Global repository directory moved to subdirectory for network `{net}`"
+                    )
                 }
             }
         }

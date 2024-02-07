@@ -339,6 +339,10 @@ impl Repository for Github {
     fn as_any(&self) -> &dyn Any {
         self
     }
+
+    fn plugins(&mut self) -> &mut Vec<Plugin> {
+        &mut self.plugins
+    }
 }
 
 impl From<StorageRepository> for Github {

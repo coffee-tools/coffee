@@ -28,7 +28,7 @@ pub trait PluginManager {
     async fn upgrade(&mut self, repo: &str, verbose: bool) -> Result<CoffeeUpgrade, CoffeeError>;
 
     /// add the remote repository to the plugin manager.
-    async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError>;
+    async fn add_remote(&mut self, name: &str, url: &str, force: bool) -> Result<(), CoffeeError>;
 
     /// remove the remote repository from the plugin manager.
     async fn rm_remote(&mut self, name: &str) -> Result<(), CoffeeError>;

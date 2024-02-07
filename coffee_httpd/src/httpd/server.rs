@@ -130,7 +130,9 @@ async fn coffee_remote_add(
     let repository_url = &body.repository_url;
 
     let mut coffee = data.coffee.lock().await;
-    let result = coffee.add_remote(repository_name, repository_url).await;
+    let result = coffee
+        .add_remote(repository_name, repository_url, false)
+        .await;
 
     handle_httpd_response!(result, "Repository '{repository_name}' added successfully")
 }
