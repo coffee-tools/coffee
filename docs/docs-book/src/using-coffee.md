@@ -166,6 +166,15 @@ Additionally, if you wish to perform a verification of coffee without making any
 coffee nurse --verify
 ```
 _________
+### Tipping a plugin in Bitcoin
+
+> ✅ Implemented
+
+```
+coffee tip <plugin_name> <millisatoshi>
+```
+
+------
 ## Running coffee as a server
 
 To run Coffee as a server, you can use the `coffee_httpd` binary.

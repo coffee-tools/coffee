@@ -90,8 +90,25 @@ pub mod response {
 
     #[derive(Debug, Serialize, Deserialize)]
     pub enum UpgradeStatus {
-        UpToDate,
-        Updated,
+        /// CommitId, Date
+        UpToDate(String, String),
+        /// CommitId, Date
+        Updated(String, String),
+    }
+
+    impl UpgradeStatus {
+        pub fn date(&self) -> String {
+            match self {
+                UpgradeStatus::UpToDate(_, date) => date.clone(),
+                UpgradeStatus::Updated(_, date) => date.clone(),
+            }
+        }
+        pub fn commit_id(&self) -> String {
+            match self {
+                UpgradeStatus::UpToDate(commit_id, _) => commit_id.clone(),
+                UpgradeStatus::Updated(commit_id, _) => commit_id.clone(),
+            }
+        }
     }
 
     #[derive(Debug, Serialize, Deserialize)]
@@ -217,5 +234,17 @@ pub mod response {
                 }
             }
         }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct CoffeeTip {
+        pub for_plugin: String,
+        pub invoice: String,
+        pub status: String,
+        pub destination: Option<String>,
+        pub amount_msat: u64,
+        // This includes the fee
+        pub amount_sent_msat: u64,
+        pub warning_partial_completion: Option<String>,
     }
 }

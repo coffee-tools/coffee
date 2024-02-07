@@ -22,6 +22,10 @@ pub enum CoffeeOperation {
     /// Search(plugin name)
     Search(String),
     Nurse(bool),
+    /// Tip operation
+    ///
+    /// (plugin_name, amount_msat)
+    Tip(String, u64),
 }
 
 #[derive(Clone, Debug)]

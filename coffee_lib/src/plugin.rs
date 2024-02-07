@@ -8,7 +8,7 @@ use tokio::process::Command;
 
 use crate::errors::CoffeeError;
 use crate::macros::error;
-use crate::plugin_conf::Conf;
+use crate::plugin_conf::{Conf, Tipping};
 use crate::sh;
 
 /// Plugin language definition
@@ -148,11 +148,6 @@ impl Plugin {
         Ok(exec_path)
     }
 
-    /// upgrade the plugin to a new version.
-    pub async fn upgrade(&mut self, _: bool) -> Result<(), CoffeeError> {
-        todo!("not implemented yet")
-    }
-
     /// remove the plugin and clean up all the data.
     async fn remove(&mut self) -> Result<(), CoffeeError> {
         todo!("not implemented yet")
@@ -160,6 +155,10 @@ impl Plugin {
 
     pub fn name(&self) -> String {
         self.name.clone()
+    }
+
+    pub fn tipping_info(&self) -> Option<Tipping> {
+        self.conf.as_ref().and_then(|conf| conf.tipping.clone())
     }
 }
 

@@ -2,14 +2,16 @@
 //! Coffee as a core lightning plugin.
 use std::fmt::Display;
 
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::runtime::Runtime;
 
 use clightningrpc_common::json_utils;
 use clightningrpc_plugin::commands::RPCCommand;
+use clightningrpc_plugin::error;
 use clightningrpc_plugin::plugin::{debug, info};
-use clightningrpc_plugin::{add_rpc, error};
 use clightningrpc_plugin::{errors::PluginError, plugin::Plugin};
+use clightningrpc_plugin_macros::{plugin, rpc_method};
 
 use coffee_core::coffee::CoffeeManager;
 use coffee_lib::errors::CoffeeError;
@@ -21,10 +23,19 @@ use super::state::PluginArgs;
 use crate::plugin::State;
 
 pub fn build_plugin() -> Result<Plugin<State>, PluginError> {
-    let mut plugin = Plugin::<State>::new(State::new(), /* dynamic */ true).on_init(on_init);
-    add_rpc!(plugin, CoffeeInstall);
-    add_rpc!(plugin, CoffeeList);
-    add_rpc!(plugin, CoffeeRemote);
+    let mut plugin = plugin! {
+        state: State::new(),
+        dynamic: true,
+        notification: [],
+        methods: [
+            coffee_install,
+            coffee_list,
+            coffee_remote,
+            coffee_generate_tip,
+        ],
+        hooks: [],
+    };
+    plugin.on_init(on_init);
     Ok(plugin)
 }
 
@@ -70,104 +81,73 @@ fn from<T: Display>(err: T) -> PluginError {
     error!("{err}")
 }
 
-#[derive(Clone)]
-struct CoffeeInstall {
-    name: String,
-    usage: String,
-    description: String,
+#[rpc_method(
+    rpc_name = "coffee_install",
+    description = "install a plugin from one of the repository choosed"
+)]
+fn coffee_install(plugin: &mut Plugin<State>, request: Value) -> Result<Value, PluginError> {
+    let coffee = plugin.state.coffee();
+    let mut coffee = coffee.lock().unwrap();
+    let rt = Runtime::new().unwrap();
+
+    let request: InstallReq = serde_json::from_value(request)?;
+    rt.block_on(coffee.install(&request.name, false, true, Some(request.branch)))
+        .map_err(from)?;
+    Ok(json!({}))
 }
 
-impl CoffeeInstall {
-    fn new() -> Self {
-        CoffeeInstall {
-            name: "coffee_install".to_string(),
-            usage: String::new(),
-            description: String::from("install a plugin from one of the repository choosed"),
-        }
+#[rpc_method(
+    rpc_name = "coffee_list",
+    description = "show all the plugin installed and if {remotes} is specified show also the one available"
+)]
+fn coffee_list(plugin: &mut Plugin<State>, _: Value) -> Result<Value, PluginError> {
+    let runtime = Runtime::new().unwrap();
+    let coffee = plugin.state.coffee();
+    let mut coffee = coffee.lock().unwrap();
+    let result = runtime.block_on(coffee.list()).map_err(from)?;
+    Ok(serde_json::to_value(result)?)
+}
+
+#[rpc_method(rpc_name = "coffee_remote", description = "manage a remote")]
+fn coffee_remote(plugin: &mut Plugin<State>, request: Value) -> Result<Value, PluginError> {
+    let request: RemoteReq = serde_json::from_value(request)?;
+    let runtime = Runtime::new().unwrap();
+    let coffee = plugin.state.coffee();
+
+    runtime
+        .block_on(async {
+            let mut coffee = coffee.lock().unwrap();
+            let cmd = request.cmd().unwrap();
+            match cmd {
+                RemoteCmd::Add => coffee.add_remote(&request.name, &request.url()).await,
+                RemoteCmd::Rm => coffee.rm_remote(&request.name).await,
+            }
+        })
+        .map_err(from)?;
+    Ok(json!({}))
+}
+
+#[rpc_method(
+    rpc_name = "coffee_generate_tip",
+    description = "Generate the BOLT 12 to add inside a plugin configuration to receive donation"
+)]
+fn coffee_generate_tip(plugin: &mut Plugin<State>, request: Value) -> Result<Value, PluginError> {
+    let runtime = Runtime::new().unwrap();
+    let coffee = plugin.state.coffee();
+
+    #[derive(Serialize, Deserialize, Debug)]
+    struct Offer {
+        pub bolt12: String,
     }
-}
 
-impl RPCCommand<State> for CoffeeInstall {
-    fn call<'c>(
-        &self,
-        plugin: &mut Plugin<State>,
-        request: serde_json::Value,
-    ) -> Result<serde_json::Value, PluginError> {
-        let coffee = plugin.state.coffee();
-        let mut coffee = coffee.lock().unwrap();
-        let rt = Runtime::new().unwrap();
-
-        let request: InstallReq = serde_json::from_value(request)?;
-        rt.block_on(coffee.install(&request.name, false, true, Some(request.branch)))
-            .map_err(from)?;
-        Ok(json!({}))
-    }
-}
-
-#[derive(Clone)]
-struct CoffeeList {
-    name: String,
-    usage: String,
-    description: String,
-}
-
-impl CoffeeList {
-    fn new() -> Self {
-        CoffeeList { name: "coffee_list".to_owned(), usage: String::new(), description: "show all the plugin installed and if {remotes} is specified show also the one available".to_owned() }
-    }
-}
-
-impl RPCCommand<State> for CoffeeList {
-    fn call<'c>(
-        &self,
-        plugin: &mut Plugin<State>,
-        _: serde_json::Value,
-    ) -> Result<serde_json::Value, PluginError> {
-        let runtime = Runtime::new().unwrap();
-        let coffee = plugin.state.coffee();
-        let mut coffee = coffee.lock().unwrap();
-        let result = runtime.block_on(coffee.list()).map_err(from)?;
-        Ok(serde_json::to_value(result)?)
-    }
-}
-
-#[derive(Clone)]
-struct CoffeeRemote {
-    name: String,
-    usage: String,
-    description: String,
-}
-
-impl CoffeeRemote {
-    fn new() -> Self {
-        CoffeeRemote {
-            name: "coffee_remote".to_owned(),
-            usage: String::new(),
-            description: "manage a remote".to_owned(),
-        }
-    }
-}
-
-impl RPCCommand<State> for CoffeeRemote {
-    fn call<'c>(
-        &self,
-        plugin: &mut Plugin<State>,
-        request: serde_json::Value,
-    ) -> Result<serde_json::Value, PluginError> {
-        let request: RemoteReq = serde_json::from_value(request)?;
-        let runtime = Runtime::new().unwrap();
-        let coffee = plugin.state.coffee();
-
-        runtime
-            .block_on(async {
-                let mut coffee = coffee.lock().unwrap();
-                let cmd = request.cmd().unwrap();
-                match cmd {
-                    RemoteCmd::Add => coffee.add_remote(&request.name, &request.url()).await,
-                    RemoteCmd::Rm => coffee.rm_remote(&request.name).await,
-                }
-            })
-            .map_err(from)?;
-        Ok(json!({}))
-    }
+    let offer = runtime
+        .block_on(async {
+            let mut coffee = coffee.lock().unwrap();
+            coffee.cln::<Value, Offer>("offer", json!({
+                "amount": "any",
+                "description": "Generating BOLT 12 for coffee tips regarding the plugin ...",
+            })).await
+        })
+        .map_err(from)?;
+    Ok(serde_json::to_value(offer)?)
 }

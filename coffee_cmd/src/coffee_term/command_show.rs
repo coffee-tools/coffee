@@ -2,18 +2,18 @@
 //! the command result on the terminal!
 
 use radicle_term as term;
-use radicle_term::table::TableOptions;
+use term::table::TableOptions;
+use term::Element;
 
 use coffee_lib::error;
 use coffee_lib::errors::CoffeeError;
-use coffee_lib::types::response::{CoffeeList, CoffeeNurse, CoffeeRemote, NurseStatus};
-use term::Element;
+use coffee_lib::types::response::{CoffeeList, CoffeeNurse, CoffeeRemote, CoffeeTip, NurseStatus};
 
 pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), CoffeeError> {
     let remotes = coffee_list?;
 
     term::println(
-        term::format::tertiary_bold("●"),
+        term::format::bold("●"),
         term::format::tertiary("Plugin installed"),
     );
     let mut table = radicle_term::Table::new(TableOptions::bordered());
@@ -45,7 +45,7 @@ pub fn show_remote_list(remote_list: Result<CoffeeRemote, CoffeeError>) -> Resul
     };
 
     term::println(
-        term::format::tertiary_bold("●"),
+        term::format::bold("●"),
         term::format::tertiary("List of repositories"),
     );
     let mut table = radicle_term::Table::new(TableOptions::bordered());
@@ -119,6 +119,30 @@ pub fn show_nurse_result(
         }
         Err(err) => eprintln!("{}", err),
     }
+    Ok(())
+}
 
+pub fn show_tips(coffee_tip: &CoffeeTip) -> Result<(), CoffeeError> {
+    term::println(term::format::bold("●"), term::format::tertiary("Plugin"));
+    let mut table = radicle_term::Table::new(TableOptions::bordered());
+    table.push([
+        term::format::dim(String::from("●")),
+        term::format::bold(String::from("Plugin")),
+        term::format::bold(String::from("Receiver")),
+        term::format::bold(String::from("Amount Sent (msat)")),
+    ]);
+    table.divider();
+
+    table.push([
+        if coffee_tip.status == "completed" {
+            term::format::positive("●").into()
+        } else {
+            term::format::negative("●").into()
+        },
+        term::format::highlight(coffee_tip.for_plugin.clone()),
+        term::format::bold(coffee_tip.destination.clone().unwrap_or_default()),
+        term::format::highlight(coffee_tip.amount_msat.to_string()),
+    ]);
+    table.print();
     Ok(())
 }

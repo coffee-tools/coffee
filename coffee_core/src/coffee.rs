@@ -1,18 +1,17 @@
 //! Coffee mod implementation
-
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::vec::Vec;
 use tokio::fs;
 
 use async_trait::async_trait;
-use chrono::{TimeZone, Utc};
 use clightningrpc_common::client::Client;
 use clightningrpc_common::json_utils;
 use clightningrpc_conf::{CLNConf, SyncCLNConf};
 use log;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use tokio::process::Command;
 
 use coffee_github::repository::Github;
@@ -353,10 +352,17 @@ impl PluginManager for CoffeeManager {
             .get_mut(repo)
             .ok_or_else(|| error!("Repository with name: `{}` not found", repo))?;
 
-        let status = repository.upgrade(&self.config.plugins).await?;
-        for plugins in status.plugins_effected.iter() {
-            self.remove(plugins).await?;
-            self.install(plugins, verbose, false, branch).await?;
+        let status = repository.upgrade(&self.config.plugins, verbose).await?;
+
+        // if status is not up to date, we need to update the plugins as well
+        match status.status {
+            UpgradeStatus::Updated(_, _) => {
+                for plugins in status.plugins_effected.iter() {
+                    self.remove(plugins).await?;
+                    self.install(plugins, verbose, false, branch).await?;
+                }
+            }
+            _ => {}
         }
         self.flush().await?;
         Ok(status)
@@ -548,6 +554,46 @@ impl PluginManager for CoffeeManager {
             }
         }
         Ok(nurse_actions)
+    }
+
+    async fn tip(&mut self, plugin: &str, amount_msat: u64) -> Result<CoffeeTip, CoffeeError> {
+        let plugins = self
+            .config
+            .plugins
+            .iter()
+            .filter(|repo_plugin| plugin == repo_plugin.name())
+            .collect::<Vec<_>>();
+        let plugin = plugins.first().ok_or(error!(
+            "No plugin with name `{plugin}` found in the plugins installed"
+        ))?;
+
+        let Some(tipping) = plugin.tipping_info() else {
+            return Err(error!("Plugin `{plugin}` has no tipping information"));
+        };
+        // FIXME write a tip_plugin method as method
+        #[derive(Debug, Deserialize)]
+        struct FetchResult {
+            invoice: String,
+        }
+        let invoice: FetchResult = self
+            .cln(
+                "fetchinvoice",
+                json!({
+                    "offer": tipping.bolt12,
+                    "amount_msat": amount_msat,
+                }),
+            )
+            .await?;
+        let tip: CoffeeTip = self
+            .cln(
+                "pay",
+                json!({
+                    "bolt11": invoice.invoice,
+                    "amount_msat": amount_msat,
+                }),
+            )
+            .await?;
+        Ok(tip)
     }
 }
 

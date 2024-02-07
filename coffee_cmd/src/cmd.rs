@@ -72,6 +72,9 @@ pub enum CoffeeCommand {
         #[arg(short, long, action = clap::ArgAction::SetTrue)]
         verify: bool,
     },
+    /// tipping a plugins developer.
+    #[clap(arg_required_else_help = false)]
+    Tip { plugin: String, amount_msat: u64 },
 }
 
 #[derive(Debug, Subcommand)]
@@ -110,6 +113,10 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
             CoffeeCommand::Show { plugin } => Self::Show(plugin.to_owned()),
             CoffeeCommand::Search { plugin } => Self::Search(plugin.to_owned()),
             CoffeeCommand::Nurse { verify } => Self::Nurse(*verify),
+            CoffeeCommand::Tip {
+                plugin,
+                amount_msat,
+            } => Self::Tip(plugin.to_owned(), amount_msat.clone()),
         }
     }
 }

@@ -7,6 +7,7 @@ edition = "2021"
 tokio = { version = "1.22.0", features = ["rt"] }
 clightningrpc-common = "0.3.0-beta.3"
 clightningrpc-plugin = { version = "0.3.0-beta.8", features = ["log"] }
+clightningrpc-plugin-macros = "0.3.0-beta.4"
 coffee_core = { path = "../coffee_core" }
 coffee_lib = { path = "../coffee_lib" }
 serde_json = "1"

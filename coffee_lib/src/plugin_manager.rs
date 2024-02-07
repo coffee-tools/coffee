@@ -62,4 +62,12 @@ pub trait PluginManager {
         &mut self,
         repos: Vec<String>,
     ) -> Result<Vec<NurseStatus>, CoffeeError>;
+
+    /// tip a specific plugins of the following amount
+    ///
+    /// The tip command required that the receiver of the
+    /// donation is runing the coffee core lightning plugin.
+    ///
+    /// P.S: only Bitcoin ofc
+    async fn tip(&mut self, plugin: &str, amount_msat: u64) -> Result<CoffeeTip, CoffeeError>;
 }

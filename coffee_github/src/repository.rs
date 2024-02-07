@@ -1,8 +1,6 @@
 use std::any::Any;
 
 use async_trait::async_trait;
-use chrono::{TimeZone, Utc};
-use coffee_lib::types::response::CoffeeUpgrade;
 use git2;
 use log::debug;
 use tokio::fs::File;
@@ -16,13 +14,14 @@ use coffee_lib::plugin::Plugin;
 use coffee_lib::plugin::PluginLang;
 use coffee_lib::plugin_conf::Conf;
 use coffee_lib::repository::Repository;
+use coffee_lib::types::response::CoffeeUpgrade;
 use coffee_lib::url::URL;
 use coffee_lib::utils::get_plugin_info_from_path;
 use coffee_storage::model::repository::Kind;
 use coffee_storage::model::repository::Repository as StorageRepository;
 
 use crate::utils::clone_recursive_fix;
-use crate::utils::fast_forward;
+use crate::utils::git_upgrade;
 
 pub struct Github {
     /// the url of the repository to be able
@@ -231,7 +230,11 @@ impl Repository for Github {
         }
     }
 
-    async fn upgrade(&mut self, plugins: &Vec<Plugin>) -> Result<CoffeeUpgrade, CoffeeError> {
+    async fn upgrade(
+        &mut self,
+        plugins: &Vec<Plugin>,
+        verbose: bool,
+    ) -> Result<CoffeeUpgrade, CoffeeError> {
         // get the list of the plugins installed from this repository
         // TODO: add a field of installed plugins in the repository struct instead
         let mut plugins_effected: Vec<String> = vec![];
@@ -253,14 +256,9 @@ impl Repository for Github {
             }
         }
         // pull the changes from the repository
-        let status = fast_forward(&self.url.path_string, &self.branch)?;
-        // update the git information
-        // (git HEAD and date of the last commit)
-        let repo = git2::Repository::open(&self.url.path_string)
-            .map_err(|err| error!("{}", err.message()))?;
-        let (commit, date) = get_repo_info!(repo);
-        self.git_head = Some(commit.clone());
-        self.last_activity = Some(date.clone());
+        let status = git_upgrade(&self.url.path_string, &self.branch, verbose).await?;
+        self.git_head = Some(status.commit_id());
+        self.last_activity = Some(status.date());
         Ok(CoffeeUpgrade {
             repo: self.name(),
             status,
