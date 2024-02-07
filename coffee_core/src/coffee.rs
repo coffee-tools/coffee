@@ -246,7 +246,7 @@ impl PluginManager for CoffeeManager {
         plugin: &str,
         verbose: bool,
         try_dynamic: bool,
-        _branch: Option<String>,
+        branch: Option<String>,
     ) -> Result<(), CoffeeError> {
         log::debug!("installing plugin: {plugin}");
         // keep track if the plugin is successfully installed
