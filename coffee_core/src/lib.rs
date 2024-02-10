@@ -26,6 +26,10 @@ pub enum CoffeeOperation {
     ///
     /// (plugin_name, amount_msat)
     Tip(String, u64),
+    /// Disable a plugin(plugin name)
+    Disable(String),
+    /// Enable a plugin(plugin name)
+    Enable(String),
 }
 
 #[derive(Clone, Debug)]

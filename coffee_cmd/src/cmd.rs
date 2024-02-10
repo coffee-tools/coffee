@@ -73,6 +73,12 @@ pub enum CoffeeCommand {
     /// tipping a plugins developer.
     #[clap(arg_required_else_help = false)]
     Tip { plugin: String, amount_msat: u64 },
+    /// Disable a plugin
+    #[clap(arg_required_else_help = true)]
+    Disable { plugin: String },
+    /// Enable a plugin
+    #[clap(arg_required_else_help = true)]
+    Enable { plugin: String },
 }
 
 #[derive(Debug, Subcommand)]
@@ -114,6 +120,8 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
                 plugin,
                 amount_msat,
             } => Self::Tip(plugin.to_owned(), amount_msat.clone()),
+            CoffeeCommand::Disable { plugin } => Self::Disable(plugin.to_owned()),
+            CoffeeCommand::Enable { plugin } => Self::Enable(plugin.to_owned()),
         }
     }
 }
