@@ -62,6 +62,8 @@ pub async fn run_httpd<T: ToSocketAddrs>(
             .service(coffee_show)
             .service(coffee_search)
             .service(coffee_list_plugins_in_remote)
+            .service(coffee_disable)
+            .service(coffee_enable)
             .with_json_spec_at("/api/v1")
             .build()
     })
@@ -196,6 +198,34 @@ async fn coffee_search(
     let result = coffee.search(plugin).await;
 
     handle_httpd_response!(result)
+}
+
+#[api_v2_operation]
+#[post("/disable")]
+async fn coffee_disable(
+    data: web::Data<AppState>,
+    body: Json<Disable>,
+) -> Result<HttpResponse, Error> {
+    let plugin = &body.plugin;
+
+    let mut coffee = data.coffee.lock().await;
+    let result = coffee.disable(plugin).await;
+
+    handle_httpd_response!(result, "Plugin '{plugin}' disabled successfully")
+}
+
+#[api_v2_operation]
+#[post("/enable")]
+async fn coffee_enable(
+    data: web::Data<AppState>,
+    body: Json<Enable>,
+) -> Result<HttpResponse, Error> {
+    let plugin = &body.plugin;
+
+    let mut coffee = data.coffee.lock().await;
+    let result = coffee.enable(plugin).await;
+
+    handle_httpd_response!(result, "Plugin '{plugin}' enabled successfully")
 }
 
 // this is just a hack to support swagger UI with https://paperclip-rs.github.io/paperclip/

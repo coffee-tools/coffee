@@ -49,6 +49,18 @@ pub mod request {
     pub struct Search {
         pub plugin: String,
     }
+
+    #[cfg(feature = "open-api")]
+    #[derive(Debug, Deserialize, Apiv2Schema, Serialize)]
+    pub struct Disable {
+        pub plugin: String,
+    }
+
+    #[cfg(feature = "open-api")]
+    #[derive(Debug, Deserialize, Apiv2Schema, Serialize)]
+    pub struct Enable {
+        pub plugin: String,
+    }
 }
 
 // Definition of the response types.
