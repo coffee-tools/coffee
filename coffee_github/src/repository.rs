@@ -186,6 +186,9 @@ impl Github {
                         plugin_lang,
                         conf.clone(),
                         commit_id.clone(),
+                        // The plugin for now is not installed, so it's
+                        // neither enabled or disabled
+                        None,
                     );
 
                     debug!("new plugin: {:?}", plugin);

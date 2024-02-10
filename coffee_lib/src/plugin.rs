@@ -104,6 +104,8 @@ pub struct Plugin {
     conf: Option<Conf>,
     /// FIXME: this field shouldn't be optional
     pub commit: Option<String>,
+    /// Optional for now to be backward compatible
+    pub enabled: Option<bool>,
 }
 
 impl Plugin {
@@ -115,6 +117,7 @@ impl Plugin {
         plugin_lang: PluginLang,
         config: Option<Conf>,
         commit_id: Option<String>,
+        enabled: Option<bool>,
     ) -> Self {
         Plugin {
             name: name.to_owned(),
@@ -123,6 +126,7 @@ impl Plugin {
             lang: plugin_lang,
             conf: config,
             commit: commit_id,
+            enabled,
         }
     }
 
