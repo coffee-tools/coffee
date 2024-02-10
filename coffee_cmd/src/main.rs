@@ -176,6 +176,14 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
             let tip_result = coffee.tip(&plugin, amount_msat).await?;
             coffee_term::show_tips(&tip_result)?;
         }
+        CoffeeCommand::Disable { plugin } => {
+            coffee.disable(&plugin).await?;
+            term::success!("Plugin {plugin} disabled");
+        }
+        CoffeeCommand::Enable { plugin } => {
+            coffee.enable(&plugin).await?;
+            term::success!("Plugin {plugin} enabled");
+        }
     };
     Ok(())
 }

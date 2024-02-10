@@ -32,11 +32,11 @@ include /home/alice/.coffee/testnet/coffee.conf
 In addition there are the following additional option that you can specify:
 
 - `--network`: by default set to `bitcoin`, but if you want to specify the network
-that Core Lightning is using, you must ensure that the flag is set to
-the correct network.
+  that Core Lightning is using, you must ensure that the flag is set to
+  the correct network.
 - `--data-dir`: by default set to `/home/alice/.coffee`, you may want to set
-this option if you are looking to specify a different directory for the
-Coffee home.
+  this option if you are looking to specify a different directory for the
+  Coffee home.
 - `--skip-verify`: Use this option to bypass `coffee`'s validation process, which checks for conflicts between its configuration and the local storage.
 
 ### Add a Plugin Repository
@@ -66,7 +66,7 @@ To list plugin repositories, simply run the following command.
 > ✅ Implemented
 
 ```bash
-coffee remote list 
+coffee remote list
 ```
 
 To list available plugins in a specific remote repository
@@ -114,10 +114,34 @@ To remove an installed plugin, you simply have to run the following command.
 coffee remove <plugin_name>
 ```
 
+### Disabling a Plugin
+
+> ✅ Implemented
+
+Disabling a plugin means that the plugin will not be loaded with CLN but it will still be installed and can be enabled at any time.
+
+To disable a plugin, run:
+
+```bash
+coffee disable <plugin_name>
+```
+
+### Enabling a Plugin
+
+> ✅ Implemented
+
+To enable a plugin, run:
+
+```bash
+coffee enable <plugin_name>
+```
+
 ### Upgrade a Plugin
 
 Coffee tightly integrates with git, allowing you to easily upgrade your plugins through the command line interface (CLI). This eliminates the need for tedious tasks such as downloading the latest updates and creating new versions of plugins. To upgrade a plugin, all you need to do is run.
+
 > ✅ Implemented
+
 ```bash
 coffee upgrade <repo_name>
 ```
@@ -138,7 +162,7 @@ coffee list
 coffee show <plugin_name>
 ```
 
-### Searching for a plugin in remote repositories 
+### Searching for a plugin in remote repositories
 
 > ✅ Implemented
 
@@ -153,12 +177,15 @@ coffee search <plugin_name>
 ```bash
 coffee nurse
 ```
+
 Additionally, if you wish to perform a verification of coffee without making any changes, you can use the `--verify` flag:
 
 ```bash
 coffee nurse --verify
 ```
-_________
+
+---
+
 ### Tipping a plugin in Bitcoin
 
 > ✅ Implemented
@@ -167,7 +194,8 @@ _________
 coffee tip <plugin_name> <millisatoshi>
 ```
 
-------
+---
+
 ## Running coffee as a server
 
 To run Coffee as a server, you can use the `coffee_httpd` binary.
@@ -178,8 +206,8 @@ Please note that the server runs on `localhost` with port `8080` where you can f
 
 To start the Coffee server, run the following command:
 
- ```shell
- coffee_httpd --cln-path <core_lightning_path> --network <network>  
- ```
+```shell
+coffee_httpd --cln-path <core_lightning_path> --network <network>
+```
 
 Make sure the `coffee_httpd` binary is in your system PATH or in the current working directory.

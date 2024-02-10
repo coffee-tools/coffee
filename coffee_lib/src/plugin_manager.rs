@@ -69,4 +69,10 @@ pub trait PluginManager {
     ///
     /// P.S: only Bitcoin ofc
     async fn tip(&mut self, plugin: &str, amount_msat: u64) -> Result<CoffeeTip, CoffeeError>;
+
+    /// disable a plugin by name
+    async fn disable(&mut self, plugin: &str) -> Result<(), CoffeeError>;
+
+    /// enable a plugin by name
+    async fn enable(&mut self, plugin: &str) -> Result<(), CoffeeError>;
 }

@@ -597,6 +597,68 @@ impl PluginManager for CoffeeManager {
             .await?;
         Ok(tip)
     }
+
+    async fn disable(&mut self, plugin: &str) -> Result<(), CoffeeError> {
+        log::debug!("disabling plugin: {plugin}");
+
+        let plugin = self
+            .config
+            .plugins
+            .iter_mut()
+            .find(|repo_plugin| plugin == repo_plugin.name())
+            .ok_or(error!(
+                "No plugin with name `{plugin}` found in the plugins installed"
+            ))?;
+        log::debug!("plugin: {:?}", plugin);
+        if plugin.enabled == Some(false) {
+            return Err(error!("Plugin `{plugin}` is already disabled"));
+        }
+        self.coffee_cln_config
+            .rm_conf("plugin", Some(&plugin.exec_path))
+            .map_err(|err| error!("{}", err.cause))?;
+        log::debug!(
+            "Plugin {} was removed from CLN configuration successfully",
+            plugin.name()
+        );
+        plugin.enabled = Some(false);
+
+        self.flush().await?;
+        self.update_conf().await?;
+
+        Ok(())
+    }
+
+    async fn enable(&mut self, plugin: &str) -> Result<(), CoffeeError> {
+        log::debug!("enabling plugin: {plugin}");
+
+        let plugin = self
+            .config
+            .plugins
+            .iter_mut()
+            .find(|repo_plugin| plugin == repo_plugin.name())
+            .ok_or(error!(
+                "No plugin with name `{plugin}` found in the plugins installed"
+            ))?;
+        log::debug!("plugin: {:?}", plugin);
+        if plugin.enabled.is_none() || plugin.enabled == Some(true) {
+            return Err(error!(
+                "Plugin `{plugin}` is already enabled or enabled by default"
+            ));
+        }
+        self.coffee_cln_config
+            .add_conf("plugin", &plugin.exec_path)
+            .map_err(|err| error!("{}", err.cause))?;
+        log::debug!(
+            "Plugin {} was added to CLN configuration successfully",
+            plugin.name()
+        );
+        plugin.enabled = Some(true);
+
+        self.flush().await?;
+        self.update_conf().await?;
+
+        Ok(())
+    }
 }
 
 // FIXME: we need to move on but this is not safe and with the coffee
