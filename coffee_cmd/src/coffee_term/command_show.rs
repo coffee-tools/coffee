@@ -14,22 +14,31 @@ pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), Cof
 
     term::println(
         term::format::bold("●"),
-        term::format::tertiary("Plugin installed"),
+        term::format::tertiary("Plugins installed"),
     );
     let mut table = radicle_term::Table::new(TableOptions::bordered());
     table.push([
         term::format::dim(String::from("●")),
         term::format::bold(String::from("Language")),
         term::format::bold(String::from("Name")),
+        term::format::bold(String::from("Enabled?")),
         term::format::bold(String::from("Exec path")),
     ]);
     table.divider();
 
     for plugin in &remotes.plugins {
+        // Get whether the plugin is enabled
+        // If enabled is None, it means the plugin is enabled by default for backward compatibility.
+        let enabled = plugin.enabled.unwrap_or(true);
         table.push([
             term::format::positive("●").into(),
             term::format::highlight(plugin.lang.to_string()),
             term::format::bold(plugin.name()),
+            if enabled {
+                term::format::positive("yes").into()
+            } else {
+                term::format::negative("no").into()
+            },
             term::format::highlight(plugin.exec_path.to_owned()),
         ])
     }

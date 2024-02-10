@@ -289,6 +289,8 @@ impl PluginManager for CoffeeManager {
                         let path = plugin.configure(verbose).await?;
                         log::debug!("runnable plugin path {path}");
                         if !try_dynamic {
+                            // mark the plugin enabled
+                            plugin.enabled = Some(true);
                             self.config.plugins.push(plugin);
                             log::debug!("path coffee conf: {}", self.coffee_cln_config.path);
                             self.coffee_cln_config
