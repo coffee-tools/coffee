@@ -21,7 +21,7 @@ pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), Cof
         term::format::dim(String::from("●")),
         term::format::bold(String::from("Language")),
         term::format::bold(String::from("Name")),
-        term::format::bold(String::from("Enabled?")),
+        term::format::bold(String::from("Enabled")),
         term::format::bold(String::from("Exec path")),
     ]);
     table.divider();

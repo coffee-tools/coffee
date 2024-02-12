@@ -104,7 +104,8 @@ pub struct Plugin {
     conf: Option<Conf>,
     /// FIXME: this field shouldn't be optional
     pub commit: Option<String>,
-    /// Optional for now to be backward compatible
+    // Optional for now to be backward compatible
+    /// If the plugin is enabled or not
     pub enabled: Option<bool>,
 }
 

@@ -614,7 +614,7 @@ impl PluginManager for CoffeeManager {
             return Err(error!("Plugin `{plugin}` is already disabled"));
         }
         self.coffee_cln_config
-            .rm_conf("plugin", Some(&plugin.exec_path))
+            .add_conf("disable-plugin", &plugin.exec_path)
             .map_err(|err| error!("{}", err.cause))?;
         log::debug!(
             "Plugin {} was removed from CLN configuration successfully",
@@ -646,7 +646,7 @@ impl PluginManager for CoffeeManager {
             ));
         }
         self.coffee_cln_config
-            .add_conf("plugin", &plugin.exec_path)
+            .rm_conf("disable-plugin", Some(&plugin.exec_path))
             .map_err(|err| error!("{}", err.cause))?;
         log::debug!(
             "Plugin {} was added to CLN configuration successfully",
