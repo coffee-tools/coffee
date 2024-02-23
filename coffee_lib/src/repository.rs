@@ -40,5 +40,8 @@ pub trait Repository: Any {
     /// return the url of the repository.
     fn url(&self) -> URL;
 
+    /// return the git head of the repository.
+    fn git_head(&self) -> Option<String>;
+
     fn as_any(&self) -> &dyn Any;
 }

@@ -21,7 +21,7 @@ use coffee_storage::model::repository::Kind;
 use coffee_storage::model::repository::Repository as StorageRepository;
 
 use crate::utils::clone_recursive_fix;
-use crate::utils::git_upgrade;
+use crate::utils::git_upgrade_with_branch;
 
 pub struct Github {
     /// the url of the repository to be able
@@ -259,7 +259,7 @@ impl Repository for Github {
             }
         }
         // pull the changes from the repository
-        let status = git_upgrade(&self.url.path_string, &self.branch, verbose).await?;
+        let status = git_upgrade_with_branch(&self.url.path_string, &self.branch, verbose).await?;
         self.git_head = Some(status.commit_id());
         self.last_activity = Some(status.date());
         Ok(CoffeeUpgrade {
@@ -334,6 +334,11 @@ impl Repository for Github {
             }
         }
         None
+    }
+
+    /// return the git head of the repository.
+    fn git_head(&self) -> Option<String> {
+        self.git_head.clone()
     }
 
     fn as_any(&self) -> &dyn Any {
