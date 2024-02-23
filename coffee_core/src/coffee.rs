@@ -15,6 +15,7 @@ use serde_json::json;
 use tokio::process::Command;
 
 use coffee_github::repository::Github;
+use coffee_github::{git_upgrade_with_branch, git_upgrade_with_git_head};
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
@@ -246,12 +247,36 @@ impl PluginManager for CoffeeManager {
         plugin: &str,
         verbose: bool,
         try_dynamic: bool,
+        branch: Option<String>,
     ) -> Result<(), CoffeeError> {
         log::debug!("installing plugin: {plugin}");
         // keep track if the plugin is successfully installed
         for repo in self.repos.values() {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
                 log::trace!("{:?}", plugin);
+
+                // if the branch is specified, we need to save current git_head
+                // and checkout the branch
+                let current_git_head = repo.git_head();
+                let current_plugin_commit = plugin.commit.clone();
+                if let Some(branch) = branch.clone() {
+                    log::debug!("checking out branch: {branch}");
+                    if current_git_head.is_none() {
+                        return Err(error!("unable to get the current git head"));
+                    }
+                    let updated_status =
+                        git_upgrade_with_branch(repo.url().path_string.as_str(), &branch, verbose)
+                            .await?;
+                    log::debug!("updated status: {:?}", updated_status);
+
+                    let repository = git2::Repository::open(repo.url().path_string.as_str())
+                        .map_err(|err| error!("{}", err.message()))?;
+
+                    // get commit id after the checkout
+                    let commit = commit_id!(repository);
+                    log::debug!("commit id after the checkout: {commit}");
+                    plugin.commit = Some(commit);
+                }
 
                 // old_root_path is the path where the plugin is cloned and currently stored
                 // eg. ~/.coffee/repositories/<repo_name>/<plugin_name>
@@ -291,7 +316,7 @@ impl PluginManager for CoffeeManager {
                         if !try_dynamic {
                             // mark the plugin enabled
                             plugin.enabled = Some(true);
-                            self.config.plugins.push(plugin);
+                            self.config.plugins.push(plugin.clone());
                             log::debug!("path coffee conf: {}", self.coffee_cln_config.path);
                             self.coffee_cln_config
                                 .add_conf("plugin", &path.to_owned())
@@ -302,6 +327,23 @@ impl PluginManager for CoffeeManager {
                         } else {
                             self.start_plugin(&path).await?;
                         }
+
+                        if branch.is_some() {
+                            // we can safely unwrap here because we have checked it before
+                            let current_git_head = current_git_head.unwrap();
+                            log::debug!("checking out to git head: {current_git_head}");
+                            // rollback to the previous git head
+                            let updated_status = git_upgrade_with_git_head(
+                                repo.url().path_string.as_str(),
+                                &current_git_head,
+                                verbose,
+                            )
+                            .await?;
+                            log::debug!("updated status: {:?}", updated_status);
+
+                            plugin.commit = current_plugin_commit;
+                        }
+
                         return Ok(());
                     }
                     None => return Err(error!("exec path not found")),
@@ -360,7 +402,7 @@ impl PluginManager for CoffeeManager {
             UpgradeStatus::Updated(_, _) => {
                 for plugins in status.plugins_effected.iter() {
                     self.remove(plugins).await?;
-                    self.install(plugins, verbose, false).await?;
+                    self.install(plugins, verbose, false, None).await?;
                 }
             }
             _ => {}

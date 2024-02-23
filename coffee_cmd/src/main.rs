@@ -20,13 +20,14 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
             plugin,
             verbose,
             dynamic,
+            branch,
         } => {
             let spinner = if !verbose {
                 Some(term::spinner("Compiling and installing"))
             } else {
                 None
             };
-            let result = coffee.install(&plugin, verbose, dynamic).await;
+            let result = coffee.install(&plugin, verbose, dynamic, branch).await;
             if let Some(spinner) = spinner {
                 if result.is_ok() {
                     spinner.finish();

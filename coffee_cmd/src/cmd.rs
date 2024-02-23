@@ -29,6 +29,12 @@ pub enum CoffeeCommand {
         verbose: bool,
         #[arg(short, long, action = clap::ArgAction::SetTrue)]
         dynamic: bool,
+        #[arg(
+            name = "branch",
+            long,
+            help = "The branch to install the plugin from. If not specified, the default branch will be used."
+        )]
+        branch: Option<String>,
     },
     /// upgrade a single repository.
     #[clap(arg_required_else_help = true)]
@@ -98,7 +104,8 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
                 plugin,
                 verbose,
                 dynamic,
-            } => Self::Install(plugin.to_owned(), *verbose, *dynamic),
+                branch,
+            } => Self::Install(plugin.to_owned(), *verbose, *dynamic, branch.clone()),
             CoffeeCommand::Upgrade { repo, verbose } => Self::Upgrade(repo.to_owned(), *verbose),
             CoffeeCommand::List {} => Self::List,
             CoffeeCommand::Setup { cln_conf } => Self::Setup(cln_conf.to_owned()),

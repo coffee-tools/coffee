@@ -25,7 +25,7 @@ pub async fn clone_recursive_fix(repo: git2::Repository, url: &URL) -> Result<()
     Ok(())
 }
 
-pub async fn git_upgrade(
+pub async fn git_upgrade_with_branch(
     path: &str,
     branch: &str,
     verbose: bool,
@@ -38,6 +38,30 @@ pub async fn git_upgrade(
 
     let mut cmd = format!("git fetch origin\n");
     cmd += &format!("git reset --hard origin/{branch}");
+    sh!(path, cmd, verbose);
+
+    let (upstream_commit, date) = get_repo_info!(repo);
+
+    if local_commit == upstream_commit {
+        Ok(UpgradeStatus::UpToDate(upstream_commit, date))
+    } else {
+        Ok(UpgradeStatus::Updated(upstream_commit, date))
+    }
+}
+
+pub async fn git_upgrade_with_git_head(
+    path: &str,
+    git_head: &str,
+    verbose: bool,
+) -> Result<UpgradeStatus, CoffeeError> {
+    use tokio::process::Command;
+
+    let repo = git2::Repository::open(path).map_err(|err| error!("{}", err.message()))?;
+
+    let (local_commit, _) = get_repo_info!(repo);
+
+    let mut cmd = format!("git fetch origin\n");
+    cmd += &format!("git reset --hard {}", git_head);
     sh!(path, cmd, verbose);
 
     let (upstream_commit, date) = get_repo_info!(repo);

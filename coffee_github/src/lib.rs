@@ -3,6 +3,8 @@
 pub mod repository;
 mod utils;
 
+pub use utils::{git_upgrade_with_branch, git_upgrade_with_git_head};
+
 #[cfg(test)]
 mod tests {
     use std::{path::Path, sync::Once};

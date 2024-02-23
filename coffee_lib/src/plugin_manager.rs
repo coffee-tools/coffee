@@ -16,6 +16,7 @@ pub trait PluginManager {
         plugins: &str,
         verbose: bool,
         try_dynamic: bool,
+        branch: Option<String>,
     ) -> Result<(), CoffeeError>;
 
     // remove a plugin by name, return an error if some error happens.
