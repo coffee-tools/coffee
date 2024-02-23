@@ -104,6 +104,14 @@ To install a plugin statically, you simply need to run.
 coffee install <plugin_name>
 ```
 
+#### Specifying a branch for installation
+
+To install a plugin from a specific branch, you simply need to run.
+
+```bash
+coffee install <plugin_name> --branch <branch_name>
+```
+
 ### Removing a Plugin
 
 > ✅ Implemented
