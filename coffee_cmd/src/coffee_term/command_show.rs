@@ -22,6 +22,7 @@ pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), Cof
         term::format::bold(String::from("Language")),
         term::format::bold(String::from("Name")),
         term::format::bold(String::from("Enabled")),
+        term::format::bold(String::from("Git HEAD")),
         term::format::bold(String::from("Exec path")),
     ]);
     table.divider();
@@ -30,6 +31,8 @@ pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), Cof
         // Get whether the plugin is enabled
         // If enabled is None, it means the plugin is enabled by default for backward compatibility.
         let enabled = plugin.enabled.unwrap_or(true);
+        let mut commit = plugin.commit.clone().unwrap_or_default();
+        commit = commit.chars().take(7).collect::<String>();
         table.push([
             term::format::positive("●").into(),
             term::format::highlight(plugin.lang.to_string()),
@@ -39,6 +42,7 @@ pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), Cof
             } else {
                 term::format::negative("no").into()
             },
+            term::format::primary(commit),
             term::format::highlight(plugin.exec_path.to_owned()),
         ])
     }
