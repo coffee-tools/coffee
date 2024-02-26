@@ -270,7 +270,15 @@ impl PluginManager for CoffeeManager {
                     old_root_path,
                     new_root_path
                 );
-                let script = format!("cp -r -T {old_root_path} {new_root_path}");
+
+                if fs::try_exists(new_root_path.clone()).await? {
+                    log::debug!(
+                        "A folder {} already exists. We should never reach this point",
+                        new_root_path.clone()
+                    );
+                    fs::remove_dir_all(new_root_path.clone()).await?;
+                }
+                let script = format!("cp -r {old_root_path} {new_root_path}");
                 sh!(self.config.root_path.clone(), script, verbose);
                 log::debug!(
                     "Done! copying directory from {} inside the new one {}",
