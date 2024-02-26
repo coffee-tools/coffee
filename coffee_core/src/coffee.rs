@@ -247,6 +247,13 @@ impl PluginManager for CoffeeManager {
         verbose: bool,
         try_dynamic: bool,
     ) -> Result<(), CoffeeError> {
+        let mut plugins = self.config.plugins.clone();
+        plugins.retain(|p| p.name().eq(plugin));
+
+        if !plugins.is_empty() {
+            return Err(error!("Plugin with name `{plugin}` already installed"));
+        }
+
         log::debug!("installing plugin: {plugin}");
         // keep track if the plugin is successfully installed
         for repo in self.repos.values() {
