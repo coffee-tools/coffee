@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::path::Path;
 
 use async_trait::async_trait;
 use git2;
@@ -52,7 +53,7 @@ fn is_hidden(entry: &DirEntry) -> bool {
 }
 
 struct IndexingInfo {
-    config: Conf,
+    config: Option<Conf>,
     lang: PluginLang,
     exec_path: String,
 }
@@ -105,12 +106,63 @@ impl Github {
 
                 let exec_path = format!("{root_path}/{}", conf_file.plugin.main);
                 return Ok(Some(IndexingInfo {
-                    config: conf_file,
+                    config: Some(conf_file),
                     lang: plugin_lang,
                     exec_path,
                 }));
             }
         }
+        Ok(None)
+    }
+
+    /// When a configuration file is not found this function is called
+    /// and we try to guess the programming language used.
+    async fn try_guess_language(
+        &self,
+        plugin_path: &Path,
+    ) -> Result<Option<IndexingInfo>, CoffeeError> {
+        log::debug!("conf file not found, so we try to guess the language");
+        // try to understand the language from the file
+        let files = WalkDir::new(plugin_path).max_depth(1);
+        for file in files {
+            let file_dir = file.unwrap().clone();
+            let (derived_root_path, derived_name) = get_plugin_info_from_path(file_dir.path())?;
+            let exec_path = None;
+            let plugin_name = Some(derived_name.to_string());
+            debug!("looking for {derived_name} in {derived_root_path}");
+            let file_name = file_dir.file_name().to_str().unwrap();
+            let plugin_lang = match file_name {
+                "requirements.txt" => {
+                    let exec_path = Some(format!("{derived_root_path}/{derived_name}.py"));
+                    PluginLang::PyPip
+                }
+                "pyproject.toml" => {
+                    let exec_path = Some(format!("{derived_root_path}/{derived_name}.py"));
+                    PluginLang::PyPoetry
+                }
+                // We dot have any information on standard pattern on where to find the
+                // plugin exec path, so for now we skip the indexing!
+                //
+                // N.B: The plugin should use the coffee manifest, period.
+                "go.mod" => PluginLang::Go,
+                "cargo.toml" => PluginLang::Rust,
+                "pubspec.yaml" => PluginLang::Dart,
+                "package.json" => PluginLang::JavaScript,
+                "tsconfig.json" => PluginLang::TypeScript,
+                _ => PluginLang::Unknown,
+            };
+            if plugin_lang != PluginLang::Unknown {
+                // TODO: call recursive to look under sub directory
+                break;
+            } else {
+                return Ok(Some(IndexingInfo {
+                    exec_path: exec_path.unwrap(),
+                    config: None,
+                    lang: plugin_lang,
+                }));
+            }
+        }
+        // There is nothing in this path
         Ok(None)
     }
 
@@ -140,47 +192,12 @@ impl Github {
                     if let Some(index_info) = self.lookup_config_file(&root_path).await? {
                         exec_path = Some(index_info.exec_path);
                         plugin_lang = index_info.lang;
-                        plugin_name = Some(index_info.config.plugin.name.to_owned());
-                        conf = Some(index_info.config);
+                        // SAFETY: it is safe to unwrap because a config gile has always a file
+                        let config = index_info.config.clone().unwrap();
+                        plugin_name = Some(config.plugin.name.to_owned());
+                        conf = index_info.config;
                     } else {
-                        // check if there was a coffee configuration file
-                        log::debug!("conf file not found, so we try to guess the language");
-                        // try to understand the language from the file
-                        let files = WalkDir::new(plugin_path.path()).max_depth(1);
-                        for file in files {
-                            let file_dir = file.unwrap().clone();
-                            let (derived_root_path, derived_name) =
-                                get_plugin_info_from_path(file_dir.path())?;
-
-                            plugin_name = Some(derived_name.to_string());
-                            debug!("looking for {derived_name} in {derived_root_path}");
-                            let file_name = file_dir.file_name().to_str().unwrap();
-                            plugin_lang = match file_name {
-                                "requirements.txt" => {
-                                    exec_path =
-                                        Some(format!("{derived_root_path}/{derived_name}.py"));
-                                    PluginLang::PyPip
-                                }
-                                "pyproject.toml" => {
-                                    exec_path =
-                                        Some(format!("{derived_root_path}/{derived_name}.py"));
-                                    PluginLang::PyPoetry
-                                }
-                                // We dot have any information on standard pattern on where to find the
-                                // plugin exec path, so for now we skip the indexing!
-                                //
-                                // N.B: The plugin should use the coffee manifest, period.
-                                "go.mod" => PluginLang::Go,
-                                "cargo.toml" => PluginLang::Rust,
-                                "pubspec.yaml" => PluginLang::Dart,
-                                "package.json" => PluginLang::JavaScript,
-                                "tsconfig.json" => PluginLang::TypeScript,
-                                _ => PluginLang::Unknown,
-                            };
-                            if plugin_lang != PluginLang::Unknown {
-                                break;
-                            }
-                        }
+                        let index_info = self.try_guess_language(plugin_path.path()).await?;
                     }
                     debug!("possible plugin language: {:?}", plugin_lang);
                     if exec_path.is_none() {
