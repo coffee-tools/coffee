@@ -93,7 +93,7 @@ async fn coffee_install(
     let try_dynamic = body.try_dynamic;
 
     let mut coffee = data.coffee.lock().await;
-    let result = coffee.install(plugin, false, try_dynamic).await;
+    let result = coffee.install(plugin, None, false, try_dynamic).await;
 
     handle_httpd_response!(result, "Plugin '{plugin}' installed successfully")
 }

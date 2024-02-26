@@ -18,6 +18,7 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
     match args.command {
         CoffeeCommand::Install {
             plugin,
+            branch,
             verbose,
             dynamic,
         } => {
@@ -26,7 +27,7 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
             } else {
                 None
             };
-            let result = coffee.install(&plugin, verbose, dynamic).await;
+            let result = coffee.install(&plugin, branch, verbose, dynamic).await;
             if let Some(spinner) = spinner {
                 if result.is_ok() {
                     spinner.finish();
