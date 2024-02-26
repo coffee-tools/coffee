@@ -270,7 +270,7 @@ impl PluginManager for CoffeeManager {
                     old_root_path,
                     new_root_path
                 );
-                let script = format!("cp -r {old_root_path} {new_root_path}");
+                let script = format!("mkdir -p {new_root_path} || echo '{new_root_path} already exist' && cp -r {old_root_path}/ {new_root_path}");
                 sh!(self.config.root_path.clone(), script, verbose);
                 log::debug!(
                     "Done! copying directory from {} inside the new one {}",
