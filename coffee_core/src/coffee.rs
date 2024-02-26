@@ -15,6 +15,7 @@ use serde_json::json;
 use tokio::process::Command;
 
 use coffee_github::repository::Github;
+use coffee_github::utils::git_checkout;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
@@ -315,6 +316,10 @@ impl PluginManager for CoffeeManager {
                         let new_exec_path = format!("{}{}", new_root_path, relative_path);
                         plugin.root_path = new_root_path;
                         plugin.exec_path = new_exec_path;
+
+                        if let Some(branch) = branch {
+                            let _ = git_checkout(&plugin.root_path, &branch, verbose).await?;
+                        }
 
                         log::debug!("plugin: {:?}", plugin);
                         let path = plugin.configure(verbose).await?;
