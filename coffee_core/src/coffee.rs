@@ -169,6 +169,17 @@ impl CoffeeManager {
         Ok(())
     }
 
+    pub async fn stop_plugin(&self, path: &str) -> Result<(), CoffeeError> {
+        let mut payload = json_utils::init_payload();
+        json_utils::add_str(&mut payload, "subcommand", "stop");
+        json_utils::add_str(&mut payload, "plugin", path);
+        let response = self
+            .cln::<serde_json::Value, serde_json::Value>("plugin", payload)
+            .await?;
+        log::debug!("plugin stopped: {response}");
+        Ok(())
+    }
+
     pub fn storage_info(&self) -> CoffeeStorageInfo {
         CoffeeStorageInfo::from(self)
     }
@@ -300,6 +311,8 @@ impl PluginManager for CoffeeManager {
                             self.flush().await?;
                             self.update_conf().await?;
                         } else {
+                            self.config.plugins.push(plugin);
+                            self.flush().await?;
                             self.start_plugin(&path).await?;
                         }
                         return Ok(());
@@ -328,9 +341,19 @@ impl PluginManager for CoffeeManager {
             log::debug!("runnable plugin path: {exec_path}");
             plugins.remove(index);
             log::debug!("coffee cln config: {}", self.coffee_cln_config);
-            self.coffee_cln_config
-                .rm_conf("plugin", Some(&exec_path.to_owned()))
-                .map_err(|err| error!("{}", &err.cause))?;
+            let remove_config = self
+                .coffee_cln_config
+                .rm_conf("plugin", Some(&exec_path.to_owned()));
+            if let Err(err) = remove_config {
+                // if this is true, we are probably a dynamic plugin:
+                if err.cause.contains("field with `plugin` not present") {
+                    if let Err(e) = self.stop_plugin(&exec_path).await {
+                        log::warn!("{}", e);
+                    };
+                } else {
+                    return Err(error!("{}", &err.cause));
+                }
+            }
             self.flush().await?;
             self.update_conf().await?;
             Ok(CoffeeRemove { plugin })
