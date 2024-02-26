@@ -318,7 +318,10 @@ impl PluginManager for CoffeeManager {
                         plugin.exec_path = new_exec_path;
 
                         if let Some(branch) = branch {
-                            let _ = git_checkout(&plugin.root_path, &branch, verbose).await?;
+                            // FIXME: Where we store the date? how we manage it?
+                            let (commit, _) =
+                                git_checkout(&plugin.root_path, &branch, verbose).await?;
+                            plugin.commit = Some(commit);
                         }
 
                         log::debug!("plugin: {:?}", plugin);
