@@ -255,6 +255,7 @@ impl PluginManager for CoffeeManager {
     async fn install(
         &mut self,
         plugin: &str,
+        branch: Option<String>,
         verbose: bool,
         try_dynamic: bool,
     ) -> Result<(), CoffeeError> {
@@ -407,7 +408,7 @@ impl PluginManager for CoffeeManager {
             UpgradeStatus::Updated(_, _) => {
                 for plugins in status.plugins_effected.iter() {
                     self.remove(plugins).await?;
-                    self.install(plugins, verbose, false).await?;
+                    self.install(plugins, None, verbose, false).await?;
                 }
             }
             _ => {}

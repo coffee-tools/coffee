@@ -18,6 +18,7 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
     match args.command {
         CoffeeCommand::Install {
             plugin,
+            branch,
             verbose,
             dynamic,
         } => {
@@ -26,7 +27,7 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
             } else {
                 None
             };
-            match coffee.install(&plugin, verbose, dynamic).await {
+            match coffee.install(&plugin, branch, verbose, dynamic).await {
                 Ok(_) => {
                     spinner.and_then(|spinner| Some(spinner.finish()));
                     term::success!("Plugin {plugin} Compiled and Installed")
