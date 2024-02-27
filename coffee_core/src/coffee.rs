@@ -586,15 +586,23 @@ impl PluginManager for CoffeeManager {
                 }),
             )
             .await?;
-        let tip: CoffeeTip = self
+        let pay: PayResponse = self
             .cln(
                 "pay",
                 json!({
                     "bolt11": invoice.invoice,
-                    "amount_msat": amount_msat,
                 }),
             )
             .await?;
+        let tip = CoffeeTip {
+            for_plugin: plugin.name(),
+            invoice: invoice.invoice,
+            status: pay.status,
+            destination: pay.destination,
+            amount_msat: pay.amount_msat,
+            amount_sent_msat: pay.amount_sent_msat,
+            warning_partial_completion: pay.warning_partial_completion,
+        };
         Ok(tip)
     }
 
