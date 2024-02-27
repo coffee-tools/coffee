@@ -258,4 +258,17 @@ pub mod response {
         pub amount_sent_msat: u64,
         pub warning_partial_completion: Option<String>,
     }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct PayResponse {
+        pub payment_preimage: String,
+        pub destination: Option<String>,
+        pub payment_hash: String,
+        pub created_at: f64,
+        pub parts: u32,
+        pub amount_msat: u64,
+        pub amount_sent_msat: u64,
+        pub warning_partial_completion: Option<String>,
+        pub status: String,
+    }
 }
