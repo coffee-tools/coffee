@@ -35,6 +35,7 @@ Where it is possible to specify the following options:
 - `lang`: the language of the plugin, used to try to install a plugin when the `install` script is not specified;
 - `install`: a custom install script used by Coffee to compile the plugin;
 - `main`: the binary or runnable file that core lightning needs to run.
+- `important`: bool flag for plugins that must be run as important-plugin
 
 In the future, the coffee will be also able to install `binary` other than a `plugin`, so coffee will be installed with coffee
 itself. With some craziness will be also possible to manage core lightning itself.

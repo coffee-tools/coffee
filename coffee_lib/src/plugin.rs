@@ -165,6 +165,18 @@ impl Plugin {
     pub fn tipping_info(&self) -> Option<Tipping> {
         self.conf.as_ref().and_then(|conf| conf.tipping.clone())
     }
+
+    pub fn important(&self) -> bool {
+        if let Some(config) = &self.conf {
+            if let Some(important) = config.plugin.important {
+                important
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
 }
 
 impl fmt::Display for Plugin {

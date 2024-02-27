@@ -271,6 +271,12 @@ impl PluginManager for CoffeeManager {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
                 log::trace!("{:?}", plugin);
 
+                if try_dynamic && plugin.important() {
+                    return Err(error!(
+                        "plugin is important, can't be dynamically installed"
+                    ));
+                }
+
                 // old_root_path is the path where the plugin is cloned and currently stored
                 // eg. ~/.coffee/repositories/<repo_name>/<plugin_name>
                 let old_root_path = plugin.root_path.clone();
@@ -297,6 +303,12 @@ impl PluginManager for CoffeeManager {
                 );
                 let old_exec_path = plugin.exec_path.clone();
 
+                let plugin_conf_key = if plugin.important() {
+                    "important-plugin"
+                } else {
+                    "plugin"
+                };
+
                 match old_exec_path.strip_prefix(&old_root_path) {
                     Some(relative_path) => {
                         let new_exec_path = format!("{}{}", new_root_path, relative_path);
@@ -312,7 +324,7 @@ impl PluginManager for CoffeeManager {
                             self.config.plugins.push(plugin);
                             log::debug!("path coffee conf: {}", self.coffee_cln_config.path);
                             self.coffee_cln_config
-                                .add_conf("plugin", &path.to_owned())
+                                .add_conf(plugin_conf_key, &path.to_owned())
                                 .map_err(|err| error!("{}", err.cause))?;
                             log::debug!("coffee conf updated: {}", self.coffee_cln_config);
                             self.flush().await?;
@@ -348,9 +360,14 @@ impl PluginManager for CoffeeManager {
             log::debug!("runnable plugin path: {exec_path}");
             plugins.remove(index);
             log::debug!("coffee cln config: {}", self.coffee_cln_config);
+            let plugin_conf_key = if plugin.important() {
+                "important-plugin"
+            } else {
+                "plugin"
+            };
             let remove_config = self
                 .coffee_cln_config
-                .rm_conf("plugin", Some(&exec_path.to_owned()));
+                .rm_conf(plugin_conf_key, Some(&exec_path.to_owned()));
             if let Err(err) = remove_config {
                 // if this is true, we are probably a dynamic plugin:
                 if err.cause.contains("field with `plugin` not present") {

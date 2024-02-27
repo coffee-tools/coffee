@@ -16,6 +16,7 @@ pub struct Plugin {
     pub dependencies: Option<Vec<String>>,
     pub install: Option<String>,
     pub main: String,
+    pub important: Option<bool>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
