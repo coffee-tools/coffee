@@ -1,8 +1,8 @@
 //! Coffee mod implementation
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::path::Path;
 use std::vec::Vec;
-use tokio::fs;
 
 use async_trait::async_trait;
 use clightningrpc_common::client::Client;
@@ -12,6 +12,7 @@ use log;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tokio::fs;
 use tokio::process::Command;
 
 use coffee_github::repository::Github;
@@ -20,6 +21,7 @@ use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
 use coffee_lib::types::response::*;
 use coffee_lib::url::URL;
+use coffee_lib::utils::{copy_dir_if_exist, rm_dir_if_exist};
 use coffee_lib::{commit_id, error, get_repo_info, sh};
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::nosql_db::NoSQlStorage;
@@ -432,7 +434,8 @@ impl PluginManager for CoffeeManager {
         if self.repos.contains_key(name) {
             return Err(error!("repository with name: {name} already exists"));
         }
-        let url = URL::new(&self.config.root_path, url, name);
+        let local_path = format!("{}/{}", self.config.root_path, self.config.network);
+        let url = URL::new(&local_path, url, name);
         log::debug!("remote adding: {} {}", name, &url.url_string);
         let mut repo = Github::new(name, &url);
         repo.init().await?;
@@ -544,6 +547,17 @@ impl PluginManager for CoffeeManager {
                 Defect::RepositoryLocallyAbsent(repos) => {
                     let mut actions = self.patch_repository_locally_absent(repos.to_vec()).await?;
                     nurse_actions.append(&mut actions);
+                }
+                Defect::CoffeeGlobalrepoCleanup(networks) => {
+                    let global_repo = format!("{}/repositories", self.config.root_path);
+                    for (network, path) in networks {
+                        if !Path::exists(Path::new(&path)) {
+                            copy_dir_if_exist(&global_repo, path).await?;
+                        }
+                        nurse_actions
+                            .push(NurseStatus::MovingGlobalRepostoryTo(network.to_owned()));
+                    }
+                    rm_dir_if_exist(&global_repo).await?;
                 }
             }
         }

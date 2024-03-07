@@ -33,7 +33,7 @@ use async_trait::async_trait;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::types::response::{ChainOfResponsibilityStatus, Defect};
 
-use super::strategy::GitRepositoryLocallyAbsentStrategy;
+use super::strategy::{CoffeeRepositoryDirCleanUp, GitRepositoryLocallyAbsentStrategy};
 use crate::coffee::CoffeeManager;
 
 #[async_trait]
@@ -52,7 +52,10 @@ impl RecoveryChainOfResponsibility {
     /// Create a new instance of the chain of responsibility
     pub async fn new() -> Result<Self, CoffeeError> {
         Ok(Self {
-            handlers: vec![Arc::new(GitRepositoryLocallyAbsentStrategy)],
+            handlers: vec![
+                Arc::new(GitRepositoryLocallyAbsentStrategy),
+                Arc::new(CoffeeRepositoryDirCleanUp),
+            ],
         })
     }
 

@@ -74,3 +74,34 @@ impl Handler for GitRepositoryLocallyAbsentStrategy {
         }
     }
 }
+
+/// Stategy for migration of the repository global directory
+/// to a local directory for each network, see [1]
+///
+/// This is a strategy tht return the list of network that
+/// needs to be migrated to to the new repository configuration.
+///
+/// [1] https://github.com/coffee-tools/coffee/issues/234
+pub struct CoffeeRepositoryDirCleanUp;
+
+#[async_trait]
+impl Handler for CoffeeRepositoryDirCleanUp {
+    async fn can_be_applied(
+        self: Arc<Self>,
+        coffee: &CoffeeManager,
+    ) -> Result<Option<Defect>, CoffeeError> {
+        let networks = ["testnet", "signet", "bitcoin", "liquid"];
+        // Check whether there exists a network-specific repositories folder for each network.
+        let mut directory_moving = vec![];
+        for network in networks {
+            let subpath_repo = format!("{}/{network}/repositories", coffee.config.root_path);
+            if !Path::exists(Path::new(&subpath_repo)) {
+                directory_moving.push((network.to_string(), subpath_repo));
+            }
+        }
+        if directory_moving.is_empty() {
+            return Ok(None);
+        }
+        Ok(Some(Defect::CoffeeGlobalrepoCleanup(directory_moving)))
+    }
+}

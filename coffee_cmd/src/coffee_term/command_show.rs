@@ -111,10 +111,14 @@ pub fn show_nurse_result(
                     NurseStatus::RepositoryLocallyRemoved(_) => {
                         "Removed from local storage".to_string()
                     }
+                    NurseStatus::MovingGlobalRepostoryTo(_) => {
+                        "Moving Global repository directory".to_string()
+                    }
                 };
                 let repos_str = match status {
                     NurseStatus::RepositoryLocallyRestored(repos)
                     | NurseStatus::RepositoryLocallyRemoved(repos) => repos.join(", "),
+                    NurseStatus::MovingGlobalRepostoryTo(network) => network.to_owned(),
                 };
 
                 table.push([
