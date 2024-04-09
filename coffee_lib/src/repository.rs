@@ -34,6 +34,11 @@ pub trait Repository: Any {
     /// recover the repository from the commit id.
     async fn recover(&mut self) -> Result<(), CoffeeError>;
 
+    /// While migrating there is a possibility that we should
+    /// move an old repository into a new path. So this
+    /// is semplyfing this process.
+    fn change_root_path(&mut self, path: &str);
+
     /// return the name of the repository.
     fn name(&self) -> String;
 

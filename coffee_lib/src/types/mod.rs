@@ -166,37 +166,6 @@ pub mod response {
         }
     }
 
-    impl fmt::Display for ChainOfResponsibilityStatus {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            if self.defects.is_empty() {
-                write!(f, "Coffee is sane")
-            } else {
-                writeln!(f, "Coffee has the following defects:")?;
-                for (i, defect) in self.defects.iter().enumerate() {
-                    match defect {
-                        Defect::RepositoryLocallyAbsent(repos) => {
-                            write!(f, "{}. Repository missing locally: ", i + 1)?;
-                            for repo in repos {
-                                write!(f, " {}", repo)?;
-                            }
-                        }
-                        Defect::CoffeeGlobalRepoCleanup(networks) => {
-                            writeln!(
-                                f,
-                                "Global repository migration completed for the networks: {}",
-                                networks
-                                    .iter()
-                                    .map(|(network, _)| network.to_owned())
-                                    .collect::<String>()
-                            )?;
-                        }
-                    }
-                }
-                Ok(())
-            }
-        }
-    }
-
     /// This struct is used to represent the status of nurse,
     /// either sane or not.
     /// If not sane, return the action that nurse has taken.
@@ -231,7 +200,9 @@ pub mod response {
                     NurseStatus::RepositoryLocallyRestored(repos) => {
                         repositories_locally_restored.append(&mut repos.clone())
                     }
-                    NurseStatus::MovingGlobalRepostoryTo(_) => {}
+                    NurseStatus::MovingGlobalRepostoryTo(status) => {
+                        new_status.push(NurseStatus::MovingGlobalRepostoryTo(status.to_owned()));
+                    }
                 }
             }
             if !repositories_locally_removed.is_empty() {

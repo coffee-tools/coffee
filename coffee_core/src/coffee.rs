@@ -79,8 +79,8 @@ pub struct CoffeeManager {
 }
 
 impl CoffeeManager {
-    pub async fn new(conf: &dyn CoffeeArgs) -> Result<Self, CoffeeError> {
-        let conf = CoffeeConf::new(conf).await?;
+    pub async fn new(conf_args: &dyn CoffeeArgs) -> Result<Self, CoffeeError> {
+        let conf = CoffeeConf::new(conf_args).await?;
         let mut coffee = CoffeeManager {
             config: conf.clone(),
             coffee_cln_config: CLNConf::new(conf.config_path, true),
@@ -97,6 +97,7 @@ impl CoffeeManager {
     /// when coffee is configured, run an inventory to collect all the necessary information
     /// about the coffee ecosystem.
     async fn inventory(&mut self) -> Result<(), CoffeeError> {
+        let skip_verify = self.config.skip_verify;
         let _ = self
             .storage
             .load::<CoffeeStorageInfo>(&self.config.network)
@@ -122,7 +123,7 @@ impl CoffeeManager {
         if let Err(err) = self.coffee_cln_config.parse() {
             log::error!("{}", err.cause);
         }
-        if !self.config.skip_verify {
+        if !skip_verify {
             // Check for the chain of responsibility
             let status = self.recovery_strategies.scan(self).await?;
             log::debug!("Chain of responsibility status: {:?}", status);
@@ -429,8 +430,7 @@ impl PluginManager for CoffeeManager {
         if !force && self.repos.contains_key(name) {
             return Err(error!("repository with name: {name} already exists"));
         }
-        let local_path = format!("{}/{}", self.config.root_path, self.config.network);
-        let url = URL::new(&local_path, url, name);
+        let url = URL::new(&self.config.path(), url, name);
         log::debug!("remote adding: {} {}", name, &url.url_string);
         let mut repo = Github::new(name, &url);
         repo.init().await?;
@@ -567,6 +567,8 @@ impl PluginManager for CoffeeManager {
             status: nurse_actions,
         };
         nurse.organize();
+        // Refesh the status
+        self.flush().await?;
         Ok(nurse)
     }
 
@@ -589,6 +591,7 @@ impl PluginManager for CoffeeManager {
                 .get_mut(repo_name)
                 .ok_or_else(|| error!("repository with name: {repo_name} not found"))?;
 
+            repo.change_root_path(&self.config.path());
             match repo.recover().await {
                 Ok(_) => {
                     log::info!("repository {} recovered", repo_name.clone());

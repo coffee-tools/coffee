@@ -1,5 +1,5 @@
 use super::macros::error;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use tokio::fs;
 
@@ -21,6 +21,7 @@ pub fn get_plugin_info_from_path(path: &Path) -> Result<(String, String), Coffee
 }
 
 pub async fn check_dir_or_make_if_missing(path: String) -> Result<(), CoffeeError> {
+    log::trace!("check_dir_or_make_if_missing: `{path}`");
     if !Path::exists(Path::new(&path.to_owned())) {
         fs::create_dir(path.clone()).await?;
         log::debug!("created dir {path}");
@@ -29,11 +30,41 @@ pub async fn check_dir_or_make_if_missing(path: String) -> Result<(), CoffeeErro
 }
 
 pub async fn copy_dir_if_exist(origin: &str, destination: &str) -> Result<(), CoffeeError> {
+    log::trace!("copy_dir_if_exist: from: `{origin}` to `{destination}`");
     if Path::exists(Path::new(&origin)) {
-        fs::copy(origin, destination).await?;
+        copy_dir_recursive(origin.to_owned(), destination.to_owned()).await?;
         log::debug!("copying dir from {origin} to {destination}");
     }
     Ok(())
+}
+
+async fn copy_dir_recursive(source: String, destination: String) -> Result<(), CoffeeError> {
+    async fn inner_copy_dir_recursive(
+        source: PathBuf,
+        destination: PathBuf,
+    ) -> Result<(), CoffeeError> {
+        check_dir_or_make_if_missing(destination.to_string_lossy().to_string()).await?;
+
+        let mut entries = fs::read_dir(source).await?;
+        while let Some(entry) = entries.next_entry().await? {
+            let file_type = entry.file_type().await?;
+            let dest_path = destination.join(entry.file_name());
+            log::debug!("copy entry {:?} in {:?}", entry, dest_path);
+            if file_type.is_dir() {
+                // Here we use Box::pin to allow recursion
+                let fut = inner_copy_dir_recursive(entry.path(), dest_path);
+                Box::pin(fut).await?;
+            } else if file_type.is_file() {
+                fs::copy(entry.path(), &dest_path).await?;
+            }
+        }
+
+        Ok(())
+    }
+    let source = Path::new(&source);
+    let destination = Path::new(&destination);
+    log::info!("{:?} - {:?}", source, destination);
+    inner_copy_dir_recursive(source.to_path_buf(), destination.to_path_buf()).await
 }
 
 pub async fn rm_dir_if_exist(origin: &str) -> Result<(), CoffeeError> {

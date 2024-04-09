@@ -7,7 +7,10 @@ use term::Element;
 
 use coffee_lib::error;
 use coffee_lib::errors::CoffeeError;
-use coffee_lib::types::response::{CoffeeList, CoffeeNurse, CoffeeRemote, CoffeeTip, NurseStatus};
+use coffee_lib::types::response::{
+    ChainOfResponsibilityStatus, CoffeeList, CoffeeNurse, CoffeeRemote, CoffeeTip, Defect,
+    NurseStatus,
+};
 
 pub fn show_list(coffee_list: Result<CoffeeList, CoffeeError>) -> Result<(), CoffeeError> {
     let remotes = coffee_list?;
@@ -83,6 +86,49 @@ pub fn show_remote_list(remote_list: Result<CoffeeRemote, CoffeeError>) -> Resul
     }
     table.print();
 
+    Ok(())
+}
+
+pub fn show_nurse_verify(nurse_verify: &ChainOfResponsibilityStatus) -> Result<(), CoffeeError> {
+    if nurse_verify.defects.is_empty() {
+        term::success!("Coffee configuration is not corrupt! No need to run coffee nurse");
+    } else {
+        let mut table = radicle_term::Table::new(TableOptions::bordered());
+        table.push([
+            term::format::dim(String::from("●")),
+            term::format::bold(String::from("Defects")),
+            term::format::bold(String::from("Affected repositories")),
+        ]);
+        table.divider();
+
+        for defect in nurse_verify.defects.iter() {
+            match defect {
+                Defect::RepositoryLocallyAbsent(repos) => {
+                    let defect = "Repository missing locally";
+                    for repo in repos {
+                        table.push([
+                            term::format::positive("●").into(),
+                            term::format::bold(defect.to_owned()),
+                            term::format::highlight(repo.clone()),
+                        ]);
+                    }
+                }
+                Defect::CoffeeGlobalRepoCleanup(networks) => {
+                    let defect = "Network specific repository missing";
+                    let networks = networks
+                        .iter()
+                        .map(|(network, _)| network.clone())
+                        .collect::<Vec<String>>();
+                    table.push([
+                        term::format::positive("●").into(),
+                        term::format::bold(defect.to_owned()),
+                        term::format::highlight(networks.join(", ")),
+                    ]);
+                }
+            }
+        }
+        table.print();
+    }
     Ok(())
 }
 

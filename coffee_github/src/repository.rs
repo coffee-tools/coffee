@@ -233,6 +233,10 @@ impl Repository for Github {
         }
     }
 
+    fn change_root_path(&mut self, path: &str) {
+        self.url.set_coffee_path(path);
+    }
+
     async fn upgrade(
         &mut self,
         plugins: &Vec<Plugin>,

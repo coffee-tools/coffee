@@ -154,9 +154,9 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
         CoffeeCommand::Nurse { verify } => {
             if verify {
                 let result = coffee.nurse_verify().await?;
-                term::info!("{}", result);
+                coffee_term::show_nurse_verify(&result)?;
                 if !result.is_sane() {
-                    term::info!("Coffee local directory is damaged, please run `coffee nurse` to try to fix it");
+                    term::warning(term::style("Coffee local directory is damaged, please run `coffee nurse` to try to fix it").bold());
                 }
             } else {
                 let nurse_result = coffee.nurse().await;
