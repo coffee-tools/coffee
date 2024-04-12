@@ -247,6 +247,21 @@ impl CoffeeManager {
 
 #[async_trait]
 impl PluginManager for CoffeeManager {
+    /// The repositories home directory, where all the dirs
+    /// will be copied and cloned
+    fn repositories_home(&self) -> String {
+        format!("{}/repositories", self.config.root_path)
+    }
+
+    /// The plugins home directory
+    ///
+    /// When we install a plugin we will have to copy it in
+    /// another plugin directory and this is the home
+    /// (aka root path for it).
+    fn plugins_home(&self) -> String {
+        unimplemented!()
+    }
+
     async fn configure(&mut self) -> Result<(), CoffeeError> {
         log::debug!("plugin configured");
         Ok(())
@@ -269,8 +284,6 @@ impl PluginManager for CoffeeManager {
         // keep track if the plugin is successfully installed
         for repo in self.repos.values() {
             if let Some(mut plugin) = repo.get_plugin_by_name(plugin) {
-                log::trace!("{:?}", plugin);
-
                 if try_dynamic && plugin.important() {
                     return Err(error!(
                         "plugin is important, can't be dynamically installed"
@@ -289,20 +302,11 @@ impl PluginManager for CoffeeManager {
                     plugin.name()
                 );
 
-                log::debug!(
-                    "Start! copying directory from {} inside the new one {}",
-                    old_root_path,
-                    new_root_path
-                );
+                // FIXME: does this with pure rust
                 let script = format!("cp -r {old_root_path} {new_root_path}");
                 sh!(self.config.root_path.clone(), script, verbose);
-                log::debug!(
-                    "Done! copying directory from {} inside the new one {}",
-                    old_root_path,
-                    new_root_path
-                );
-                let old_exec_path = plugin.exec_path.clone();
 
+                let old_exec_path = plugin.exec_path.clone();
                 let plugin_conf_key = if plugin.important() {
                     "important-plugin"
                 } else {
@@ -434,7 +438,7 @@ impl PluginManager for CoffeeManager {
         }
         let url = URL::new(url, name);
         log::debug!("remote adding: {} {}", name, &url.url_string);
-        let repo_path = format!("{}/repositories/{name}", self.config.root_path);
+        let repo_path = format!("{}/{name}", self.repositories_home());
         let mut repo = Github::new(name, &repo_path, &url);
         repo.init().await?;
         self.repos.insert(repo.name(), Box::new(repo));

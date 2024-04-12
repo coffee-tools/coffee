@@ -75,4 +75,15 @@ pub trait PluginManager {
 
     /// enable a plugin by name
     async fn enable(&mut self, plugin: &str) -> Result<(), CoffeeError>;
+
+    /// The repositories home directory, where all the dirs
+    /// will be copied and cloned
+    fn repositories_home(&self) -> String;
+
+    /// The plugins home directory
+    ///
+    /// When we install a plugin we will have to copy it in
+    /// another plugin directory and this is the home
+    /// (aka root path for it).
+    fn plugins_home(&self) -> String;
 }
