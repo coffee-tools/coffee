@@ -41,4 +41,6 @@ pub trait Repository: Any {
     fn url(&self) -> URL;
 
     fn as_any(&self) -> &dyn Any;
+
+    fn home(&self) -> String;
 }

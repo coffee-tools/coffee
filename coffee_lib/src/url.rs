@@ -11,10 +11,12 @@ pub struct URL {
     pub name: String,
     /// the url string
     pub url_string: String,
-    /// the coffee path associated with the url
-    pub path_string: String,
     /// the repo name associated with the url
     pub repo_name: String,
+    #[deprecated(
+        note = "this value is used only for migration from db, a caller you never use this value"
+    )]
+    pub path_string: Option<String>,
 }
 
 /// Handle GitHub HTTP links
@@ -48,23 +50,19 @@ fn get_repo_name_from_url(url: &str) -> String {
 
 impl URL {
     /// Build a new URL and initialize its fields
-    pub fn new(local_path: &str, url: &str, remote_name: &str) -> Self {
+    pub fn new(url: &str, remote_name: &str) -> Self {
         URL {
             name: remote_name.to_owned(),
             url_string: handle_incorrect_url(url),
-            path_string: format!("{local_path}/repositories/{remote_name}"),
             repo_name: get_repo_name_from_url(url),
+            path_string: None,
         }
     }
 }
 
 impl fmt::Display for URL {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "repo_name: {}, url: {}, path: {}",
-            self.repo_name, self.url_string, self.path_string
-        )
+        write!(f, "repo_name: {}, url: {}", self.repo_name, self.url_string)
     }
 }
 
@@ -75,9 +73,8 @@ mod tests {
     #[test]
     fn test_remote() {
         let u = "https://github.com/lightningd/plugins";
-        let url = URL::new("/tmp/", u, "lightningd_plugins");
+        let url = URL::new(u, "lightningd_plugins");
         assert_eq!(url.repo_name, "plugins");
         assert_eq!(url.url_string, u);
-        println!("{}", &url);
     }
 }

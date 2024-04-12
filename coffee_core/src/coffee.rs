@@ -2,7 +2,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::vec::Vec;
-use tokio::fs;
 
 use async_trait::async_trait;
 use clightningrpc_common::client::Client;
@@ -12,6 +11,7 @@ use log;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tokio::fs;
 use tokio::process::Command;
 
 use coffee_github::repository::Github;
@@ -108,11 +108,11 @@ impl CoffeeManager {
             .storage
             .load::<HashMap<RepoName, RepositoryInfo>>("repositories")
             .await
-            .map(|item| {
+            .map(|mut item| {
                 log::debug!("repositories in store {:?}", item);
-                item.iter().for_each(|repo| match repo.1.kind {
+                item.iter_mut().for_each(|(_, info)| match info.kind {
                     Kind::Git => {
-                        let repo = Github::from(repo.1);
+                        let repo = Github::from(info);
                         self.repos.insert(repo.name(), Box::new(repo));
                     }
                 });
@@ -432,9 +432,10 @@ impl PluginManager for CoffeeManager {
         if self.repos.contains_key(name) {
             return Err(error!("repository with name: {name} already exists"));
         }
-        let url = URL::new(&self.config.root_path, url, name);
+        let url = URL::new(url, name);
         log::debug!("remote adding: {} {}", name, &url.url_string);
-        let mut repo = Github::new(name, &url);
+        let repo_path = format!("{}/repositories/{name}", self.config.root_path);
+        let mut repo = Github::new(name, &repo_path, &url);
         repo.init().await?;
         self.repos.insert(repo.name(), Box::new(repo));
         log::debug!("remote added: {} {}", name, &url.url_string);
@@ -447,7 +448,7 @@ impl PluginManager for CoffeeManager {
         match self.repos.get(name) {
             Some(repo) => {
                 let remote_repo = repo.list().await?;
-                let repo_path = repo.url().path_string;
+                let repo_home = repo.home();
                 let plugins = self.config.plugins.clone();
                 for plugin in &remote_repo {
                     if let Some(ind) = plugins
@@ -461,7 +462,7 @@ impl PluginManager for CoffeeManager {
                         }
                     }
                 }
-                fs::remove_dir_all(repo_path).await?;
+                fs::remove_dir_all(repo_home).await?;
                 self.repos.remove(name);
                 log::debug!("remote removed: {}", name);
                 self.flush().await?;
@@ -476,8 +477,8 @@ impl PluginManager for CoffeeManager {
     async fn list_remotes(&mut self) -> Result<CoffeeRemote, CoffeeError> {
         let mut remote_list = Vec::new();
         for repo in self.repos.values() {
-            let repository = git2::Repository::open(repo.url().path_string.as_str())
-                .map_err(|err| error!("{}", err.message()))?;
+            let repository =
+                git2::Repository::open(repo.home()).map_err(|err| error!("{}", err.message()))?;
             let (commit, date) = get_repo_info!(repository);
             remote_list.push(CoffeeListRemote {
                 local_name: repo.name(),
@@ -587,7 +588,7 @@ impl PluginManager for CoffeeManager {
                     // Maybe when trying to recover the repository,
                     // we have created the folder but we were not able
                     // to clone the repository.
-                    let repo_path = repo.url().path_string;
+                    let repo_path = repo.home();
                     // This shouldn't return an error if the repository
                     // is not present locally.
                     let _ = fs::remove_dir_all(repo_path).await;

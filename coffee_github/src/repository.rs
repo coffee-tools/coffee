@@ -27,6 +27,8 @@ pub struct Github {
     /// the url of the repository to be able
     /// to get all the plugin information.
     url: URL,
+    /// The root path of the repository
+    root_path: Option<String>,
     /// the name of the repository that can be used
     /// by coffee as repository key.
     name: String,
@@ -54,11 +56,12 @@ fn is_hidden(entry: &DirEntry) -> bool {
 impl Github {
     /// Create a new instance of the Repository
     /// with a name and a url
-    pub fn new(name: &str, url: &URL) -> Self {
+    pub fn new(name: &str, path: &str, url: &URL) -> Self {
         debug!("creating repository: {} {}", name, url.url_string);
         Github {
             name: name.to_owned(),
             url: url.clone(),
+            root_path: Some(path.to_owned()),
             plugins: vec![],
             branch: "".to_owned(),
             git_head: None,
@@ -69,8 +72,7 @@ impl Github {
     /// Index the repository to store information
     /// related to the plugins
     pub async fn index_repository(&mut self) -> Result<(), CoffeeError> {
-        let repo_path = &self.url.path_string;
-        let target_dirs = WalkDir::new(repo_path)
+        let target_dirs = WalkDir::new(self.home())
             .max_depth(1)
             .into_iter()
             .filter_entry(|dir_entry| !is_hidden(dir_entry));
@@ -203,17 +205,25 @@ impl Github {
 
 #[async_trait]
 impl Repository for Github {
+    fn home(&self) -> String {
+        // SAFETY: this is safe bause the optional
+        // value is used only for retro-compatibility
+        self.root_path.clone().unwrap()
+    }
+
     /// Init the repository where it is required to index
     /// all the plugin contained, and store somewhere the index.
     ///
     /// Where to store the index is an implementation
     /// details.
     async fn init(&mut self) -> Result<(), CoffeeError> {
-        debug!(
+        log::debug!(
             "initializing repository: {} {} > {}",
-            self.name, &self.url.url_string, &self.url.path_string,
+            self.name,
+            self.url.url_string,
+            self.home(),
         );
-        let res = git2::Repository::clone(&self.url.url_string, &self.url.path_string);
+        let res = git2::Repository::clone(&self.url.url_string, &self.home());
         match res {
             Ok(repo) => {
                 self.branch = if repo.find_branch("master", git2::BranchType::Local).is_ok() {
@@ -225,7 +235,7 @@ impl Repository for Github {
                 self.git_head = Some(commit.clone());
                 self.last_activity = Some(date.clone());
 
-                let clone = clone_recursive_fix(repo, &self.url).await;
+                let clone = clone_recursive_fix(repo, &self.home()).await;
                 self.index_repository().await?;
                 clone
             }
@@ -259,7 +269,7 @@ impl Repository for Github {
             }
         }
         // pull the changes from the repository
-        let status = git_upgrade(&self.url.path_string, &self.branch, verbose).await?;
+        let status = git_upgrade(&self.home(), &self.branch, verbose).await?;
         self.git_head = Some(status.commit_id());
         self.last_activity = Some(status.date());
         Ok(CoffeeUpgrade {
@@ -275,11 +285,11 @@ impl Repository for Github {
         log::debug!(
             "recovering repository: {} {} > {}",
             self.name,
-            &self.url.url_string,
-            &self.url.path_string,
+            self.url.url_string,
+            self.home(),
         );
         // recursively clone the repository
-        let res = git2::Repository::clone(&self.url.url_string, &self.url.path_string);
+        let res = git2::Repository::clone(&self.url.url_string, &self.home());
         match res {
             Ok(repo) => {
                 // get the commit id
@@ -298,8 +308,7 @@ impl Repository for Github {
                 // retrieve the submodules
                 let submodules = repo.submodules().unwrap_or_default();
                 for (_, sub) in submodules.iter().enumerate() {
-                    let path =
-                        format!("{}/{}", &self.url.path_string, sub.path().to_str().unwrap());
+                    let path = format!("{}/{}", &self.home(), sub.path().to_str().unwrap());
                     if let Err(err) = git2::Repository::clone(sub.url().unwrap(), &path) {
                         return Err(error!("{}", err.message()));
                     }
@@ -344,7 +353,8 @@ impl Repository for Github {
 impl From<StorageRepository> for Github {
     fn from(value: StorageRepository) -> Self {
         Github {
-            url: value.url,
+            url: value.url.clone(),
+            root_path: Some(value.root_path.unwrap_or(value.url.path_string.unwrap())),
             name: value.name,
             plugins: value.plugins,
             branch: value.branch,
@@ -354,10 +364,16 @@ impl From<StorageRepository> for Github {
     }
 }
 
-impl From<&StorageRepository> for Github {
-    fn from(value: &StorageRepository) -> Self {
+impl From<&mut StorageRepository> for Github {
+    fn from(value: &mut StorageRepository) -> Self {
+        let root_path = value
+            .root_path
+            .clone()
+            .unwrap_or(value.url.path_string.clone().unwrap());
+        value.url.path_string = None; // make sure that we store a none value
         Github {
             url: value.url.to_owned(),
+            root_path: Some(root_path),
             name: value.name.to_owned(),
             plugins: value.plugins.to_owned(),
             branch: value.branch.to_owned(),
@@ -377,6 +393,9 @@ impl From<Github> for StorageRepository {
             branch: value.branch,
             git_head: value.git_head,
             last_activity: value.last_activity,
+            root_path: Some(value.root_path.expect(
+                "this should be alway not None, otherwise there is a bug in the migration logic",
+            )),
         }
     }
 }
@@ -391,6 +410,9 @@ impl From<&Github> for StorageRepository {
             branch: value.branch.to_owned(),
             git_head: value.git_head.to_owned(),
             last_activity: value.last_activity.to_owned(),
+            root_path: Some(value.root_path.clone().expect(
+                "this should be alway not None, otherwise there is a bug in the migration logic",
+            )),
         }
     }
 }

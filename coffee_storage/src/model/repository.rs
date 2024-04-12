@@ -12,6 +12,10 @@ pub enum Kind {
 pub struct Repository {
     pub kind: Kind,
     pub name: String,
+    #[deprecated(
+        note = "make this not optional, the optional value is good just for db migration"
+    )]
+    pub root_path: Option<String>,
     pub url: URL,
     pub plugins: Vec<Plugin>,
     pub branch: String,

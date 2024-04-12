@@ -56,9 +56,9 @@ impl Handler for GitRepositoryLocallyAbsentStrategy {
         let mut repos: Vec<String> = Vec::new();
         let coffee_repos = &coffee.repos;
         for repo in coffee_repos.values() {
+            let repo_home = repo.home();
             log::debug!("Checking if repository {} exists locally", repo.name());
-            let repo_path = repo.url().path_string;
-            let repo_path = Path::new(&repo_path);
+            let repo_path = Path::new(&repo_home);
             if !repo_path.exists() {
                 log::debug!("Repository {} is missing locally", repo.name());
                 repos.push(repo.name().to_string());
