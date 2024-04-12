@@ -18,7 +18,7 @@ pub struct URL {
 }
 
 /// Handle GitHub HTTP links
-fn remove_dot_git_from_url(url: &str) -> &str {
+pub(crate) fn remove_dot_git_from_url(url: &str) -> &str {
     match url.strip_suffix(".git") {
         Some(s) => s,
         None => url,
@@ -42,8 +42,9 @@ fn handle_incorrect_url(mut url: &str) -> String {
 
 /// Get repo_name field from the URL
 fn get_repo_name_from_url(url: &str) -> String {
-    let repo_name = url.split('/').last().unwrap().to_string();
-    repo_name
+    let repo_name = url.split('/').last().unwrap_or(url);
+    let repo_name = remove_dot_git_from_url(repo_name);
+    repo_name.to_owned()
 }
 
 impl URL {
@@ -70,6 +71,7 @@ impl fmt::Display for URL {
 
 #[cfg(test)]
 mod tests {
+    use super::remove_dot_git_from_url;
     use super::URL;
 
     #[test]
@@ -78,6 +80,13 @@ mod tests {
         let url = URL::new("/tmp/", u, "lightningd_plugins");
         assert_eq!(url.repo_name, "plugins");
         assert_eq!(url.url_string, u);
-        println!("{}", &url);
+    }
+
+    #[test]
+    fn test_remote_git_prefix() {
+        let u = "https://github.com/lightningd/plugins.git";
+        let url = URL::new("/tmp/", u, "lightningd_plugins");
+        assert_eq!(url.repo_name, "plugins");
+        assert_eq!(url.url_string, remove_dot_git_from_url(u));
     }
 }
