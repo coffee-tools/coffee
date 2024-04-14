@@ -105,8 +105,7 @@ impl CoffeeManager {
             .map(|store| {
                 self.config = store.config;
             });
-        // FIXME: check if this exist in a better wai
-        let _ = self
+        let global_repositories = self
             .storage
             .load::<HashMap<RepoName, RepositoryInfo>>("repositories")
             .await
@@ -119,6 +118,34 @@ impl CoffeeManager {
                     }
                 });
             });
+
+        if let Ok(_) = global_repositories {
+            // HACK: this should be done with the nurse command, but
+            // due that currently migrating the database with the nurse
+            // logic is a little bit tricky we do this hack and we try
+            // to move on, but if you are looking something to do in coffee
+            // it is possible to take this problem and design a solution.
+            // FIXME: add the drop method inside nosql_db
+        }
+
+        let local_repositories = self
+            .storage
+            .load::<HashMap<RepoName, RepositoryInfo>>(&format!(
+                "{}/repositories",
+                self.config.network
+            ))
+            .await;
+        if let Ok(repos) = local_repositories {
+            // FIXME: till we are not able to remove a key from
+            // the database
+            self.repos.clear();
+            repos.iter().for_each(|repo| match repo.1.kind {
+                Kind::Git => {
+                    let repo = Github::from(repo.1);
+                    self.repos.insert(repo.name(), Box::new(repo));
+                }
+            });
+        }
 
         if let Err(err) = self.coffee_cln_config.parse() {
             log::error!("{}", err.cause);
@@ -192,7 +219,10 @@ impl CoffeeManager {
             .store(&self.config.network, &store_info)
             .await?;
         self.storage
-            .store("repositories", &store_info.repositories)
+            .store(
+                &format!("{}/repositories", self.config.network),
+                &store_info.repositories,
+            )
             .await?;
         Ok(())
     }
