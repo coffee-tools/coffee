@@ -93,7 +93,7 @@ impl PluginLang {
 }
 
 /// Plugin struct definition
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Plugin {
     name: String,
     /// root path of the plugin

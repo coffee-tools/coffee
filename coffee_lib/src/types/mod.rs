@@ -85,12 +85,12 @@ pub mod response {
         pub plugins: Vec<Plugin>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
     pub struct CoffeeRemote {
         pub remotes: Option<Vec<CoffeeListRemote>>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
     pub struct CoffeeListRemote {
         pub local_name: String,
         pub url: String,

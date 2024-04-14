@@ -40,7 +40,11 @@ pub async fn init_coffee_test_cmd() -> anyhow::Result<()> {
     let root_path = manager.root_path().to_owned();
     manager
         .coffee()
-        .add_remote("folgore", "https://github.com/coffee-tools/folgore.git")
+        .add_remote(
+            "folgore",
+            "https://github.com/coffee-tools/folgore.git",
+            false,
+        )
         .await
         .unwrap();
 
@@ -107,7 +111,11 @@ pub async fn init_coffee_test_add_remote() {
 
     manager
         .coffee()
-        .add_remote("lightningd", "https://github.com/lightningd/plugins.git")
+        .add_remote(
+            "lightningd",
+            "https://github.com/lightningd/plugins.git",
+            false,
+        )
         .await
         .unwrap();
     manager
@@ -141,7 +149,7 @@ pub async fn test_add_remove_plugins() {
     let repo_url = "https://github.com/lightningd/plugins.git";
     manager
         .coffee()
-        .add_remote(repo_name, repo_url)
+        .add_remote(repo_name, repo_url, false)
         .await
         .unwrap();
 
@@ -260,7 +268,7 @@ pub async fn test_errors_and_show() {
     let repo_url = "https://github.com/lightningd/plugins.git";
     manager
         .coffee()
-        .add_remote(repo_name, repo_url)
+        .add_remote(repo_name, repo_url, false)
         .await
         .unwrap();
 
@@ -346,7 +354,11 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
     // Add lightningd remote repository
     manager
         .coffee()
-        .add_remote("lightningd", "https://github.com/lightningd/plugins.git")
+        .add_remote(
+            "lightningd",
+            "https://github.com/lightningd/plugins.git",
+            false,
+        )
         .await
         .unwrap();
     // Install summary plugin
@@ -386,7 +398,11 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
 
     let result = manager
         .coffee()
-        .add_remote("lightningd", "https://github.com/lightningd/plugins.git")
+        .add_remote(
+            "lightningd",
+            "https://github.com/lightningd/plugins.git",
+            false,
+        )
         .await;
     assert!(result.is_err(), "{:?}", result);
     // Install summary plugin
@@ -423,7 +439,7 @@ pub async fn test_double_slash() {
     let repo_url = "https://github.com/lightningd/plugins.git";
     manager
         .coffee()
-        .add_remote(repo_name, repo_url)
+        .add_remote(repo_name, repo_url, false)
         .await
         .unwrap();
 
@@ -486,7 +502,11 @@ pub async fn test_plugin_installation_path() {
     // Add lightningd remote repository
     manager
         .coffee()
-        .add_remote("lightningd", "https://github.com/lightningd/plugins.git")
+        .add_remote(
+            "lightningd",
+            "https://github.com/lightningd/plugins.git",
+            false,
+        )
         .await
         .unwrap();
 
@@ -604,7 +624,11 @@ pub async fn test_nurse_repository_missing_on_disk() {
     // Add folgore remote repository
     manager
         .coffee()
-        .add_remote("folgore", "https://github.com/coffee-tools/folgore.git")
+        .add_remote(
+            "folgore",
+            "https://github.com/coffee-tools/folgore.git",
+            false,
+        )
         .await
         .unwrap();
 
@@ -699,4 +723,88 @@ pub async fn test_nurse_repository_missing_on_disk() {
     assert!(result.is_sane());
 
     cln.stop().await.unwrap();
+}
+
+/// Materializing the following test case
+/// https://github.com/coffee-tools/coffee/pull/239#issuecomment-2052606147
+#[tokio::test]
+#[ntest::timeout(560000)]
+pub async fn test_migrated_repository_to_local_one() {
+    init();
+    // We need to run before the testnet and the regtest
+    // because we work on the same database
+    //
+    // WHEN UNIX socket?
+    let dir = Arc::new(tempfile::tempdir().unwrap());
+
+    let testnet_conf = CoffeeTestingArgs {
+        conf: None,
+        data_dir: dir.path().to_str().unwrap().to_owned(),
+        network: "testnet".to_owned(),
+    };
+
+    let mut coffee_testnet_m = CoffeeTesting::tmp_with_args(&testnet_conf, dir.clone())
+        .await
+        .unwrap();
+    let coffee_testnet = coffee_testnet_m.coffee();
+    coffee_testnet
+        .add_remote(
+            "lightningd",
+            "https://github.com/lightningd/plugins.git",
+            false,
+        )
+        .await
+        .unwrap();
+
+    let test_remotes = coffee_testnet.list_remotes().await.unwrap();
+    std::mem::drop(coffee_testnet_m);
+
+    let regtest_conf = CoffeeTestingArgs {
+        conf: None,
+        data_dir: dir.path().to_str().unwrap().to_owned(),
+        network: "regtest".to_owned(),
+    };
+
+    let mut coffee_regtest_m = CoffeeTesting::tmp_with_args(&regtest_conf, dir.clone())
+        .await
+        .unwrap();
+    let coffee_regtest = coffee_regtest_m.coffee();
+
+    coffee_regtest
+        .add_remote(
+            "folgore",
+            "https://github.com/coffee-tools/folgore.git",
+            false,
+        )
+        .await
+        .unwrap();
+
+    coffee_regtest
+        .install("folgore", false, false)
+        .await
+        .unwrap();
+
+    let reg_plugins = coffee_regtest.list().await.unwrap();
+    let reg_remotes = coffee_regtest.list_remotes().await.unwrap();
+
+    std::mem::drop(coffee_regtest_m);
+    // just lightnind
+    assert_eq!(test_remotes.remotes.unwrap().len(), 1);
+    // just folgore
+    assert_eq!(reg_remotes.remotes.clone().unwrap().len(), 1);
+
+    let mut coffee_testnet_m = CoffeeTesting::tmp_with_args(&testnet_conf, dir.clone())
+        .await
+        .unwrap();
+    let coffee_testnet = coffee_testnet_m.coffee();
+    let test_plugins = coffee_testnet.list().await.unwrap();
+    let test_remotes = coffee_testnet.list_remotes().await.unwrap();
+    std::mem::drop(coffee_testnet_m);
+
+    // in the regtest plugins we will just a single plugin, and in testnet none
+    assert_eq!(test_plugins.plugins.len() + 1, reg_plugins.plugins.len());
+    assert_eq!(
+        test_remotes.remotes.unwrap().len(),
+        reg_remotes.remotes.unwrap().len()
+    );
 }

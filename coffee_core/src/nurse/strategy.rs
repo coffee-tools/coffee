@@ -91,6 +91,11 @@ impl Handler for CoffeeRepositoryDirCleanUpStrategy {
         coffee: &CoffeeManager,
     ) -> Result<Option<Defect>, CoffeeError> {
         let network = coffee.config.network.clone();
+        let global_dir = coffee.config.root_path.clone();
+        let global_dir = format!("{global_dir}/repositories");
+        if !Path::exists(Path::new(&global_dir)) {
+            return Ok(None);
+        }
         // Check whether there exists a network-specific repositories folder for each network.
         let mut directory_moving = vec![];
         let subpath_repo = format!("{}/{network}/repositories", coffee.config.root_path);
