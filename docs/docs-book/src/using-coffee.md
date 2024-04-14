@@ -74,7 +74,7 @@ To list available plugins in a specific remote repository
 > ✅ Implemented
 
 ```bash
-coffee remote <repository_name> --plugins
+coffee remote inspect <repository_name>
 ```
 
 ### Install a Plugin
