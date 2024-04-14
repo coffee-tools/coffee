@@ -48,8 +48,6 @@ pub enum CoffeeCommand {
     Remote {
         #[clap(subcommand)]
         action: Option<RemoteAction>,
-        #[arg(short, long, action = clap::ArgAction::SetTrue, requires = "remote-name")]
-        plugins: bool,
         #[arg(name = "remote-name", help = "The name of the remote repository")]
         name: Option<String>,
     },
@@ -87,6 +85,8 @@ pub enum RemoteAction {
     Add { name: String, url: String },
     /// Remove a remote repository from the plugin manager.
     Rm { name: String },
+    /// Inspect the plugins available in a remote repository.
+    Inspect { name: String },
     /// List the remote repositories from the plugin manager.
     List {},
 }
@@ -102,15 +102,11 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
             CoffeeCommand::Upgrade { repo, verbose } => Self::Upgrade(repo.to_owned(), *verbose),
             CoffeeCommand::List {} => Self::List,
             CoffeeCommand::Setup { cln_conf } => Self::Setup(cln_conf.to_owned()),
-            CoffeeCommand::Remote {
-                action,
-                plugins,
-                name,
-            } => {
+            CoffeeCommand::Remote { action, name } => {
                 if let Some(action) = action {
-                    return Self::Remote(Some(action.into()), *plugins, name.clone());
+                    return Self::Remote(Some(action.into()), name.clone());
                 }
-                Self::Remote(None, *plugins, name.clone())
+                Self::Remote(None, name.clone())
             }
             CoffeeCommand::Remove { plugin } => Self::Remove(plugin.to_owned()),
             CoffeeCommand::Show { plugin } => Self::Show(plugin.to_owned()),
@@ -131,6 +127,7 @@ impl From<&RemoteAction> for coffee_core::RemoteAction {
         match value {
             RemoteAction::Add { name, url } => Self::Add(name.to_owned(), url.to_owned()),
             RemoteAction::Rm { name } => Self::Rm(name.to_owned()),
+            RemoteAction::Inspect { name } => Self::Inspect(name.to_owned()),
             RemoteAction::List {} => Self::List,
         }
     }

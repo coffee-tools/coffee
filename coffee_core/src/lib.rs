@@ -15,7 +15,7 @@ pub enum CoffeeOperation {
     Upgrade(String, bool),
     Remove(String),
     /// Remote(name repository, url of the repository)
-    Remote(Option<RemoteAction>, bool, Option<String>),
+    Remote(Option<RemoteAction>, Option<String>),
     /// Setup(core lightning root path)
     Setup(String),
     Show(String),
@@ -36,6 +36,7 @@ pub enum CoffeeOperation {
 pub enum RemoteAction {
     Add(String, String),
     Rm(String),
+    Inspect(String),
     List,
 }
 
