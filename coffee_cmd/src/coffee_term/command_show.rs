@@ -97,7 +97,7 @@ pub fn show_nurse_verify(nurse_verify: &ChainOfResponsibilityStatus) -> Result<(
         table.push([
             term::format::dim(String::from("●")),
             term::format::bold(String::from("Defects")),
-            term::format::bold(String::from("Affected repositories")),
+            term::format::bold(String::from("Action")),
         ]);
         table.divider();
 
