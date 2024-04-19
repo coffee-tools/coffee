@@ -6,9 +6,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Ubuntu utils
 RUN apt-get update && apt-get install -y \
-    software-properties-common  \
-    build-essential \
-    curl wget
+  software-properties-common  \
+  build-essential \
+  curl wget
 
 RUN apt-get update
 
@@ -28,12 +28,12 @@ RUN apt-get update && apt-get install -y \
 ENV CLIGHTNING_VERSION=master
 
 RUN git clone https://github.com/ElementsProject/lightning.git --branch=$CLIGHTNING_VERSION && \
-    cd lightning && \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
-    ./configure --disable-rust && git submodule update --init --recursive && \
-    pip3 install --upgrade pip && \
-    pip3 install mako mistune==0.8.4 mrkd && \
-    make -j$(nproc) && make install
+  cd lightning && \
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+  ./configure --disable-rust && git submodule update --init --recursive && \
+  pip3 install --upgrade pip && \
+  pip3 install mako mistune==0.8.4 mrkd grpcio-tools && \
+  make -j$(nproc) && make install
 
 RUN echo $(lightningd --version)
 
