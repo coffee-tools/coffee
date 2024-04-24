@@ -1,5 +1,8 @@
 //! Coffee command line arguments definition.
 use clap::{Parser, Subcommand};
+use coffee_lib::error;
+use coffee_lib::errors::CoffeeError;
+use std::fmt::Display;
 
 /// Coffee main command line definition for the command line tools.
 #[derive(Debug, Parser)]
@@ -133,6 +136,43 @@ impl From<&RemoteAction> for coffee_core::RemoteAction {
     }
 }
 
+#[derive(Debug)]
+enum ClnNetwork {
+    Mainnet,
+    Testnet,
+    Signet,
+    Regtest,
+    Liquid,
+}
+
+impl Display for ClnNetwork {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            ClnNetwork::Mainnet => "mainnet",
+            ClnNetwork::Testnet => "testnet",
+            ClnNetwork::Signet => "signet",
+            ClnNetwork::Regtest => "regtest",
+            ClnNetwork::Liquid => "liquid",
+        };
+        write!(f, "{s}")
+    }
+}
+
+impl TryFrom<String> for ClnNetwork {
+    type Error = String;
+
+    fn try_from(network: String) -> Result<Self, Self::Error> {
+        match network.as_str() {
+            "mainnet" => Ok(Self::Mainnet),
+            "testnet" => Ok(Self::Testnet),
+            "signet" => Ok(Self::Signet),
+            "regtest" => Ok(Self::Regtest),
+            "liquid" => Ok(Self::Liquid),
+            _ => Err(format!("{network} is not a valid network name")),
+        }
+    }
+}
+
 impl coffee_core::CoffeeArgs for CoffeeArgs {
     fn command(&self) -> coffee_core::CoffeeOperation {
         coffee_core::CoffeeOperation::from(&self.command)
@@ -147,7 +187,17 @@ impl coffee_core::CoffeeArgs for CoffeeArgs {
     }
 
     fn network(&self) -> Option<String> {
-        self.network.clone()
+        let network = self
+            .network
+            .clone()
+            .ok_or_else(|| error!("Network is not defined"))
+            .ok()?;
+        let validated_network = ClnNetwork::try_from(network.to_lowercase()).ok();
+
+        match validated_network {
+            Some(valid_network) => format!("{valid_network}").into(),
+            None => None,
+        }
     }
 
     fn skip_verify(&self) -> bool {
