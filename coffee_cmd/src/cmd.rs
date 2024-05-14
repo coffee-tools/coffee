@@ -1,8 +1,10 @@
 //! Coffee command line arguments definition.
+use std::fmt::Display;
+
 use clap::{Parser, Subcommand};
+
 use coffee_lib::error;
 use coffee_lib::errors::CoffeeError;
-use std::fmt::Display;
 
 /// Coffee main command line definition for the command line tools.
 #[derive(Debug, Parser)]
