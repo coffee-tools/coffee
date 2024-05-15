@@ -85,12 +85,12 @@ pub mod response {
         pub plugins: Vec<Plugin>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
     pub struct CoffeeRemote {
         pub remotes: Option<Vec<CoffeeListRemote>>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
     pub struct CoffeeListRemote {
         pub local_name: String,
         pub url: String,
@@ -150,6 +150,8 @@ pub mod response {
         // A patch operation when a git repository is present in the coffee configuration
         // but is absent from the local storage.
         RepositoryLocallyAbsent(Vec<String>),
+        /// (Affected network, path)
+        CoffeeGlobalRepoCleanup(Vec<(String, String)>),
         // TODO: Add more patch operations
     }
 
@@ -164,27 +166,6 @@ pub mod response {
         }
     }
 
-    impl fmt::Display for ChainOfResponsibilityStatus {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            if self.defects.is_empty() {
-                write!(f, "Coffee is sane")
-            } else {
-                writeln!(f, "Coffee has the following defects:")?;
-                for (i, defect) in self.defects.iter().enumerate() {
-                    match defect {
-                        Defect::RepositoryLocallyAbsent(repos) => {
-                            write!(f, "{}. Repository missing locally: ", i + 1)?;
-                            for repo in repos {
-                                write!(f, " {}", repo)?;
-                            }
-                        }
-                    }
-                }
-                Ok(())
-            }
-        }
-    }
-
     /// This struct is used to represent the status of nurse,
     /// either sane or not.
     /// If not sane, return the action that nurse has taken.
@@ -192,6 +173,7 @@ pub mod response {
     pub enum NurseStatus {
         RepositoryLocallyRestored(Vec<String>),
         RepositoryLocallyRemoved(Vec<String>),
+        MovingGlobalRepostoryTo(String),
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -218,6 +200,9 @@ pub mod response {
                     NurseStatus::RepositoryLocallyRestored(repos) => {
                         repositories_locally_restored.append(&mut repos.clone())
                     }
+                    NurseStatus::MovingGlobalRepostoryTo(status) => {
+                        new_status.push(NurseStatus::MovingGlobalRepostoryTo(status.to_owned()));
+                    }
                 }
             }
             if !repositories_locally_removed.is_empty() {
@@ -242,6 +227,12 @@ pub mod response {
                 }
                 NurseStatus::RepositoryLocallyRemoved(val) => {
                     write!(f, "Repositories removed locally: {}", val.join(" "))
+                }
+                NurseStatus::MovingGlobalRepostoryTo(net) => {
+                    write!(
+                        f,
+                        "Global repository directory moved to subdirectory for network `{net}`"
+                    )
                 }
             }
         }

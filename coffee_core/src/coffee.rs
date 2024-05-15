@@ -2,7 +2,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::vec::Vec;
-use tokio::fs;
 
 use async_trait::async_trait;
 use clightningrpc_common::client::Client;
@@ -12,6 +11,7 @@ use log;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tokio::fs;
 use tokio::process::Command;
 
 use coffee_github::repository::Github;
@@ -20,6 +20,7 @@ use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
 use coffee_lib::types::response::*;
 use coffee_lib::url::URL;
+use coffee_lib::utils::rm_dir_if_exist;
 use coffee_lib::{commit_id, error, get_repo_info, sh};
 use coffee_storage::model::repository::{Kind, Repository as RepositoryInfo};
 use coffee_storage::nosql_db::NoSQlStorage;
@@ -78,8 +79,8 @@ pub struct CoffeeManager {
 }
 
 impl CoffeeManager {
-    pub async fn new(conf: &dyn CoffeeArgs) -> Result<Self, CoffeeError> {
-        let conf = CoffeeConf::new(conf).await?;
+    pub async fn new(conf_args: &dyn CoffeeArgs) -> Result<Self, CoffeeError> {
+        let conf = CoffeeConf::new(conf_args).await?;
         let mut coffee = CoffeeManager {
             config: conf.clone(),
             coffee_cln_config: CLNConf::new(conf.config_path, true),
@@ -96,6 +97,7 @@ impl CoffeeManager {
     /// when coffee is configured, run an inventory to collect all the necessary information
     /// about the coffee ecosystem.
     async fn inventory(&mut self) -> Result<(), CoffeeError> {
+        let skip_verify = self.config.skip_verify;
         let _ = self
             .storage
             .load::<CoffeeStorageInfo>(&self.config.network)
@@ -103,8 +105,7 @@ impl CoffeeManager {
             .map(|store| {
                 self.config = store.config;
             });
-        // FIXME: check if this exist in a better wai
-        let _ = self
+        let global_repositories = self
             .storage
             .load::<HashMap<RepoName, RepositoryInfo>>("repositories")
             .await
@@ -118,10 +119,38 @@ impl CoffeeManager {
                 });
             });
 
+        if let Ok(_) = global_repositories {
+            // HACK: this should be done with the nurse command, but
+            // due that currently migrating the database with the nurse
+            // logic is a little bit tricky we do this hack and we try
+            // to move on, but if you are looking something to do in coffee
+            // it is possible to take this problem and design a solution.
+            // FIXME: add the drop method inside nosql_db
+        }
+
+        let local_repositories = self
+            .storage
+            .load::<HashMap<RepoName, RepositoryInfo>>(&format!(
+                "{}/repositories",
+                self.config.network
+            ))
+            .await;
+        if let Ok(repos) = local_repositories {
+            // FIXME: till we are not able to remove a key from
+            // the database
+            self.repos.clear();
+            repos.iter().for_each(|repo| match repo.1.kind {
+                Kind::Git => {
+                    let repo = Github::from(repo.1);
+                    self.repos.insert(repo.name(), Box::new(repo));
+                }
+            });
+        }
+
         if let Err(err) = self.coffee_cln_config.parse() {
             log::error!("{}", err.cause);
         }
-        if !self.config.skip_verify {
+        if !skip_verify {
             // Check for the chain of responsibility
             let status = self.recovery_strategies.scan(self).await?;
             log::debug!("Chain of responsibility status: {:?}", status);
@@ -190,7 +219,10 @@ impl CoffeeManager {
             .store(&self.config.network, &store_info)
             .await?;
         self.storage
-            .store("repositories", &store_info.repositories)
+            .store(
+                &format!("{}/repositories", self.config.network),
+                &store_info.repositories,
+            )
             .await?;
         Ok(())
     }
@@ -424,15 +456,11 @@ impl PluginManager for CoffeeManager {
         Ok(())
     }
 
-    async fn add_remote(&mut self, name: &str, url: &str) -> Result<(), CoffeeError> {
-        // FIXME: we should allow some error here like
-        // for the add remote command the no found error for the `repository`
-        // directory is fine.
-
-        if self.repos.contains_key(name) {
+    async fn add_remote(&mut self, name: &str, url: &str, force: bool) -> Result<(), CoffeeError> {
+        if !force && self.repos.contains_key(name) {
             return Err(error!("repository with name: {name} already exists"));
         }
-        let url = URL::new(&self.config.root_path, url, name);
+        let url = URL::new(&self.config.path(), url, name);
         log::debug!("remote adding: {} {}", name, &url.url_string);
         let mut repo = Github::new(name, &url);
         repo.init().await?;
@@ -545,12 +573,32 @@ impl PluginManager for CoffeeManager {
                     let mut actions = self.patch_repository_locally_absent(repos.to_vec()).await?;
                     nurse_actions.append(&mut actions);
                 }
+
+                Defect::CoffeeGlobalRepoCleanup(networks) => {
+                    let iter = self
+                        .repos
+                        .iter()
+                        .map(|(name, repo)| (name.to_owned(), repo.url()))
+                        .collect::<Vec<(String, URL)>>();
+                    for (network, _) in networks {
+                        log::debug!("reindexing repository for the network `{:?}`", network);
+                        for (name, url) in &iter {
+                            self.add_remote(&name, &url.url_string, true).await?;
+                        }
+                        nurse_actions
+                            .push(NurseStatus::MovingGlobalRepostoryTo(network.to_owned()));
+                    }
+                    let global_repo = format!("{}/repositories", self.config.root_path);
+                    rm_dir_if_exist(&global_repo).await?;
+                }
             }
         }
         let mut nurse = CoffeeNurse {
             status: nurse_actions,
         };
         nurse.organize();
+        // Refesh the status
+        self.flush().await?;
         Ok(nurse)
     }
 
@@ -573,6 +621,7 @@ impl PluginManager for CoffeeManager {
                 .get_mut(repo_name)
                 .ok_or_else(|| error!("repository with name: {repo_name} not found"))?;
 
+            repo.change_root_path(&self.config.path());
             match repo.recover().await {
                 Ok(_) => {
                     log::info!("repository {} recovered", repo_name.clone());

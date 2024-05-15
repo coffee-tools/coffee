@@ -57,6 +57,10 @@ impl URL {
             repo_name: get_repo_name_from_url(url),
         }
     }
+
+    pub fn set_coffee_path(&mut self, path: &str) {
+        self.path_string = format!("{path}/{}", self.repo_name);
+    }
 }
 
 impl fmt::Display for URL {
