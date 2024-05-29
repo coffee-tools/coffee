@@ -41,11 +41,11 @@ impl State {
         self.args.clone().unwrap()
     }
 
-    pub async fn setup(&self) -> Result<(), CoffeeError> {
+    pub async fn link(&self) -> Result<(), CoffeeError> {
         self.coffee()
             .lock()
             .unwrap()
-            .setup(&self.args.clone().unwrap().conf)
+            .link(&self.args.clone().unwrap().conf)
             .await?;
         Ok(())
     }

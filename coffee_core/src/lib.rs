@@ -7,6 +7,8 @@ pub use coffee_lib as lib;
 
 #[derive(Clone, Debug)]
 pub enum CoffeeOperation {
+    /// Link coffee to the lightning configuration file
+    Link(String),
     /// Install(plugin name, verbose run, dynamic installation)
     Install(String, bool, bool),
     /// List
@@ -16,8 +18,6 @@ pub enum CoffeeOperation {
     Remove(String),
     /// Remote(name repository, url of the repository)
     Remote(Option<RemoteAction>, Option<String>),
-    /// Setup(core lightning root path)
-    Setup(String),
     Show(String),
     /// Search(plugin name)
     Search(String),

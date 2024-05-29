@@ -64,7 +64,7 @@ fn on_init(plugin: &mut Plugin<State>) -> Value {
         }
         let coffee = coffee.unwrap();
         plugin.state.set_coffee(coffee);
-        plugin.state.setup().await
+        plugin.state.link().await
     });
 
     if let Err(err) = result {

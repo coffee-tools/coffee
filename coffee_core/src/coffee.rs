@@ -228,7 +228,7 @@ impl CoffeeManager {
         Ok(())
     }
 
-    pub async fn setup_with_cln(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
+    pub async fn link_with_cln(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
         if self.cln_config.is_some() {
             log::warn!("you are overriding the previous set up");
         }
@@ -417,8 +417,8 @@ impl PluginManager for CoffeeManager {
         Ok(status)
     }
 
-    async fn setup(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
-        self.setup_with_cln(cln_dir).await?;
+    async fn link(&mut self, cln_dir: &str) -> Result<(), CoffeeError> {
+        self.link_with_cln(cln_dir).await?;
         log::info!("cln configured");
         self.flush().await?;
         Ok(())
