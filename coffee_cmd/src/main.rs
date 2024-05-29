@@ -16,6 +16,11 @@ use crate::cmd::RemoteAction;
 
 async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeError> {
     match args.command {
+        CoffeeCommand::Link { cln_conf } => {
+            // FIXME: read the core lightning config
+            // and the coffee script
+            coffee.link(&cln_conf).await?;
+        }
         CoffeeCommand::Install {
             plugin,
             verbose,
@@ -133,11 +138,6 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
                     coffee_term::show_remote_list(remote)?;
                 }
             }
-        }
-        CoffeeCommand::Setup { cln_conf } => {
-            // FIXME: read the core lightning config
-            // and the coffee script
-            coffee.setup(&cln_conf).await?;
         }
         CoffeeCommand::Show { plugin } => {
             let val = coffee.show(&plugin).await?;

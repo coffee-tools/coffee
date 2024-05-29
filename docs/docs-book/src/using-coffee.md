@@ -18,7 +18,7 @@ By default the Core Lightning home is stored in the `/home/<user>/.lightning`,
 and you can do it with the following command
 
 ```bash
-coffee setup /home/alice/.lightning
+coffee link /home/alice/.lightning
 ```
 
 Then you will find an include at the end of the config file at

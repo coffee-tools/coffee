@@ -37,7 +37,7 @@ In fact, you can install a Java plugin that supports Coffee in a couple of
 commands after you [install it](./install-coffee.md)
 
 ```bash
-coffee --network testnet setup /home/alice/.lightning
+coffee --network testnet link /home/alice/.lightning
 coffee --network testnet remote add lightningd https://github.com/lightningd/plugins.git
 coffee --network testnet install btcli4j
 ```

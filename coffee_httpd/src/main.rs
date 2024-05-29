@@ -13,7 +13,7 @@ async fn main() -> Result<(), CoffeeError> {
     env_logger::init();
     let cmd = cmd::HttpdArgs::parse();
     let mut coffee = CoffeeManager::new(&cmd).await?;
-    coffee.setup(&cmd.cln_path).await?;
+    coffee.link(&cmd.cln_path).await?;
 
     let port = cmd.port.unwrap_or(8080) as u16;
     log::info!("Running on port 127.0.0.1:{port}");

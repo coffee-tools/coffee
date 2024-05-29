@@ -39,9 +39,8 @@ pub trait PluginManager {
     /// List the plugins available in a remote repository.
     async fn get_plugins_in_remote(&self, name: &str) -> Result<CoffeeList, CoffeeError>;
 
-    /// set up the core lightning configuration target for the
-    /// plugin manager.
-    async fn setup(&mut self, cln_conf_path: &str) -> Result<(), CoffeeError>;
+    /// Link coffee to CLN configuration file
+    async fn link(&mut self, cln_conf_path: &str) -> Result<(), CoffeeError>;
 
     /// show the README file of the plugin
     async fn show(&mut self, plugin: &str) -> Result<CoffeeShow, CoffeeError>;

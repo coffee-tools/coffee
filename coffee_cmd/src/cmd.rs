@@ -26,6 +26,10 @@ pub struct CoffeeArgs {
 /// Coffee subcommand of the command line daemon.
 #[derive(Debug, Subcommand)]
 pub enum CoffeeCommand {
+    /// Configure coffee with the core lightning
+    /// configuration
+    #[clap(arg_required_else_help = true)]
+    Link { cln_conf: String },
     /// Install a single by name.
     #[clap(arg_required_else_help = true)]
     Install {
@@ -56,10 +60,6 @@ pub enum CoffeeCommand {
         #[arg(name = "remote-name", help = "The name of the remote repository")]
         name: Option<String>,
     },
-    /// Configure coffee with the core lightning
-    /// configuration
-    #[clap(arg_required_else_help = true)]
-    Setup { cln_conf: String },
     /// show the README file of the plugin
     #[clap(arg_required_else_help = true)]
     Show { plugin: String },
@@ -99,6 +99,7 @@ pub enum RemoteAction {
 impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
     fn from(value: &CoffeeCommand) -> Self {
         match value {
+            CoffeeCommand::Link { cln_conf } => Self::Link(cln_conf.to_owned()),
             CoffeeCommand::Install {
                 plugin,
                 verbose,
@@ -106,7 +107,6 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
             } => Self::Install(plugin.to_owned(), *verbose, *dynamic),
             CoffeeCommand::Upgrade { repo, verbose } => Self::Upgrade(repo.to_owned(), *verbose),
             CoffeeCommand::List {} => Self::List,
-            CoffeeCommand::Setup { cln_conf } => Self::Setup(cln_conf.to_owned()),
             CoffeeCommand::Remote { action, name } => {
                 if let Some(action) = action {
                     return Self::Remote(Some(action.into()), name.clone());

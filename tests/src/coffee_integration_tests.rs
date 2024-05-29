@@ -81,7 +81,7 @@ pub async fn init_coffee_test_with_cln() -> anyhow::Result<()> {
     let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
     log::info!("lightning path: {lightning_dir}");
 
-    manager.coffee().setup(&lightning_dir).await?;
+    manager.coffee().link(&lightning_dir).await?;
 
     Ok(())
 }
@@ -103,7 +103,7 @@ pub async fn init_coffee_test_add_remote() {
     let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
     log::info!("lightning path: {lightning_dir}");
 
-    manager.coffee().setup(&lightning_dir).await.unwrap();
+    manager.coffee().link(&lightning_dir).await.unwrap();
 
     manager
         .coffee()
@@ -135,7 +135,7 @@ pub async fn test_add_remove_plugins() {
     let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
     log::info!("lightning path: {lightning_dir}");
 
-    manager.coffee().setup(&lightning_dir).await.unwrap();
+    manager.coffee().link(&lightning_dir).await.unwrap();
     // Add lightningd remote repository
     let repo_name = "lightningd";
     let repo_url = "https://github.com/lightningd/plugins.git";
@@ -254,7 +254,7 @@ pub async fn test_errors_and_show() {
     let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
     log::info!("lightning path: {lightning_dir}");
 
-    manager.coffee().setup(&lightning_dir).await.unwrap();
+    manager.coffee().link(&lightning_dir).await.unwrap();
     // Add lightningd remote repository
     let repo_name = "lightningd";
     let repo_url = "https://github.com/lightningd/plugins.git";
@@ -341,7 +341,7 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
         network: "regtest".to_string(),
     };
     let mut manager = CoffeeTesting::tmp_with_args(&args, dir.clone()).await?;
-    let result = manager.coffee().setup(&lightning_regtest_dir).await;
+    let result = manager.coffee().link(&lightning_regtest_dir).await;
     assert!(result.is_ok(), "{:?}", result);
     // Add lightningd remote repository
     manager
@@ -378,11 +378,7 @@ pub async fn install_plugin_in_two_networks() -> anyhow::Result<()> {
     let mut manager = CoffeeTesting::tmp_with_args(&new_args, dir.clone()).await?;
     let new_root_path = manager.root_path().to_owned();
     assert_eq!(dir.path(), new_root_path.path());
-    manager
-        .coffee()
-        .setup(&lightning_testnet_dir)
-        .await
-        .unwrap();
+    manager.coffee().link(&lightning_testnet_dir).await.unwrap();
 
     let result = manager
         .coffee()
@@ -416,7 +412,7 @@ pub async fn test_double_slash() {
     let lightning_dir = cln.rpc().getinfo().unwrap().ligthning_dir;
     let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
     log::info!("lightning path: {lightning_dir}");
-    manager.coffee().setup(&lightning_dir).await.unwrap();
+    manager.coffee().link(&lightning_dir).await.unwrap();
 
     // Add lightningd remote repository
     let repo_name = "lightningd";
@@ -481,7 +477,7 @@ pub async fn test_plugin_installation_path() {
     let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
     log::info!("lightning path: {lightning_dir}");
 
-    manager.coffee().setup(&lightning_dir).await.unwrap();
+    manager.coffee().link(&lightning_dir).await.unwrap();
 
     // Add lightningd remote repository
     manager
@@ -589,7 +585,7 @@ pub async fn test_nurse_repository_missing_on_disk() {
     let lightning_dir = lightning_dir.strip_suffix("/regtest").unwrap();
     log::info!("lightning path: {lightning_dir}");
 
-    manager.coffee().setup(&lightning_dir).await.unwrap();
+    manager.coffee().link(&lightning_dir).await.unwrap();
 
     // Construct the root path
     let root_path = manager
