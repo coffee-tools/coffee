@@ -30,6 +30,9 @@ pub enum CoffeeCommand {
     /// configuration
     #[clap(arg_required_else_help = true)]
     Link { cln_conf: String },
+    /// Unlink coffee from the core lightning configuration
+    #[clap(arg_required_else_help = true)]
+    Unlink { cln_conf: String },
     /// Install a single by name.
     #[clap(arg_required_else_help = true)]
     Install {
@@ -100,6 +103,7 @@ impl From<&CoffeeCommand> for coffee_core::CoffeeOperation {
     fn from(value: &CoffeeCommand) -> Self {
         match value {
             CoffeeCommand::Link { cln_conf } => Self::Link(cln_conf.to_owned()),
+            CoffeeCommand::Unlink { cln_conf } => Self::Unlink(cln_conf.to_owned()),
             CoffeeCommand::Install {
                 plugin,
                 verbose,

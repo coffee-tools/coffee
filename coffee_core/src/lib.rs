@@ -9,6 +9,8 @@ pub use coffee_lib as lib;
 pub enum CoffeeOperation {
     /// Link coffee to the lightning configuration file
     Link(String),
+    /// Unlink coffee from the lightning configuration file
+    Unlink(String),
     /// Install(plugin name, verbose run, dynamic installation)
     Install(String, bool, bool),
     /// List
