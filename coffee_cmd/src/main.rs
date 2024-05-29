@@ -21,6 +21,9 @@ async fn run(args: CoffeeArgs, mut coffee: CoffeeManager) -> Result<(), CoffeeEr
             // and the coffee script
             coffee.link(&cln_conf).await?;
         }
+        CoffeeCommand::Unlink { cln_conf } => {
+            coffee.unlink(&cln_conf).await?;
+        }
         CoffeeCommand::Install {
             plugin,
             verbose,

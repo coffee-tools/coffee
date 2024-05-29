@@ -21,6 +21,13 @@ and you can do it with the following command
 coffee link /home/alice/.lightning
 ```
 
+If you want to unlink coffee from Core Lightning configuration at any time, you
+can do it with the following command
+
+```bash
+coffee unlink /home/alice/.lightning
+```
+
 Then you will find an include at the end of the config file at
 `/home/alice/.lightning/bitcoin/config`, in case this config file do not exist
 Coffee will create it.

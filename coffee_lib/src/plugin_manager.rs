@@ -42,6 +42,9 @@ pub trait PluginManager {
     /// Link coffee to CLN configuration file
     async fn link(&mut self, cln_conf_path: &str) -> Result<(), CoffeeError>;
 
+    /// Unlink coffee from CLN configuration file
+    async fn unlink(&mut self, cln_conf_path: &str) -> Result<(), CoffeeError>;
+
     /// show the README file of the plugin
     async fn show(&mut self, plugin: &str) -> Result<CoffeeShow, CoffeeError>;
 
