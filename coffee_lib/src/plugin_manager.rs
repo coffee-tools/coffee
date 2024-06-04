@@ -14,6 +14,7 @@ pub trait PluginManager {
     async fn install(
         &mut self,
         plugins: &str,
+        branch: Option<String>,
         verbose: bool,
         try_dynamic: bool,
     ) -> Result<(), CoffeeError>;

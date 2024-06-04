@@ -15,6 +15,7 @@ use serde_json::json;
 use tokio::process::Command;
 
 use coffee_github::repository::Github;
+use coffee_github::utils::git_checkout;
 use coffee_lib::errors::CoffeeError;
 use coffee_lib::plugin_manager::PluginManager;
 use coffee_lib::repository::Repository;
@@ -255,6 +256,7 @@ impl PluginManager for CoffeeManager {
     async fn install(
         &mut self,
         plugin: &str,
+        branch: Option<String>,
         verbose: bool,
         try_dynamic: bool,
     ) -> Result<(), CoffeeError> {
@@ -314,6 +316,13 @@ impl PluginManager for CoffeeManager {
                         let new_exec_path = format!("{}{}", new_root_path, relative_path);
                         plugin.root_path = new_root_path;
                         plugin.exec_path = new_exec_path;
+
+                        if let Some(branch) = branch {
+                            // FIXME: Where we store the date? how we manage it?
+                            let (commit, _) =
+                                git_checkout(&plugin.root_path, &branch, verbose).await?;
+                            plugin.commit = Some(commit);
+                        }
 
                         log::debug!("plugin: {:?}", plugin);
                         let path = plugin.configure(verbose).await?;
@@ -407,7 +416,7 @@ impl PluginManager for CoffeeManager {
             UpgradeStatus::Updated(_, _) => {
                 for plugins in status.plugins_effected.iter() {
                     self.remove(plugins).await?;
-                    self.install(plugins, verbose, false).await?;
+                    self.install(plugins, None, verbose, false).await?;
                 }
             }
             _ => {}
